@@ -1,6 +1,7 @@
 /**
  * Bayerisches Schafkopf - Hauptspiel-Logik
  * Koordiniert Spielverlauf, Regeln und Benutzerinteraktionen
+ * MIT INLINE ASS-AUSWAHL (kein Modal)
  */
 
 /**
@@ -33,7 +34,7 @@ function newGame() {
     updateUI();
     updateGameStatus('Wählen Sie ein Ass für das Rufspiel...');
     
-    // Ass-Auswahl anzeigen
+    // Ass-Auswahl anzeigen (INLINE, kein Modal!)
     showAceSelection();
     
     // Debug-Ausgabe
@@ -46,7 +47,7 @@ function newGame() {
 }
 
 /**
- * Zeigt die Ass-Auswahl für das Rufspiel
+ * Zeigt die Ass-Auswahl für das Rufspiel (INLINE)
  */
 function showAceSelection() {
     const humanPlayer = gameState.players[0];
@@ -61,8 +62,61 @@ function showAceSelection() {
         return;
     }
     
-    // Ass-Auswahl Dialog erstellen
-    showAceSelectionDialog(availableAces);
+    // Ass-Auswahl-Buttons unter den Spielerkarten anzeigen
+    showAceSelectionButtons(availableAces);
+}
+
+/**
+ * Zeigt die Ass-Auswahl Buttons unter den Spielerkarten (NEUE FUNKTION)
+ * @param {Array} availableAces - Verfügbare Asse
+ */
+function showAceSelectionButtons(availableAces) {
+    const humanPlayerElement = document.getElementById('player-0');
+    const cardsContainer = document.getElementById('cards-0');
+    
+    // Prüfen ob bereits Auswahl-Buttons existieren
+    let selectionContainer = document.getElementById('ace-selection-container');
+    if (!selectionContainer) {
+        // Container für Ass-Auswahl erstellen
+        selectionContainer = document.createElement('div');
+        selectionContainer.id = 'ace-selection-container';
+        selectionContainer.className = 'ace-selection-container';
+        
+        // Nach dem Karten-Container einfügen
+        cardsContainer.parentNode.insertBefore(selectionContainer, cardsContainer.nextSibling);
+    }
+    
+    // Ass-Auswahl HTML erstellen
+    selectionContainer.innerHTML = `
+        <div class="ace-selection-prompt">
+            <strong>🃏 Rufspiel: Wählen Sie ein Ass</strong>
+            <div class="ace-selection-help">Herz ist Trumpf - Sie können nur Asse rufen, wenn Sie die passende Farbe haben</div>
+        </div>
+        <div class="ace-selection-buttons-inline">
+            ${availableAces.map(ace => `
+                <button class="btn ace-btn-inline" onclick="selectAceForCall('${ace.suit}')">
+                    <span class="ace-symbol">${ace.symbol}</span>
+                    <span class="ace-name">${ace.name}</span>
+                </button>
+            `).join('')}
+            <button class="btn cancel-btn-inline" onclick="cancelAceSelection()">
+                Abbrechen
+            </button>
+        </div>
+    `;
+    
+    // Status aktualisieren
+    updateGameStatus('Wählen Sie ein Ass für das Rufspiel...');
+}
+
+/**
+ * Entfernt die Ass-Auswahl Buttons (NEUE FUNKTION)
+ */
+function hideAceSelectionButtons() {
+    const selectionContainer = document.getElementById('ace-selection-container');
+    if (selectionContainer) {
+        selectionContainer.remove();
+    }
 }
 
 /**
@@ -110,76 +164,7 @@ function getAvailableAcesForCall(playerCards) {
 }
 
 /**
- * Zeigt den Ass-Auswahl Dialog
- * @param {Array} availableAces - Verfügbare Asse
- */
-function showAceSelectionDialog(availableAces) {
-    const modal = document.getElementById('modal');
-    const titleElement = document.getElementById('modal-title');
-    const textElement = document.getElementById('modal-text');
-    
-    if (titleElement) titleElement.textContent = '🃏 Rufspiel - Ass wählen';
-    
-    // Eigene Karten für bessere Übersicht anzeigen
-    const humanPlayer = gameState.players[0];
-    const cardsDisplay = humanPlayer.cards.map(card => {
-        const colorClass = card.color === 'red' ? 'style="color: #dc2626;"' : 
-                          card.color === 'green' ? 'style="color: #16a34a;"' : '';
-        const trumpMark = card.isTrump ? '⭐' : '';
-        return `<span ${colorClass}>${card.symbol}${card.short}${trumpMark}</span>`;
-    }).join(' ');
-    
-    // Custom Modal Content für Ass-Auswahl
-    if (textElement) {
-        textElement.innerHTML = `
-            <div style="margin-bottom: 20px;">
-                <strong>Ihre Karten:</strong><br>
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 16px; line-height: 1.8;">
-                    ${cardsDisplay}
-                </div>
-                <small style="color: #aaa;">⭐ = Trumpf</small>
-            </div>
-            
-            <div style="margin-bottom: 15px;">
-                Mit welchem Ass möchten Sie zusammenspielen?<br>
-                <small style="color: #666;">(Herz ist Trumpf - nur Asse mit passender Begleitfarbe wählbar)</small>
-            </div>
-            
-            <div class="ace-selection-buttons" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 20px 0;">
-                ${availableAces.map(ace => `
-                    <button class="btn ace-btn" 
-                            onclick="selectAceForCall('${ace.suit}')" 
-                            style="padding: 15px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span style="font-size: 20px;">${ace.symbol}</span>
-                        <span>${ace.name}</span>
-                    </button>
-                `).join('')}
-            </div>
-            
-            <div style="margin-top: 20px;">
-                <button class="btn" onclick="cancelAceSelection()" style="background: #666; padding: 12px 20px;">
-                    Abbrechen (neues Spiel)
-                </button>
-            </div>
-            
-            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 5px; font-size: 12px; text-align: left;">
-                <strong>💡 Strategie-Tipp:</strong><br>
-                • Wählen Sie ein Ass einer Farbe, in der Sie stark sind<br>
-                • Achten Sie auf Ihre Trümpfe (⭐) - viele Trümpfe = bessere Chancen<br>
-                • Sie können nur Asse rufen, wenn Sie die passende Farbe haben
-            </div>
-        `;
-    }
-    
-    if (modal) {
-        modal.style.display = 'block';
-        // Custom close verhindern
-        modal.dataset.preventClose = 'true';
-    }
-}
-
-/**
- * Behandelt die Auswahl eines Asses
+ * Behandelt die Auswahl eines Asses (GEÄNDERT)
  * @param {string} suit - Gewählte Farbe des Asses
  */
 function selectAceForCall(suit) {
@@ -190,8 +175,8 @@ function selectAceForCall(suit) {
     // Partner finden (wer das gerufene Ass hat)
     findPartnerWithAce(suit);
     
-    // Modal schließen
-    closeModal();
+    // Ass-Auswahl Buttons entfernen (GEÄNDERT!)
+    hideAceSelectionButtons();
     
     // Spiel starten
     startGameAfterAceSelection();
@@ -200,6 +185,20 @@ function selectAceForCall(suit) {
         suit: suit, 
         partner: gameState.calledAcePlayer 
     });
+}
+
+/**
+ * Bricht die Ass-Auswahl ab (GEÄNDERT)
+ */
+function cancelAceSelection() {
+    // Buttons entfernen (GEÄNDERT!)
+    hideAceSelectionButtons();
+    
+    // Neues Spiel starten
+    updateGameStatus('Spiel abgebrochen - neues Spiel wird gestartet...');
+    setTimeout(() => {
+        newGame();
+    }, 1000);
 }
 
 /**
@@ -222,7 +221,7 @@ function findPartnerWithAce(suit) {
             gameState.playerPartnership[3] = i === 3 ? 1 : 1; // Team 1
             
             if (gameState.debugMode) {
-                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suits[suit].name}-Ass`);
+                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${callableSuits[suit].name}-Ass`);
             }
             return;
         }
@@ -255,15 +254,6 @@ function startGameAfterAceSelection() {
 function handleNoAceCallable() {
     // Vereinfacht: Neues Spiel starten
     showModal('Neues Spiel', 'Es wird ein neues Spiel gestartet.', () => {
-        newGame();
-    });
-}
-
-/**
- * Bricht die Ass-Auswahl ab
- */
-function cancelAceSelection() {
-    showModal('Spiel abgebrochen', 'Die Ass-Auswahl wurde abgebrochen. Ein neues Spiel wird gestartet.', () => {
         newGame();
     });
 }
@@ -459,9 +449,9 @@ function endGame() {
     }
     
     message += `\n\nEinzelscores:\n`;
-    gameState.players.forEach(player => {
+    gameState.players.forEach((player, index) => {
         const teamMarker = gameState.calledAcePlayer >= 0 ? 
-            (gameState.playerPartnership[player.index] === 0 ? ' 👥' : ' 🔥') : '';
+            (gameState.playerPartnership[index] === 0 ? ' 👥' : ' 🔥') : '';
         message += `${player.name}${teamMarker}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
     });
     
@@ -523,7 +513,16 @@ function showStats() {
     statsText += `Spieltyp: ${gameState.gameType === 'rufspiel' ? 'Rufspiel' : gameState.gameType}\n`;
     if (gameState.calledAce && gameState.calledAcePlayer >= 0) {
         const partnerName = gameState.players[gameState.calledAcePlayer].name;
-        statsText += `Gerufenes Ass: ${suits[gameState.calledAce].name}-Ass\n`;
+        
+        // Definiere Suit-Namen lokal für die Anzeige
+        const suitNames = {
+            'eichel': 'Eichel',
+            'gras': 'Gras', 
+            'schellen': 'Schellen',
+            'herz': 'Herz'
+        };
+        
+        statsText += `Gerufenes Ass: ${suitNames[gameState.calledAce] || gameState.calledAce}-Ass\n`;
         statsText += `Ihr Partner: ${partnerName}\n`;
     }
     statsText += `Runde: ${stats.roundNumber}\n`;
@@ -531,10 +530,10 @@ function showStats() {
     statsText += `Verbleibende Stiche: ${stats.tricksRemaining}\n\n`;
     
     statsText += `PUNKTESTAND:\n`;
-    stats.players.forEach(player => {
+    stats.players.forEach((player, index) => {
         const marker = player.isHuman ? '👤' : '🤖';
         const teamMarker = gameState.calledAcePlayer >= 0 ? 
-            (gameState.playerPartnership[player.index] === 0 ? ' 👥' : ' 🔥') : '';
+            (gameState.playerPartnership[index] === 0 ? ' 👥' : ' 🔥') : '';
         statsText += `${marker} ${player.name}${teamMarker}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
     });
     
