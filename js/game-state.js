@@ -30,8 +30,39 @@ let gameState = {
     gamesPlayed: 0,
     
     // Debug-Modus
-    debugMode: true // Standardmäßig an für Entwicklung
+    debugMode: true, // Standardmäßig an für Entwicklung
+    
+    // Spielverlauf-Log - WICHTIG: Hier schon initialisieren!
+    gameLog: []
 };
+
+/**
+ * Protokolliert eine Spielaktion
+ * @param {string} action - Beschreibung der Aktion
+ * @param {Object} data - Zusätzliche Daten
+ */
+function logGameAction(action, data = {}) {
+    // Sicherheitsprüfung: gameLog initialisieren falls nicht vorhanden
+    if (!gameState.gameLog) {
+        gameState.gameLog = [];
+    }
+    
+    const logEntry = {
+        timestamp: Date.now(),
+        action: action,
+        data: data,
+        gamePhase: gameState.gamePhase,
+        currentPlayer: gameState.currentPlayer,
+        trickNumber: gameState.trickNumber
+    };
+    
+    gameState.gameLog.push(logEntry);
+    
+    // In Debug-Modus auch in Konsole ausgeben
+    if (gameState.debugMode) {
+        console.log(`[${new Date().toLocaleTimeString()}] ${action}:`, data);
+    }
+}
 
 /**
  * Initialisiert einen neuen Spielzustand
@@ -85,13 +116,14 @@ function initializeGameState(options = {}) {
         // Debug und Einstellungen
         debugMode: config.debugMode,
         
-        // Spielverlauf-Log
+        // Spielverlauf-Log - WICHTIG: Hier initialisieren!
         gameLog: [],
         
         // Timing
         lastActionTime: Date.now()
     };
     
+    // Jetzt können wir sicher loggen, da gameLog existiert
     logGameAction('Spiel initialisiert', config);
 }
 
@@ -268,29 +300,6 @@ function setDebugMode(enabled) {
     // CSS-Klasse für Debug-Modus setzen/entfernen
     if (typeof document !== 'undefined') {
         document.body.classList.toggle('debug-mode', enabled);
-    }
-}
-
-/**
- * Protokolliert eine Spielaktion
- * @param {string} action - Beschreibung der Aktion
- * @param {Object} data - Zusätzliche Daten
- */
-function logGameAction(action, data = {}) {
-    const logEntry = {
-        timestamp: Date.now(),
-        action: action,
-        data: data,
-        gamePhase: gameState.gamePhase,
-        currentPlayer: gameState.currentPlayer,
-        trickNumber: gameState.trickNumber
-    };
-    
-    gameState.gameLog.push(logEntry);
-    
-    // In Debug-Modus auch in Konsole ausgeben
-    if (gameState.debugMode) {
-        console.log(`[${new Date().toLocaleTimeString()}] ${action}:`, data);
     }
 }
 
