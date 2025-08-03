@@ -95,7 +95,14 @@ function updateGameInfo() {
     if (gameTypeElement) {
         let gameTypeText = 'Rufspiel';
         if (gameState.gameType === 'rufspiel' && gameState.calledAce) {
-            gameTypeText = `Rufspiel (${suits[gameState.calledAce].name})`;
+            // Definiere Suit-Namen lokal
+            const suitNames = {
+                'eichel': 'Eichel',
+                'gras': 'Gras',
+                'schellen': 'Schellen',
+                'herz': 'Herz'
+            };
+            gameTypeText = `Rufspiel (${suitNames[gameState.calledAce] || gameState.calledAce})`;
         }
         gameTypeElement.textContent = gameTypeText;
     }
@@ -198,9 +205,22 @@ function updateTrumpInfo() {
     const calledAceElement = document.getElementById('called-ace');
     if (calledAceElement) {
         if (gameState.calledAce) {
-            const aceSuit = suits[gameState.calledAce];
-            calledAceElement.textContent = `${aceSuit.symbol}A`;
-            calledAceElement.style.color = aceSuit.color === 'red' ? '#e53e3e' : '#2d3748';
+            // Definiere Suit-Informationen lokal
+            const suitInfo = {
+                'eichel': { symbol: '🌰', color: 'black' },
+                'gras': { symbol: '🍀', color: 'green' },
+                'schellen': { symbol: '🔔', color: 'red' },
+                'herz': { symbol: '❤️', color: 'red' }
+            };
+            
+            const aceSuit = suitInfo[gameState.calledAce];
+            if (aceSuit) {
+                calledAceElement.textContent = `${aceSuit.symbol}A`;
+                calledAceElement.style.color = aceSuit.color === 'red' ? '#e53e3e' : (aceSuit.color === 'green' ? '#16a34a' : '#2d3748');
+            } else {
+                calledAceElement.textContent = `${gameState.calledAce}A`;
+                calledAceElement.style.color = '';
+            }
         } else {
             calledAceElement.textContent = '-';
             calledAceElement.style.color = '';

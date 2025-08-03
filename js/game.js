@@ -72,9 +72,15 @@ function showAceSelection() {
  */
 function getAvailableAcesForCall(playerCards) {
     const availableAces = [];
-    const suits = ['eichel', 'gras', 'schellen']; // Herz ist Trumpf, daher nicht rufbar
     
-    suits.forEach(suit => {
+    // Definiere die rufbaren Farben (Herz ist Trumpf, daher nicht rufbar)
+    const callableSuits = {
+        'eichel': { name: 'Eichel', symbol: '🌰' },
+        'gras': { name: 'Gras', symbol: '🍀' },
+        'schellen': { name: 'Schellen', symbol: '🔔' }
+    };
+    
+    Object.keys(callableSuits).forEach(suit => {
         // Prüfen ob Spieler selbst das Ass hat
         const hasAce = playerCards.some(card => 
             card.suit === suit && card.value === 'sau'
@@ -94,8 +100,8 @@ function getAvailableAcesForCall(playerCards) {
         if (hasSuitCard) {
             availableAces.push({
                 suit: suit,
-                name: `${suits[suit].name}-Ass`,
-                symbol: suits[suit].symbol
+                name: `${callableSuits[suit].name}-Ass`,
+                symbol: callableSuits[suit].symbol
             });
         }
     });
