@@ -1,6 +1,394 @@
-/* CSS-Erweiterungen für Ass-Auswahl und Team-Anzeige */
+/**
+ * Bayerisches Schafkopf - Komplettes Stylesheet
+ * Basis-Styles + Ass-Auswahl-Erweiterungen
+ */
 
-/* Bestehende Styles beibehalten und erweitern */
+/* === RESET UND BASIS === */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #2c5530, #1a3d1f);
+    color: white;
+    min-height: 100vh;
+    overflow-x: hidden;
+}
+
+/* === HEADER === */
+.header {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    text-align: center;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.game-info {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    font-size: 1.1em;
+    margin-top: 10px;
+}
+
+.game-info > div {
+    padding: 5px 15px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    backdrop-filter: blur(10px);
+}
+
+/* === HAUPTSPIELBEREICH === */
+.game-area {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: calc(100vh - 200px);
+}
+
+.players {
+    position: relative;
+    width: 80vw;
+    height: 70vh;
+    max-width: 1000px;
+    max-height: 600px;
+    display: grid;
+    grid-template-areas: 
+        "cpu1 cpu2 cpu3"
+        "center center center"
+        "human human human";
+    grid-template-rows: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+/* === SPIELER-LAYOUTS === */
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 15px;
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    backdrop-filter: blur(10px);
+}
+
+.player.active {
+    border-color: #3b82f6;
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+}
+
+.player h3 {
+    font-size: 1.3em;
+    margin-bottom: 10px;
+    text-align: center;
+}
+
+.player-info {
+    display: flex;
+    gap: 15px;
+    font-size: 0.9em;
+    margin: 5px 0;
+}
+
+.player-info > div {
+    padding: 2px 6px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+}
+
+/* Spieler-Positionierung */
+.cpu1 {
+    grid-area: cpu1;
+    justify-self: start;
+}
+
+.cpu2 {
+    grid-area: cpu2;
+    justify-self: center;
+}
+
+.cpu3 {
+    grid-area: cpu3;
+    justify-self: end;
+}
+
+.human {
+    grid-area: human;
+    justify-self: center;
+}
+
+.center-area {
+    grid-area: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 20px;
+    padding: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+/* === KARTEN === */
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px;
+    margin-top: 10px;
+    position: relative;
+}
+
+.card {
+    width: 45px;
+    height: 65px;
+    background: linear-gradient(145deg, #f0f0f0, #d0d0d0);
+    border: 2px solid #888;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 0.8em;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.card-back {
+    background: linear-gradient(145deg, #8b4513, #654321);
+    color: #ffd700;
+    font-size: 1.2em;
+}
+
+.suit-symbol {
+    font-size: 1.1em;
+    margin-bottom: 2px;
+}
+
+/* Kartenfarben */
+.card.red {
+    color: #dc2626;
+}
+
+.card.green {
+    color: #16a34a;
+}
+
+/* Spielbare Karten */
+.card.playable {
+    cursor: pointer;
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    border-color: #22c55e;
+}
+
+.card.playable:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+    border-color: #16a34a;
+}
+
+/* Trump-Karten */
+.card.trump {
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+}
+
+/* === TRUMP-INFO === */
+.trump-info {
+    text-align: center;
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.trump-info > div {
+    margin: 5px 0;
+    padding: 5px 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+}
+
+#called-ace {
+    font-weight: bold;
+    font-size: 1.2em;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* === SPIELSTATUS === */
+.game-status {
+    text-align: center;
+    font-size: 1.2em;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin: 10px 0;
+    transition: all 0.3s ease;
+}
+
+/* === STICH-ANZEIGE === */
+.trick-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 10px;
+    width: 200px;
+    height: 200px;
+    margin: 20px auto;
+}
+
+.trick-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.trick-card .card {
+    transform: scale(0.8);
+    animation: cardPlay 0.5s ease-out;
+}
+
+@keyframes cardPlay {
+    from {
+        transform: scale(0) rotate(180deg);
+        opacity: 0;
+    }
+    to {
+        transform: scale(0.8) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* === BEDIENELEMENTE === */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 24px;
+    background: linear-gradient(145deg, #4a7c59, #357a3a);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn:hover {
+    background: linear-gradient(145deg, #5a8c69, #4a8a4a);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+.btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn:hover::before {
+    left: 100%;
+}
+
+/* Debug-Button aktiv */
+.debug-active {
+    background: #f59e0b !important;
+    color: white !important;
+}
+
+/* === MODAL === */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+}
+
+.modal-content {
+    background: linear-gradient(145deg, #2a4a2e, #1e3d22);
+    margin: 5% auto;
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    border: 2px solid #4a7c59;
+    color: white;
+    text-align: center;
+}
+
+.modal-content h2 {
+    color: #66bb6a;
+    margin-bottom: 15px;
+    font-size: 1.8em;
+}
+
+.modal-content p {
+    line-height: 1.6;
+    margin-bottom: 20px;
+    white-space: pre-line;
+}
+
+/* === DEBUG-MODUS === */
+.debug-mode .card-back {
+    display: none;
+}
+
+.debug-mode .player.cpu .cards .card {
+    opacity: 0.9;
+}
+
+/* === ASS-AUSWAHL ERWEITERUNGEN === */
 
 /* Ass-Auswahl Buttons im Modal */
 .ace-selection-buttons {
@@ -28,7 +416,7 @@
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-/* Team-Markierungen für Spieler */
+/* === TEAM-MARKIERUNGEN === */
 .player.teammate {
     border: 2px solid #4ade80;
     background: rgba(74, 222, 128, 0.1);
@@ -71,34 +459,20 @@
     z-index: 10;
 }
 
-/* Gerufenes Ass hervorheben */
-#called-ace {
-    font-weight: bold;
-    font-size: 1.2em;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: rgba(255, 255, 255, 0.2);
-}
-
-/* Modal-Verbesserungen */
-.modal {
-    backdrop-filter: blur(5px);
-}
-
-.modal-content {
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-/* Debug-Button aktiv */
-.debug-active {
-    background: #f59e0b !important;
-    color: white !important;
-}
-
-/* Toast-Verbesserungen */
+/* === TOAST-NACHRICHTEN === */
 #toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0,0,0,0.8);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    z-index: 2000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    max-width: 300px;
+    word-wrap: break-word;
     animation: slideIn 0.3s ease-out;
 }
 
@@ -113,26 +487,93 @@
     }
 }
 
-/* Karten-Verbesserungen */
-.card.playable {
-    cursor: pointer;
-    transform: translateY(-5px);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+/* === ANIMATIONEN === */
+
+/* Spielerwechsel-Animation */
+.player.active {
+    animation: pulse 2s infinite;
 }
 
-.card.playable:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    }
 }
 
-/* Trump-Karten hervorheben */
-.card.trump {
-    border: 2px solid #fbbf24;
-    box-shadow: 0 0 8px rgba(251, 191, 36, 0.5);
+/* CPU-Denk-Animation */
+.player.cpu.active .cards::after {
+    content: "🤔";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    animation: thinking 1s infinite;
 }
 
-/* Responsive Design für kleine Bildschirme */
+@keyframes thinking {
+    0%, 100% { opacity: 0.5; }
+    50% { opacity: 1; }
+}
+
+/* Gewinnende Karte hervorheben */
+.trick-card.winning .card {
+    border: 3px solid #fbbf24;
+    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
+}
+
+/* === RESPONSIVE DESIGN === */
 @media (max-width: 768px) {
+    .header h1 {
+        font-size: 2em;
+    }
+    
+    .game-info {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .players {
+        width: 95vw;
+        height: 60vh;
+        grid-template-areas: 
+            "cpu2"
+            "cpu1 cpu3"
+            "center"
+            "human";
+        grid-template-rows: auto auto 1fr auto;
+        grid-template-columns: 1fr 1fr;
+    }
+    
+    .center-area {
+        grid-column: 1 / -1;
+    }
+    
+    .human {
+        grid-column: 1 / -1;
+    }
+    
+    .card {
+        width: 35px;
+        height: 50px;
+        font-size: 0.7em;
+    }
+    
+    .controls {
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 10px 16px;
+        font-size: 0.9em;
+    }
+    
     .ace-selection-buttons {
         grid-template-columns: 1fr;
         gap: 8px;
@@ -151,133 +592,24 @@
     }
 }
 
-/* Animationen für Spielerwechsel */
-.player.active {
-    animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+@media (max-width: 480px) {
+    .game-area {
+        padding: 10px;
     }
-    70% {
-        box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+    
+    .player {
+        padding: 10px;
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+    
+    .card {
+        width: 30px;
+        height: 42px;
+        font-size: 0.6em;
     }
-}
-
-/* Stich-Anzeige verbessert */
-.trick-area {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
-    gap: 10px;
-    width: 200px;
-    height: 200px;
-    margin: 20px auto;
-}
-
-.trick-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.trick-card .card {
-    transform: scale(0.8);
-    animation: cardPlay 0.5s ease-out;
-}
-
-@keyframes cardPlay {
-    from {
-        transform: scale(0) rotate(180deg);
-        opacity: 0;
+    
+    .modal-content {
+        margin: 10% auto;
+        padding: 20px;
+        width: 95%;
     }
-    to {
-        transform: scale(0.8) rotate(0deg);
-        opacity: 1;
-    }
-}
-
-/* Verbesserte Button-Styles */
-.btn {
-    position: relative;
-    overflow: hidden;
-}
-
-.btn::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-    transition: left 0.5s;
-}
-
-.btn:hover::before {
-    left: 100%;
-}
-
-/* Farbkodierung für Kartenfarben */
-.card.red {
-    color: #dc2626;
-}
-
-.card.green {
-    color: #16a34a;
-}
-
-/* Status-Anzeige verbessert */
-.game-status {
-    transition: all 0.3s ease;
-    padding: 10px;
-    border-radius: 8px;
-    background: rgba(0, 0, 0, 0.1);
-    margin: 10px 0;
-}
-
-/* Spieler-Info Layout */
-.player-info {
-    display: flex;
-    gap: 15px;
-    font-size: 0.9em;
-    margin: 5px 0;
-}
-
-.player-info > div {
-    padding: 2px 6px;
-    background: rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
-}
-
-/* Highlight für gewinnende Karte im Stich */
-.trick-card.winning .card {
-    border: 3px solid #fbbf24;
-    box-shadow: 0 0 15px rgba(251, 191, 36, 0.8);
-}
-
-/* Verbesserte Hover-Effekte */
-.card:not(.card-back):hover {
-    z-index: 10;
-    position: relative;
-}
-
-/* Loading-Animation für CPU-Züge */
-.player.cpu.active .cards::after {
-    content: "🤔";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2em;
-    animation: thinking 1s infinite;
-}
-
-@keyframes thinking {
-    0%, 100% { opacity: 0.5; }
-    50% { opacity: 1; }
 }
