@@ -64,6 +64,14 @@ function updatePlayerInfo() {
         
         if (pointsElement) pointsElement.textContent = player.points;
         if (tricksElement) tricksElement.textContent = player.tricks;
+        
+        // Team-Markierung hinzufügen (für Rufspiel)
+        const playerElement = document.getElementById(`player-${index}`);
+        if (playerElement && gameState.calledAcePlayer >= 0) {
+            const isTeammate = gameState.playerPartnership[index] === gameState.playerPartnership[0];
+            playerElement.classList.toggle('teammate', isTeammate && index !== 0);
+            playerElement.classList.toggle('opponent', !isTeammate);
+        }
     });
 }
 
@@ -85,7 +93,11 @@ function updateGameInfo() {
     const trickCounterElement = document.getElementById('trick-counter');
     
     if (gameTypeElement) {
-        gameTypeElement.textContent = gameState.gameType === 'rufspiel' ? 'Rufspiel' : gameState.gameType;
+        let gameTypeText = 'Rufspiel';
+        if (gameState.gameType === 'rufspiel' && gameState.calledAce) {
+            gameTypeText = `Rufspiel (${suits[gameState.calledAce].name})`;
+        }
+        gameTypeElement.textContent = gameTypeText;
     }
     
     if (roundCounterElement) {
@@ -116,6 +128,10 @@ function updateGameStatus(message = null) {
     switch (gameState.gamePhase) {
         case 'setup':
             statusElement.textContent = 'Spiel wird vorbereitet...';
+            break;
+            
+        case 'bidding':
+            statusElement.textContent = 'Wählen Sie ein Ass für das Rufspiel...';
             break;
             
         case 'playing':
@@ -182,10 +198,12 @@ function updateTrumpInfo() {
     const calledAceElement = document.getElementById('called-ace');
     if (calledAceElement) {
         if (gameState.calledAce) {
-            const ace = gameState.calledAce;
-            calledAceElement.textContent = `${ace.symbol}${ace.short}`;
+            const aceSuit = suits[gameState.calledAce];
+            calledAceElement.textContent = `${aceSuit.symbol}A`;
+            calledAceElement.style.color = aceSuit.color === 'red' ? '#e53e3e' : '#2d3748';
         } else {
             calledAceElement.textContent = '-';
+            calledAceElement.style.color = '';
         }
     }
 }
@@ -227,11 +245,20 @@ function showModal(title, text, callback = null) {
     const textElement = document.getElementById('modal-text');
     
     if (titleElement) titleElement.textContent = title;
-    if (textElement) textElement.textContent = text;
+    if (textElement) {
+        // Prüfen ob HTML-Content übergeben wurde
+        if (text.includes('<')) {
+            textElement.innerHTML = text;
+        } else {
+            textElement.textContent = text;
+        }
+    }
     
     if (modal) {
         modal.style.display = 'block';
         modal.dataset.callback = callback ? callback.toString() : '';
+        // Präventives Schließen zurücksetzen
+        modal.dataset.preventClose = '';
     }
 }
 
@@ -240,12 +267,12 @@ function showModal(title, text, callback = null) {
  */
 function closeModal() {
     const modal = document.getElementById('modal');
-    if (modal) {
+    if (modal && !modal.dataset.preventClose) {
         const callback = modal.dataset.callback;
         modal.style.display = 'none';
         
         // Callback ausführen falls vorhanden
-        if (callback) {
+        if (callback && callback !== 'null') {
             try {
                 eval(callback)();
             } catch (e) {
@@ -264,6 +291,12 @@ function handleCardClick(suit, value) {
     // Nur menschliche Spieler können Karten klicken
     if (!isPlayerTurn(0)) {
         showModal('Nicht am Zug', 'Sie sind gerade nicht am Zug!');
+        return;
+    }
+    
+    // Während Ass-Auswahl keine Karten spielbar
+    if (gameState.gamePhase === 'bidding') {
+        showModal('Ass-Auswahl', 'Bitte wählen Sie zuerst ein Ass für das Rufspiel.');
         return;
     }
     
@@ -308,6 +341,8 @@ function showToast(message, duration = 3000) {
             z-index: 2000;
             opacity: 0;
             transition: opacity 0.3s ease;
+            max-width: 300px;
+            word-wrap: break-word;
         `;
         document.body.appendChild(toast);
     }
@@ -371,10 +406,10 @@ function initializeEventListeners() {
     // Keyboard-Handler
     document.addEventListener('keydown', handleKeyboardInput);
     
-    // Modal schließen bei Klick außerhalb
+    // Modal schließen bei Klick außerhalb (nur wenn nicht preventClose)
     document.addEventListener('click', (event) => {
         const modal = document.getElementById('modal');
-        if (event.target === modal) {
+        if (event.target === modal && !modal.dataset.preventClose) {
             closeModal();
         }
     });
@@ -395,6 +430,9 @@ function debugUI() {
     console.log('Game State:', getGameState());
     console.log('Current Player:', getCurrentPlayer());
     console.log('Current Trick:', gameState.currentTrick);
+    console.log('Called Ace:', gameState.calledAce);
+    console.log('Partner:', gameState.calledAcePlayer >= 0 ? gameState.players[gameState.calledAcePlayer].name : 'None');
+    console.log('Partnerships:', gameState.playerPartnership);
     console.log('Game Log:', exportGameLog().slice(-5)); // Letzte 5 Einträge
 }
 

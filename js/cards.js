@@ -31,7 +31,7 @@ const suits = {
     }
 };
 
-// Kartenwertdefinitionen
+// Kartenwertdefinitionen (korrigiert für Schafkopf)
 const values = {
     'sau': { 
         name: 'Sau', 
@@ -312,5 +312,90 @@ function debugCards(cards, label = 'Karten') {
     ).join(' '));
 }
 
+/**
+ * Hilfsfunktion: Findet alle Asse in einem Kartenstapel
+ * @param {Array} cards - Array von Karten
+ * @returns {Array} Array mit allen Assen
+ */
+function findAces(cards) {
+    return cards.filter(card => card.value === 'sau');
+}
+
+/**
+ * Hilfsfunktion: Findet alle Trümpfe in einem Kartenstapel  
+ * @param {Array} cards - Array von Karten
+ * @returns {Array} Array mit allen Trümpfen
+ */
+function findTrumps(cards) {
+    return cards.filter(card => card.isTrump);
+}
+
+/**
+ * Hilfsfunktion: Findet alle Karten einer bestimmten Farbe (ohne Trümpfe)
+ * @param {Array} cards - Array von Karten
+ * @param {string} suit - Gesuchte Farbe
+ * @returns {Array} Array mit Karten der Farbe
+ */
+function findSuitCards(cards, suit) {
+    return cards.filter(card => card.suit === suit && !card.isTrump);
+}
+
+/**
+ * Validiert ein Kartendeck auf Vollständigkeit und Korrektheit
+ * @param {Array} deck - Das zu prüfende Deck
+ * @returns {Object} Validierungsergebnis
+ */
+function validateDeck(deck) {
+    const result = {
+        valid: true,
+        errors: [],
+        warnings: []
+    };
+    
+    // Sollte 32 Karten haben
+    if (deck.length !== 32) {
+        result.valid = false;
+        result.errors.push(`Falsche Anzahl Karten: ${deck.length} statt 32`);
+    }
+    
+    // Alle Farben und Werte prüfen
+    const expectedCards = [];
+    for (let suit in suits) {
+        for (let value in values) {
+            expectedCards.push(`${suit}_${value}`);
+        }
+    }
+    
+    const deckIds = deck.map(card => card.id);
+    expectedCards.forEach(expectedId => {
+        if (!deckIds.includes(expectedId)) {
+            result.valid = false;
+            result.errors.push(`Fehlende Karte: ${expectedId}`);
+        }
+    });
+    
+    // Duplikate prüfen
+    const duplicates = deckIds.filter((id, index) => deckIds.indexOf(id) !== index);
+    if (duplicates.length > 0) {
+        result.valid = false;
+        result.errors.push(`Doppelte Karten: ${duplicates.join(', ')}`);
+    }
+    
+    // Trumpf-Status prüfen
+    const trumps = deck.filter(card => card.isTrump);
+    if (trumps.length !== 14) {
+        result.warnings.push(`Unerwartete Anzahl Trümpfe: ${trumps.length} statt 14`);
+    }
+    
+    // Punkte prüfen
+    const totalPoints = countPoints(deck);
+    if (totalPoints !== 120) {
+        result.valid = false;
+        result.errors.push(`Falsche Gesamtpunkte: ${totalPoints} statt 120`);
+    }
+    
+    return result;
+}
+
 // Export für andere Module (falls ES6 Module verwendet werden)
-// export { suits, values, createDeck, shuffleDeck, setTrumpStatus, sortCards, dealCards, isCardHigher, findCard, removeCard, countPoints, debugCards };
+// export { suits, values, createDeck, shuffleDeck, setTrumpStatus, sortCards, dealCards, isCardHigher, findCard, removeCard, countPoints, debugCards, findAces, findTrumps, findSuitCards, validateDeck };

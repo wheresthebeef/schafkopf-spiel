@@ -25,13 +25,16 @@ function newGame() {
         gameState.players[index].cards = hand;
     });
     
-    // Spielphase setzen
-    gameState.gamePhase = 'playing';
-    gameState.currentPlayer = 0; // Menschlicher Spieler beginnt
+    // Spielphase auf Ass-Auswahl setzen (nicht direkt spielen)
+    gameState.gamePhase = 'bidding';
+    gameState.currentPlayer = 0; // Menschlicher Spieler wählt Ass
     
     // UI aktualisieren
     updateUI();
-    updateGameStatus('Neues Spiel gestartet - Sie beginnen!');
+    updateGameStatus('Wählen Sie ein Ass für das Rufspiel...');
+    
+    // Ass-Auswahl anzeigen
+    showAceSelection();
     
     // Debug-Ausgabe
     if (gameState.debugMode) {
@@ -40,6 +43,201 @@ function newGame() {
             debugCards(player.cards, `${player.name} (${index})`);
         });
     }
+}
+
+/**
+ * Zeigt die Ass-Auswahl für das Rufspiel
+ */
+function showAceSelection() {
+    const humanPlayer = gameState.players[0];
+    const availableAces = getAvailableAcesForCall(humanPlayer.cards);
+    
+    if (availableAces.length === 0) {
+        // Kein Ass rufbar - automatisch Solo vorschlagen oder pass
+        showModal('Kein Ass rufbar', 
+            'Sie können kein Ass rufen. Das Spiel wird als Ramsch gespielt oder Sie können ein Solo ansagen.',
+            () => handleNoAceCallable()
+        );
+        return;
+    }
+    
+    // Ass-Auswahl Dialog erstellen
+    showAceSelectionDialog(availableAces);
+}
+
+/**
+ * Ermittelt welche Asse der Spieler rufen kann
+ * @param {Array} playerCards - Karten des Spielers
+ * @returns {Array} Array mit rufbaren Assen
+ */
+function getAvailableAcesForCall(playerCards) {
+    const availableAces = [];
+    const suits = ['eichel', 'gras', 'schellen']; // Herz ist Trumpf, daher nicht rufbar
+    
+    suits.forEach(suit => {
+        // Prüfen ob Spieler selbst das Ass hat
+        const hasAce = playerCards.some(card => 
+            card.suit === suit && card.value === 'sau'
+        );
+        
+        if (hasAce) {
+            return; // Eigenes Ass kann nicht gerufen werden
+        }
+        
+        // Prüfen ob Spieler mindestens eine Karte der Farbe hat (außer Ober/Unter)
+        const hasSuitCard = playerCards.some(card => 
+            card.suit === suit && 
+            card.value !== 'ober' && 
+            card.value !== 'unter'
+        );
+        
+        if (hasSuitCard) {
+            availableAces.push({
+                suit: suit,
+                name: `${suits[suit].name}-Ass`,
+                symbol: suits[suit].symbol
+            });
+        }
+    });
+    
+    return availableAces;
+}
+
+/**
+ * Zeigt den Ass-Auswahl Dialog
+ * @param {Array} availableAces - Verfügbare Asse
+ */
+function showAceSelectionDialog(availableAces) {
+    const modal = document.getElementById('modal');
+    const titleElement = document.getElementById('modal-title');
+    const textElement = document.getElementById('modal-text');
+    
+    if (titleElement) titleElement.textContent = '🃏 Rufspiel - Ass wählen';
+    
+    // Custom Modal Content für Ass-Auswahl
+    if (textElement) {
+        textElement.innerHTML = `
+            <div style="margin-bottom: 15px;">
+                Mit welchem Ass möchten Sie zusammenspielen?<br>
+                <small style="color: #666;">(Herz ist Trumpf, nur Asse mit passender Begleitfarbe wählbar)</small>
+            </div>
+            <div class="ace-selection-buttons" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 20px 0;">
+                ${availableAces.map(ace => `
+                    <button class="btn ace-btn" 
+                            onclick="selectAceForCall('${ace.suit}')" 
+                            style="padding: 15px; font-size: 16px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="font-size: 20px;">${ace.symbol}</span>
+                        <span>${ace.name}</span>
+                    </button>
+                `).join('')}
+            </div>
+            <div style="margin-top: 20px;">
+                <button class="btn" onclick="cancelAceSelection()" style="background: #666;">
+                    Abbrechen (anderes Spiel)
+                </button>
+            </div>
+            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; font-size: 12px;">
+                <strong>Ihre Karten:</strong><br>
+                ${gameState.players[0].cards.map(card => `${card.symbol}${card.short}`).join(' ')}
+            </div>
+        `;
+    }
+    
+    if (modal) {
+        modal.style.display = 'block';
+        // Custom close verhindern
+        modal.dataset.preventClose = 'true';
+    }
+}
+
+/**
+ * Behandelt die Auswahl eines Asses
+ * @param {string} suit - Gewählte Farbe des Asses
+ */
+function selectAceForCall(suit) {
+    // Gerufenes Ass im Spielzustand speichern
+    gameState.calledAce = suit;
+    gameState.gameType = 'rufspiel';
+    
+    // Partner finden (wer das gerufene Ass hat)
+    findPartnerWithAce(suit);
+    
+    // Modal schließen
+    closeModal();
+    
+    // Spiel starten
+    startGameAfterAceSelection();
+    
+    logGameAction('Ass gerufen', { 
+        suit: suit, 
+        partner: gameState.calledAcePlayer 
+    });
+}
+
+/**
+ * Findet den Partner anhand des gerufenen Asses
+ * @param {string} suit - Farbe des gerufenen Asses
+ */
+function findPartnerWithAce(suit) {
+    for (let i = 1; i < gameState.players.length; i++) {
+        const hasAce = gameState.players[i].cards.some(card => 
+            card.suit === suit && card.value === 'sau'
+        );
+        
+        if (hasAce) {
+            gameState.calledAcePlayer = i;
+            // Partnerschaft setzen: Spieler 0 und gefundener Partner vs. Rest
+            gameState.playerPartnership[0] = 0; // Team 0
+            gameState.playerPartnership[i] = 0; // Team 0  
+            gameState.playerPartnership[1] = i === 1 ? 1 : 1; // Team 1
+            gameState.playerPartnership[2] = i === 2 ? 1 : 1; // Team 1  
+            gameState.playerPartnership[3] = i === 3 ? 1 : 1; // Team 1
+            
+            if (gameState.debugMode) {
+                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suits[suit].name}-Ass`);
+            }
+            return;
+        }
+    }
+    
+    // Sollte nicht passieren, aber Fallback
+    console.warn('Gerufenes Ass nicht gefunden!');
+    gameState.calledAcePlayer = -1;
+}
+
+/**
+ * Startet das Spiel nach der Ass-Auswahl
+ */
+function startGameAfterAceSelection() {
+    gameState.gamePhase = 'playing';
+    gameState.currentPlayer = 0; // Menschlicher Spieler beginnt
+    
+    updateUI();
+    updateGameStatus('Rufspiel gestartet - Sie beginnen!');
+    
+    if (gameState.debugMode && gameState.calledAcePlayer >= 0) {
+        const partnerName = gameState.players[gameState.calledAcePlayer].name;
+        showToast(`Ihr Partner: ${partnerName}`, 3000);
+    }
+}
+
+/**
+ * Behandelt den Fall, dass kein Ass gerufen werden kann
+ */
+function handleNoAceCallable() {
+    // Vereinfacht: Neues Spiel starten
+    showModal('Neues Spiel', 'Es wird ein neues Spiel gestartet.', () => {
+        newGame();
+    });
+}
+
+/**
+ * Bricht die Ass-Auswahl ab
+ */
+function cancelAceSelection() {
+    showModal('Spiel abgebrochen', 'Die Ass-Auswahl wurde abgebrochen. Ein neues Spiel wird gestartet.', () => {
+        newGame();
+    });
 }
 
 /**
@@ -190,27 +388,53 @@ function playCPUCard() {
 function endGame() {
     const result = finishGame();
     
+    // Team-basierte Auswertung für Rufspiel
     let message = `Spiel beendet!\n\n`;
-    message += `Ihre Punkte: ${result.humanPoints}\n`;
-    message += `CPU-Punkte: ${result.cpuPoints}\n\n`;
     
-    if (result.humanWins) {
-        message += `🎉 Glückwunsch! Sie haben gewonnen!`;
-        if (result.humanPoints >= 91) {
-            message += ` Mit Schneider!`;
+    if (gameState.gameType === 'rufspiel' && gameState.calledAcePlayer >= 0) {
+        const humanTeam = gameState.playerPartnership[0];
+        const partnerName = gameState.players[gameState.calledAcePlayer].name;
+        
+        // Team-Punkte berechnen
+        const team0Points = gameState.players
+            .filter((p, i) => gameState.playerPartnership[i] === 0)
+            .reduce((sum, p) => sum + p.points, 0);
+        const team1Points = gameState.players
+            .filter((p, i) => gameState.playerPartnership[i] === 1)
+            .reduce((sum, p) => sum + p.points, 0);
+        
+        message += `Rufspiel-Ergebnis:\n`;
+        message += `Ihr Team (mit ${partnerName}): ${team0Points} Punkte\n`;
+        message += `Gegner-Team: ${team1Points} Punkte\n\n`;
+        
+        if (team0Points >= 61) {
+            message += `🎉 Ihr Team hat gewonnen!`;
+            if (team0Points >= 91) {
+                message += ` Mit Schneider!`;
+            }
+        } else {
+            message += `😔 Ihr Team hat verloren.`;
+            if (team0Points <= 30) {
+                message += ` Mit Schneider verloren!`;
+            }
         }
     } else {
-        message += `😔 Sie haben verloren.`;
-        if (result.humanPoints === 0) {
-            message += ` Schwarz verloren!`;
-        } else if (result.humanPoints < 31) {
-            message += ` Mit Schneider verloren!`;
+        // Fallback für andere Spieltypen
+        message += `Ihre Punkte: ${result.humanPoints}\n`;
+        message += `CPU-Punkte: ${result.cpuPoints}\n\n`;
+        
+        if (result.humanWins) {
+            message += `🎉 Glückwunsch! Sie haben gewonnen!`;
+        } else {
+            message += `😔 Sie haben verloren.`;
         }
     }
     
-    message += `\n\nDetailscore:\n`;
+    message += `\n\nEinzelscores:\n`;
     gameState.players.forEach(player => {
-        message += `${player.name}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
+        const teamMarker = gameState.calledAcePlayer >= 0 ? 
+            (gameState.playerPartnership[player.index] === 0 ? ' 👥' : ' 🔥') : '';
+        message += `${player.name}${teamMarker}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
     });
     
     showModal('Spielende', message);
@@ -224,9 +448,15 @@ function showRules() {
     const rulesText = `Bayerisches Schafkopf - Spielregeln
 
 ZIEL:
-• 61 von 120 Punkten erreichen
+• 61 von 120 Punkten erreichen (im Team bei Rufspiel)
 • Bei 91+ Punkten: "Mit Schneider" gewonnen
 • Bei 0 Punkten: "Schwarz" verloren
+
+RUFSPIEL:
+• Sie wählen ein Ass (außer Herz-Ass)
+• Der Spieler mit diesem Ass wird Ihr Partner
+• Ihr Team muss zusammen 61+ Punkte erreichen
+• Sie können nur Asse rufen, wenn Sie mindestens eine Karte der gleichen Farbe haben (Ober/Unter zählen nicht)
 
 TRÜMPFE (von hoch zu niedrig):
 • Eichel-Ober, Gras-Ober, Herz-Ober, Schellen-Ober
@@ -246,11 +476,6 @@ SPIELREGELN:
 • Trumpfzwang: Bei Trumpf muss Trumpf zugegeben werden
 • Stichzwang: Höhere Karte muss gespielt werden (wenn möglich)
 
-AKTUELLE VERSION:
-• Vereinfachtes Spiel ohne Partnerschaften
-• Sie spielen gegen 3 CPU-Gegner
-• Debug-Modus zeigt alle Karten offen
-
 STEUERUNG:
 • Karte anklicken zum Spielen
 • F1: Diese Hilfe
@@ -267,6 +492,12 @@ function showStats() {
     const stats = getGameStats();
     
     let statsText = `Aktuelle Spielstatistik\n\n`;
+    statsText += `Spieltyp: ${gameState.gameType === 'rufspiel' ? 'Rufspiel' : gameState.gameType}\n`;
+    if (gameState.calledAce && gameState.calledAcePlayer >= 0) {
+        const partnerName = gameState.players[gameState.calledAcePlayer].name;
+        statsText += `Gerufenes Ass: ${suits[gameState.calledAce].name}-Ass\n`;
+        statsText += `Ihr Partner: ${partnerName}\n`;
+    }
     statsText += `Runde: ${stats.roundNumber}\n`;
     statsText += `Gespielte Stiche: ${stats.totalTricks}/8\n`;
     statsText += `Verbleibende Stiche: ${stats.tricksRemaining}\n\n`;
@@ -274,7 +505,9 @@ function showStats() {
     statsText += `PUNKTESTAND:\n`;
     stats.players.forEach(player => {
         const marker = player.isHuman ? '👤' : '🤖';
-        statsText += `${marker} ${player.name}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
+        const teamMarker = gameState.calledAcePlayer >= 0 ? 
+            (gameState.playerPartnership[player.index] === 0 ? ' 👥' : ' 🔥') : '';
+        statsText += `${marker} ${player.name}${teamMarker}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
     });
     
     statsText += `\nGESAMTPUNKTE: ${stats.totalPoints}/120\n`;
@@ -311,6 +544,11 @@ function toggleDebugMode() {
  * @returns {boolean} true wenn die Karte gespielt werden kann
  */
 function canPlayCard(card, playerIndex) {
+    // Während Ass-Auswahl können keine Karten gespielt werden
+    if (gameState.gamePhase === 'bidding') {
+        return false;
+    }
+    
     // Erster Spieler im Stich kann alles spielen
     if (gameState.currentTrick.length === 0) {
         return true;
@@ -416,7 +654,7 @@ function exportGameData() {
         gameState: getGameState(),
         gameLog: exportGameLog(),
         timestamp: new Date().toISOString(),
-        version: '0.2.0'
+        version: '0.3.0'
     };
 }
 
@@ -453,4 +691,8 @@ if (typeof window !== 'undefined') {
     window.debugUI = debugUI;
     window.exportGameData = exportGameData;
     window.importGameData = importGameData;
+    
+    // Neue Funktionen für Ass-Auswahl
+    window.selectAceForCall = selectAceForCall;
+    window.cancelAceSelection = cancelAceSelection;
 }
