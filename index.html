@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bayerisches Schafkopf</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5016, #4a7c24);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .game-info {
+            display: flex;
+            justify-content: space-around;
+            margin: 10px 0;
+            font-size: 1.1em;
+        }
+
+        .game-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .players {
+            display: grid;
+            grid-template-areas: 
+                ". top ."
+                "left center right"
+                ". bottom .";
+            grid-template-columns: 1fr 2fr 1fr;
+            grid-template-rows: 1fr 2fr 1fr;
+            height: 500px;
+            margin: 20px 0;
+            gap: 20px;
+        }
+
+        .player {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px;
+            backdrop-filter: blur(5px);
+            border: 2px solid rgba(255,255,255,0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player.human { grid-area: bottom; }
+        .player.cpu1 { grid-area: left; }
+        .player.cpu2 { grid-area: top; }
+        .player.cpu3 { grid-area: right; }
+
+        .player.active {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        .player h3 {
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .player-info {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .cards {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            width: 50px;
+            height: 75px;
+            background: white;
+            border-radius: 8px;
+            border: 2px solid #333;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .human .card {
+            width: 80px;
+            height: 120px;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .card.red {
+            color: #d32f2f;
+        }
+
+        .card.playable {
+            border-color: #4caf50;
+            box-shadow: 0 0 10px rgba(76,175,80,0.5);
+        }
+
+        .card-back {
+            background: linear-gradient(45deg, #1565c0, #0d47a1);
+            color: white;
+        }
+
+        .center-area {
+            grid-area: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.2);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .trick-area {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 10px;
+            width: 200px;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+
+        .trick-card {
+            width: 80px;
+            height: 100px;
+        }
+
+        .game-status {
+            text-align: center;
+            font-size: 1.2em;
+            margin-bottom: 15px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .trump-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            color: #333;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .suit-symbol {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .players {
+                height: 400px;
+                gap: 10px;
+            }
+            
+            .card {
+                width: 40px;
+                height: 60px;
+                font-size: 0.8em;
+            }
+            
+            .human .card {
+                width: 60px;
+                height: 90px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🃏 Bayerisches Schafkopf</h1>
+        <div class="game-info">
+            <div>Spiel: <span id="game-type">Rufspiel</span></div>
+            <div>Runde: <span id="round-counter">1</span></div>
+            <div>Stiche: <span id="trick-counter">0/8</span></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="players">
+            <!-- CPU-Spieler 1 (links) -->
+            <div class="player cpu1" id="player-1">
+                <h3>Anna</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-1"></div>
+            </div>
+
+            <!-- CPU-Spieler 2 (oben) -->
+            <div class="player cpu2" id="player-2">
+                <h3>Hans</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-2"></div>
+            </div>
+
+            <!-- CPU-Spieler 3 (rechts) -->
+            <div class="player cpu3" id="player-3">
+                <h3>Sepp</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-3"></div>
+            </div>
+
+            <!-- Menschlicher Spieler (unten) -->
+            <div class="player human active" id="player-0">
+                <h3>Sie</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-0"></div>
+            </div>
+
+            <!-- Spielfeld-Mitte -->
+            <div class="center-area">
+                <div class="trump-info">
+                    <div>Trumpf: Herz</div>
+                    <div>Gerufenes Ass: <span id="called-ace">-</span></div>
+                </div>
+                
+                <div class="game-status" id="game-status">
+                    Neues Spiel - Karten werden verteilt...
+                </div>
+                
+                <div class="trick-area" id="trick-area">
+                    <!-- Hier werden die gespielten Karten angezeigt -->
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">Neues Spiel</button>
+            <button class="btn" onclick="showRules()">Regeln</button>
+            <button class="btn" onclick="showStats()">Statistik</button>
+        </div>
+    </div>
+
+    <!-- Modal für Dialoge -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Titel</h2>
+            <p id="modal-text">Text</p>
+            <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        // Globale Spielvariablen
+        let gameState = {
+            players: [],
+            currentPlayer: 0,
+            currentTrick: [],
+            trickNumber: 0,
+            gamePhase: 'bidding', // 'bidding', 'playing', 'finished'
+            trumpSuit: 'herz',
+            calledAce: null,
+            playerPartnership: [0, 1, 2, 3] // Wird später für Partnerschaften verwendet
+        };
+
+        // Kartendefinitionen
+        const suits = {
+            'eichel': { name: 'Eichel', symbol: '🌰', color: 'black' },
+            'gras': { name: 'Gras', symbol: '🍀', color: 'green' },
+            'herz': { name: 'Herz', symbol: '❤️', color: 'red' },
+            'schellen': { name: 'Schellen', symbol: '🔔', color: 'red' }
+        };
+
+        const values = {
+            'sau': { name: 'Sau', short: 'A', points: 11, order: 14 },
+            'zehn': { name: 'Zehn', short: '10', points: 10, order: 13 },
+            'koenig': { name: 'König', short: 'K', points: 4, order: 12 },
+            'ober': { name: 'Ober', short: 'O', points: 3, order: 11 },
+            'unter': { name: 'Unter', short: 'U', points: 2, order: 10 },
+            'neun': { name: 'Neun', short: '9', points: 0, order: 9 },
+            'acht': { name: 'Acht', short: '8', points: 0, order: 8 },
+            'sieben': { name: 'Sieben', short: '7', points: 0, order: 7 }
+        };
+
+        // Kartendeck erstellen
+        function createDeck() {
+            const deck = [];
+            for (let suit in suits) {
+                for (let value in values) {
+                    deck.push({
+                        suit: suit,
+                        value: value,
+                        name: `${values[value].name} ${suits[suit].name}`,
+                        short: values[value].short,
+                        symbol: suits[suit].symbol,
+                        color: suits[suit].color,
+                        points: values[value].points,
+                        order: values[value].order,
+                        isTrump: false // Wird später gesetzt
+                    });
+                }
+            }
+            return deck;
+        }
+
+        // Karten mischen
+        function shuffleDeck(deck) {
+            for (let i = deck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [deck[i], deck[j]] = [deck[j], deck[i]];
+            }
+            return deck;
+        }
+
+        // Trumpf-Status setzen
+        function setTrumpStatus(deck) {
+            deck.forEach(card => {
+                // Ober und Unter sind immer Trumpf
+                if (card.value === 'ober' || card.value === 'unter') {
+                    card.isTrump = true;
+                    // Trumpf-Reihenfolge für Ober: Eichel(18), Gras(17), Herz(16), Schellen(15)
+                    if (card.value === 'ober') {
+                        switch (card.suit) {
+                            case 'eichel': card.trumpOrder = 18; break;
+                            case 'gras': card.trumpOrder = 17; break;
+                            case 'herz': card.trumpOrder = 16; break;
+                            case 'schellen': card.trumpOrder = 15; break;
+                        }
+                    }
+                    // Trumpf-Reihenfolge für Unter: Eichel(14), Gras(13), Herz(12), Schellen(11)
+                    else if (card.value === 'unter') {
+                        switch (card.suit) {
+                            case 'eichel': card.trumpOrder = 14; break;
+                            case 'gras': card.trumpOrder = 13; break;
+                            case 'herz': card.trumpOrder = 12; break;
+                            case 'schellen': card.trumpOrder = 11; break;
+                        }
+                    }
+                }
+                // Herz-Karten (außer Ober/Unter) sind auch Trumpf
+                else if (card.suit === 'herz') {
+                    card.isTrump = true;
+                    card.trumpOrder = card.order; // Normale Reihenfolge für Herz-Karten
+                }
+            });
+        }
+
+        // Spieler initialisieren
+        function initializePlayers() {
+            gameState.players = [
+                { name: 'Sie', isHuman: true, cards: [], points: 0, tricks: 0 },
+                { name: 'Anna', isHuman: false, cards: [], points: 0, tricks: 0 },
+                { name: 'Hans', isHuman: false, cards: [], points: 0, tricks: 0 },
+                { name: 'Sepp', isHuman: false, cards: [], points: 0, tricks: 0 }
+            ];
+        }
+
+        // Karten verteilen
+        function dealCards() {
+            const deck = shuffleDeck(createDeck());
+            setTrumpStatus(deck);
+            
+            // 8 Karten pro Spieler
+            for (let i = 0; i < 32; i++) {
+                const playerIndex = i % 4;
+                gameState.players[playerIndex].cards.push(deck[i]);
+            }
+            
+            // Karten sortieren
+            gameState.players.forEach(player => {
+                player.cards.sort((a, b) => {
+                    if (a.isTrump && b.isTrump) {
+                        return b.trumpOrder - a.trumpOrder;
+                    }
+                    if (a.isTrump && !b.isTrump) return -1;
+                    if (!a.isTrump && b.isTrump) return 1;
+                    if (a.suit !== b.suit) return a.suit.localeCompare(b.suit);
+                    return b.order - a.order;
+                });
+            });
+        }
+
+        // Karte HTML erstellen
+        function createCardHTML(card, isBack = false, isPlayable = false) {
+            if (isBack) {
+                return `<div class="card card-back">🃏</div>`;
+            }
+            
+            const playableClass = isPlayable ? ' playable' : '';
+            const colorClass = card.color === 'red' ? ' red' : '';
+            
+            return `
+                <div class="card${colorClass}${playableClass}" 
+                     data-suit="${card.suit}" 
+                     data-value="${card.value}"
+                     onclick="playCard('${card.suit}', '${card.value}')">
+                    <div class="suit-symbol">${card.symbol}</div>
+                    <div>${card.short}</div>
+                </div>
+            `;
+        }
+
+        // Spielfeld aktualisieren
+        function updateGameDisplay() {
+            // Spieler-Karten anzeigen
+            gameState.players.forEach((player, index) => {
+                const cardsContainer = document.getElementById(`cards-${index}`);
+                if (player.isHuman) {
+                    // Menschliche Karten sichtbar
+                    cardsContainer.innerHTML = player.cards.map(card => 
+                        createCardHTML(card, false, canPlayCard(card))
+                    ).join('');
+                } else {
+                    // CPU-Karten als Rückseite
+                    cardsContainer.innerHTML = player.cards.map(() => 
+                        createCardHTML(null, true)
+                    ).join('');
+                }
+                
+                // Punkte und Stiche aktualisieren
+                document.querySelector(`#player-${index} .points`).textContent = player.points;
+                document.querySelector(`#player-${index} .tricks`).textContent = player.tricks;
+            });
+            
+            // Aktiver Spieler markieren
+            document.querySelectorAll('.player').forEach((el, index) => {
+                el.classList.toggle('active', index === gameState.currentPlayer);
+            });
+            
+            // Spielstatus aktualisieren
+            updateGameStatus();
+        }
+
+        // Prüfen ob Karte gespielt werden kann
+        function canPlayCard(card) {
+            if (gameState.currentPlayer !== 0) return false; // Nicht der menschliche Spieler
+            if (gameState.currentTrick.length === 0) return true; // Erster Spieler kann alles spielen
+            
+            const leadCard = gameState.currentTrick[0].card;
+            const playerCards = gameState.players[0].cards;
+            
+            // Bedienungspflicht prüfen
+            if (leadCard.isTrump) {
+                // Trumpf angespielt - Trumpf bedienen oder beliebige Karte
+                return card.isTrump || !playerCards.some(c => c.isTrump);
+            } else {
+                // Farbe angespielt - Farbe bedienen oder beliebige Karte
+                return card.suit === leadCard.suit || 
+                       !playerCards.some(c => c.suit === leadCard.suit && !c.isTrump);
+            }
+        }
+
+        // Karte spielen
+        function playCard(suit, value) {
+            if (gameState.currentPlayer !== 0) return; // Nicht der menschliche Spieler
+            
+            const player = gameState.players[0];
+            const cardIndex = player.cards.findIndex(c => c.suit === suit && c.value === value);
+            
+            if (cardIndex === -1) return;
+            
+            const card = player.cards[cardIndex];
+            if (!canPlayCard(card)) {
+                showModal('Ungültiger Zug', 'Diese Karte können Sie jetzt nicht spielen.');
+                return;
+            }
+            
+            // Karte spielen
+            player.cards.splice(cardIndex, 1);
+            gameState.currentTrick.push({ player: 0, card: card });
+            
+            // Nächster Spieler
+            nextPlayer();
+        }
+
+        // Nächster Spieler
+        function nextPlayer() {
+            if (gameState.currentTrick.length === 4) {
+                // Stich auswerten
+                evaluateTrick();
+                return;
+            }
+            
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % 4;
+            
+            // CPU-Spieler automatisch spielen lassen
+            if (!gameState.players[gameState.currentPlayer].isHuman) {
+                setTimeout(playCPUCard, 1000);
+            }
+            
+            updateGameDisplay();
+        }
+
+        // CPU-Karte spielen
+        function playCPUCard() {
+            const player = gameState.players[gameState.currentPlayer];
+            let playableCards = player.cards.filter(card => canPlayCard(card));
+            
+            if (playableCards.length === 0) {
+                playableCards = player.cards; // Fallback
+            }
+            
+            // Einfache KI: Zufällige spielbare Karte
+            const randomCard = playableCards[Math.floor(Math.random() * playableCards.length)];
+            const cardIndex = player.cards.indexOf(randomCard);
+            
+            player.cards.splice(cardIndex, 1);
+            gameState.currentTrick.push({ 
+                player: gameState.currentPlayer, 
+                card: randomCard 
+            });
+            
+            nextPlayer();
+        }
+
+        // Stich auswerten
+        function evaluateTrick() {
+            let winner = 0;
+            let highestCard = gameState.currentTrick[0].card;
+            
+            // Höchste Karte finden
+            for (let i = 1; i < gameState.currentTrick.length; i++) {
+                const currentCard = gameState.currentTrick[i].card;
+                
+                if (isCardHigher(currentCard, highestCard)) {
+                    highestCard = currentCard;
+                    winner = i;
+                }
+            }
+            
+            // Punkte zum Gewinner hinzufügen
+            const trickPoints = gameState.currentTrick.reduce((sum, play) => 
+                sum + play.card.points, 0);
+            
+            const winnerPlayerIndex = gameState.currentTrick[winner].player;
+            gameState.players[winnerPlayerIndex].points += trickPoints;
+            gameState.players[winnerPlayerIndex].tricks += 1;
+            
+            // Stich anzeigen
+            displayTrick();
+            
+            // Nächster Stich
+            setTimeout(() => {
+                gameState.currentTrick = [];
+                gameState.trickNumber++;
+                gameState.currentPlayer = winnerPlayerIndex;
+                
+                if (gameState.trickNumber >= 8) {
+                    endGame();
+                } else {
+                    updateGameDisplay();
+                    if (!gameState.players[gameState.currentPlayer].isHuman) {
+                        setTimeout(playCPUCard, 1000);
+                    }
+                }
+            }, 2000);
+        }
+
+        // Prüfen ob Karte höher ist
+        function isCardHigher(card1, card2) {
+            // Beide Trumpf
+            if (card1.isTrump && card2.isTrump) {
+                return card1.trumpOrder > card2.trumpOrder;
+            }
+            
+            // Nur card1 ist Trumpf
+            if (card1.isTrump && !card2.isTrump) {
+                return true;
+            }
+            
+            // Nur card2 ist Trumpf
+            if (!card1.isTrump && card2.isTrump) {
+                return false;
+            }
+            
+            // Beide keine Trümpfe - gleiche Farbe?
+            if (card1.suit === card2.suit) {
+                return card1.order > card2.order;
+            }
+            
+            // Verschiedene Farben, card2 gewinnt (wurde zuerst gespielt)
+            return false;
+        }
+
+        // Stich anzeigen
+        function displayTrick() {
+            const trickArea = document.getElementById('trick-area');
+            trickArea.innerHTML = gameState.currentTrick.map((play, index) => {
+                const position = ['bottom', 'left', 'top', 'right'][play.player];
+                return `<div class="trick-card ${position}">${createCardHTML(play.card)}</div>`;
+            }).join('');
+        }
+
+        // Spielstatus aktualisieren
+        function updateGameStatus() {
+            const status = document.getElementById('game-status');
+            const trickCounter = document.getElementById('trick-counter');
+            
+            if (gameState.gamePhase === 'playing') {
+                const currentPlayerName = gameState.players[gameState.currentPlayer].name;
+                status.textContent = `${currentPlayerName} ist am Zug`;
+                trickCounter.textContent = `${gameState.trickNumber}/8`;
+            }
+        }
+
+        // Spiel beenden
+        function endGame() {
+            gameState.gamePhase = 'finished';
+            
+            // Gewinner ermitteln (vereinfacht)
+            const humanPoints = gameState.players[0].points;
+            const cpuPoints = gameState.players[1].points + 
+                            gameState.players[2].points + 
+                            gameState.players[3].points;
+            
+            let message;
+            if (humanPoints >= 61) {
+                message = `Glückwunsch! Sie haben gewonnen mit ${humanPoints} Punkten!`;
+            } else {
+                message = `Sie haben verloren. ${humanPoints} Punkte reichten nicht.`;
+            }
+            
+            showModal('Spiel beendet', message);
+        }
+
+        // Neues Spiel starten
+        function newGame() {
+            gameState = {
+                players: [],
+                currentPlayer: 0,
+                currentTrick: [],
+                trickNumber: 0,
+                gamePhase: 'playing',
+                trumpSuit: 'herz',
+                calledAce: null,
+                playerPartnership: [0, 1, 2, 3]
+            };
+            
+            initializePlayers();
+            dealCards();
+            updateGameDisplay();
+            
+            document.getElementById('game-status').textContent = 'Neues Spiel gestartet - Sie beginnen!';
+        }
+
+        // Modal anzeigen
+        function showModal(title, text) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = text;
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        // Modal schließen
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // Regeln anzeigen
+        function showRules() {
+            const rulesText = `
+                Bayerisches Schafkopf - Kurzregeln:
+                
+                • Ziel: 61 von 120 Punkten erreichen
+                • Trümpfe: Alle Ober, alle Unter, alle Herz-Karten
+                • Trumpf-Reihenfolge: Eichel-Ober, Gras-Ober, Herz-Ober, Schellen-Ober, dann Unter in gleicher Reihenfolge, dann Herz-Karten
+                • Kartenwerte: Ass=11, Zehn=10, König=4, Ober=3, Unter=2, Rest=0
+                • Bedienungspflicht: Gespielte Farbe muss bedient werden
+                
+                Diese Version: Vereinfachtes Rufspiel gegen 3 CPU-Gegner
+            `;
+            showModal('Spielregeln', rulesText);
+        }
+
+        // Statistik anzeigen
+        function showStats() {
+            const stats = `
+                Aktuelle Punkte:
+                
+                Sie: ${gameState.players[0].points} Punkte (${gameState.players[0].tricks} Stiche)
+                Anna: ${gameState.players[1].points} Punkte (${gameState.players[1].tricks} Stiche)
+                Hans: ${gameState.players[2].points} Punkte (${gameState.players[2].tricks} Stiche)
+                Sepp: ${gameState.players[3].points} Punkte (${gameState.players[3].tricks} Stiche)
+                
+                Gespielt: ${gameState.trickNumber}/8 Stiche
+            `;
+            showModal('Spielstatistik', stats);
+        }
+
+        // Spiel beim Laden initialisieren
+        window.addEventListener('load', () => {
+            newGame();
+        });
+    </script>
+</body>
+</html>
