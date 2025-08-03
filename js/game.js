@@ -120,13 +120,31 @@ function showAceSelectionDialog(availableAces) {
     
     if (titleElement) titleElement.textContent = '🃏 Rufspiel - Ass wählen';
     
+    // Eigene Karten für bessere Übersicht anzeigen
+    const humanPlayer = gameState.players[0];
+    const cardsDisplay = humanPlayer.cards.map(card => {
+        const colorClass = card.color === 'red' ? 'style="color: #dc2626;"' : 
+                          card.color === 'green' ? 'style="color: #16a34a;"' : '';
+        const trumpMark = card.isTrump ? '⭐' : '';
+        return `<span ${colorClass}>${card.symbol}${card.short}${trumpMark}</span>`;
+    }).join(' ');
+    
     // Custom Modal Content für Ass-Auswahl
     if (textElement) {
         textElement.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <strong>Ihre Karten:</strong><br>
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; margin: 10px 0; font-size: 16px; line-height: 1.8;">
+                    ${cardsDisplay}
+                </div>
+                <small style="color: #aaa;">⭐ = Trumpf</small>
+            </div>
+            
             <div style="margin-bottom: 15px;">
                 Mit welchem Ass möchten Sie zusammenspielen?<br>
-                <small style="color: #666;">(Herz ist Trumpf, nur Asse mit passender Begleitfarbe wählbar)</small>
+                <small style="color: #666;">(Herz ist Trumpf - nur Asse mit passender Begleitfarbe wählbar)</small>
             </div>
+            
             <div class="ace-selection-buttons" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 20px 0;">
                 ${availableAces.map(ace => `
                     <button class="btn ace-btn" 
@@ -137,14 +155,18 @@ function showAceSelectionDialog(availableAces) {
                     </button>
                 `).join('')}
             </div>
+            
             <div style="margin-top: 20px;">
-                <button class="btn" onclick="cancelAceSelection()" style="background: #666;">
-                    Abbrechen (anderes Spiel)
+                <button class="btn" onclick="cancelAceSelection()" style="background: #666; padding: 12px 20px;">
+                    Abbrechen (neues Spiel)
                 </button>
             </div>
-            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; font-size: 12px;">
-                <strong>Ihre Karten:</strong><br>
-                ${gameState.players[0].cards.map(card => `${card.symbol}${card.short}`).join(' ')}
+            
+            <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.15); border-radius: 5px; font-size: 12px; text-align: left;">
+                <strong>💡 Strategie-Tipp:</strong><br>
+                • Wählen Sie ein Ass einer Farbe, in der Sie stark sind<br>
+                • Achten Sie auf Ihre Trümpfe (⭐) - viele Trümpfe = bessere Chancen<br>
+                • Sie können nur Asse rufen, wenn Sie die passende Farbe haben
             </div>
         `;
     }
