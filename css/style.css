@@ -1,6 +1,6 @@
 /**
  * Bayerisches Schafkopf - Komplettes Stylesheet
- * Basis-Styles + Ass-Auswahl-Erweiterungen
+ * ALLE STYLES: Basis + Ass-Auswahl-Erweiterungen
  */
 
 /* === RESET UND BASIS === */
@@ -90,6 +90,7 @@ body {
 .player.active {
     border-color: #3b82f6;
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+    animation: pulse 2s infinite;
 }
 
 .player h3 {
@@ -490,10 +491,6 @@ body {
 /* === ANIMATIONEN === */
 
 /* Spielerwechsel-Animation */
-.player.active {
-    animation: pulse 2s infinite;
-}
-
 @keyframes pulse {
     0% {
         box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
