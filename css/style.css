@@ -254,24 +254,34 @@ body {
 
 /* === STICH-ANZEIGE === */
 .trick-area {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: 1fr 1fr;
+    display: flex;
+    justify-content: center;
+    align-items: center;
     gap: 10px;
-    width: 200px;
-    height: 200px;
+    width: 100%;
+    height: 120px;
     margin: 20px auto;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
 }
 
 .trick-card {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
 }
 
 .trick-card .card {
-    transform: scale(0.8);
+    transform: scale(0.9);
     animation: cardPlay 0.5s ease-out;
+}
+
+/* Erste Karte leicht hervorheben */
+.trick-card:first-child .card {
+    border: 2px solid #fbbf24;
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.6);
 }
 
 @keyframes cardPlay {
@@ -280,7 +290,7 @@ body {
         opacity: 0;
     }
     to {
-        transform: scale(0.8) rotate(0deg);
+        transform: scale(0.9) rotate(0deg);
         opacity: 1;
     }
 }

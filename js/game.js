@@ -221,8 +221,7 @@ function findPartnerWithAce(suit) {
             gameState.playerPartnership[3] = i === 3 ? 1 : 1; // Team 1
             
             if (gameState.debugMode) {
-                const suitNames = {'eichel': 'Eichel', 'gras': 'Gras', 'schellen': 'Schellen'};
-                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suitNames[suit]}-Ass`);
+                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${callableSuits[suit].name}-Ass`);
             }
             return;
         }
@@ -402,19 +401,18 @@ function playCPUCard() {
 }
 
 /**
- * Beendet das Spiel und zeigt Ergebnisse
+ * Beendet das Spiel und zeigt Ergebnisse (ÜBERARBEITET: Team-basierte Auswertung)
  */
 function endGame() {
     const result = finishGame();
     
-    // Team-basierte Auswertung für Rufspiel
     let message = `Spiel beendet!\n\n`;
     
+    // Korrekte Team-basierte Auswertung für Rufspiel
     if (gameState.gameType === 'rufspiel' && gameState.calledAcePlayer >= 0) {
-        const humanTeam = gameState.playerPartnership[0];
         const partnerName = gameState.players[gameState.calledAcePlayer].name;
         
-        // Team-Punkte berechnen
+        // Team-Punkte korrekt berechnen
         const team0Points = gameState.players
             .filter((p, i) => gameState.playerPartnership[i] === 0)
             .reduce((sum, p) => sum + p.points, 0);
@@ -422,39 +420,62 @@ function endGame() {
             .filter((p, i) => gameState.playerPartnership[i] === 1)
             .reduce((sum, p) => sum + p.points, 0);
         
-        message += `Rufspiel-Ergebnis:\n`;
+        message += `🎯 Rufspiel-Ergebnis:\n`;
         message += `Ihr Team (mit ${partnerName}): ${team0Points} Punkte\n`;
         message += `Gegner-Team: ${team1Points} Punkte\n\n`;
         
-        if (team0Points >= 61) {
+        // Gewinner basierend auf Team-Punkten ermitteln
+        const teamWins = team0Points >= 61;
+        
+        if (teamWins) {
             message += `🎉 Ihr Team hat gewonnen!`;
             if (team0Points >= 91) {
-                message += ` Mit Schneider!`;
+                message += ` Mit Schneider! (91+ Punkte)`;
+            } else if (team0Points >= 61) {
+                message += ` Knapp gewonnen!`;
             }
         } else {
             message += `😔 Ihr Team hat verloren.`;
             if (team0Points <= 30) {
-                message += ` Mit Schneider verloren!`;
+                message += ` Mit Schneider verloren! (≤30 Punkte)`;
+            } else if (team0Points === 0) {
+                message += ` Schwarz verloren!`;
+            } else {
+                message += ` Knapp verloren.`;
             }
         }
+        
+        message += `\n\n📊 Einzelergebnisse:\n`;
+        gameState.players.forEach((player, index) => {
+            const teamIcon = gameState.playerPartnership[index] === 0 ? '👥' : '🔥';
+            const teamName = gameState.playerPartnership[index] === 0 ? ' (Ihr Team)' : ' (Gegner)';
+            message += `${teamIcon} ${player.name}${teamName}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
+        });
+        
     } else {
-        // Fallback für andere Spieltypen
+        // Fallback für andere Spieltypen (Solo, etc.)
         message += `Ihre Punkte: ${result.humanPoints}\n`;
         message += `CPU-Punkte: ${result.cpuPoints}\n\n`;
         
         if (result.humanWins) {
             message += `🎉 Glückwunsch! Sie haben gewonnen!`;
+            if (result.humanPoints >= 91) {
+                message += ` Mit Schneider!`;
+            }
         } else {
             message += `😔 Sie haben verloren.`;
+            if (result.humanPoints === 0) {
+                message += ` Schwarz verloren!`;
+            } else if (result.humanPoints <= 30) {
+                message += ` Mit Schneider verloren!`;
+            }
         }
+        
+        message += `\n\nEinzelscores:\n`;
+        gameState.players.forEach((player, index) => {
+            message += `${player.name}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
+        });
     }
-    
-    message += `\n\nEinzelscores:\n`;
-    gameState.players.forEach((player, index) => {
-        const teamMarker = gameState.calledAcePlayer >= 0 ? 
-            (gameState.playerPartnership[index] === 0 ? ' 👥' : ' 🔥') : '';
-        message += `${player.name}${teamMarker}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
-    });
     
     showModal('Spielende', message);
     updateGameStatus('Spiel beendet');

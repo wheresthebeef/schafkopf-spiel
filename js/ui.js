@@ -159,7 +159,7 @@ function updateGameStatus(message = null) {
 }
 
 /**
- * Zeigt den aktuellen Stich in der Mitte an
+ * Zeigt den aktuellen Stich in der Mitte an (ÜBERARBEITET: Reihe statt Grid)
  */
 function updateTrickDisplay() {
     const trickArea = document.getElementById('trick-area');
@@ -170,14 +170,15 @@ function updateTrickDisplay() {
         return;
     }
     
-    // Positionen für die Stich-Karten (entsprechend der Spieler-Positionen)
-    const positions = ['bottom', 'left', 'top', 'right'];
-    
+    // Karten in einer Reihe anzeigen, erste Karte links
     trickArea.innerHTML = gameState.currentTrick.map((trickCard, index) => {
-        const position = positions[trickCard.player];
+        const playerName = gameState.players[trickCard.player].name;
         return `
-            <div class="trick-card ${position}" style="grid-area: ${getGridArea(trickCard.player)}">
+            <div class="trick-card" title="${playerName}">
                 ${createCardHTML(trickCard.card, false, false)}
+                <div style="position: absolute; bottom: -20px; font-size: 10px; color: #aaa;">
+                    ${playerName}
+                </div>
             </div>
         `;
     }).join('');
@@ -199,13 +200,13 @@ function getGridArea(playerIndex) {
 }
 
 /**
- * Aktualisiert die Trump-Informationen
+ * Aktualisiert die Trump-Informationen (BEHOBEN!)
  */
 function updateTrumpInfo() {
     const calledAceElement = document.getElementById('called-ace');
     if (calledAceElement) {
         if (gameState.calledAce) {
-            // Definiere Suit-Informationen lokal
+            // Definiere Suit-Informationen lokal (FIX!)
             const suitInfo = {
                 'eichel': { symbol: '🌰', color: 'black' },
                 'gras': { symbol: '🍀', color: 'green' },
