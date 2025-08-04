@@ -221,7 +221,8 @@ function findPartnerWithAce(suit) {
             gameState.playerPartnership[3] = i === 3 ? 1 : 1; // Team 1
             
             if (gameState.debugMode) {
-                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${callableSuits[suit].name}-Ass`);
+                const suitNames = {'eichel': 'Eichel', 'gras': 'Gras', 'schellen': 'Schellen'};
+                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suitNames[suit]}-Ass`);
             }
             return;
         }
