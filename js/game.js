@@ -1,4 +1,72 @@
 /**
+ * Zeigt den "Weiter"-Button nach einem abgeschlossenen Stich
+ */
+function showContinueButton() {
+    // Prüfen ob bereits ein Continue-Button existiert
+    let continueContainer = document.getElementById('continue-container');
+    if (!continueContainer) {
+        // Container für Continue-Button erstellen
+        continueContainer = document.createElement('div');
+        continueContainer.id = 'continue-container';
+        continueContainer.className = 'continue-container';
+        
+        // In die Mitte des Spielfelds einfügen
+        const centerArea = document.querySelector('.center-area');
+        if (centerArea) {
+            centerArea.appendChild(continueContainer);
+        }
+    }
+    
+    // Button-Text abhängig vom Spielstand
+    const isLastTrick = isGameFinished();
+    const buttonText = isLastTrick ? 'Endergebnis anzeigen' : 'Weiter zur nächsten Runde';
+    const statusText = isLastTrick ? 'Spiel beendet!' : 'Stich abgeschlossen';
+    
+    continueContainer.innerHTML = `
+        <div class="continue-status">
+            <strong>🎯 ${statusText}</strong>
+        </div>
+        <button class="btn btn-continue" onclick="continueAfterTrick()">
+            ${buttonText}
+        </button>
+    `;
+    
+    continueContainer.style.display = 'block';
+}
+
+/**
+ * Entfernt den "Weiter"-Button
+ */
+function hideContinueButton() {
+    const continueContainer = document.getElementById('continue-container');
+    if (continueContainer) {
+        continueContainer.style.display = 'none';
+    }
+}
+
+/**
+ * Wird aufgerufen wenn der "Weiter"-Button geklickt wird
+ */
+function continueAfterTrick() {
+    // Continue-Button verstecken
+    hideContinueButton();
+    
+    // Prüfen ob Spiel beendet
+    if (isGameFinished()) {
+        // Spiel beendet - Endergebnis anzeigen
+        endGame();
+    } else {
+        // Nächster Stich - UI leeren und fortfahren
+        // Der currentTrick wurde bereits in completeTrick() geleert
+        updateUI();
+        updateGameStatus();
+        
+        // Nächster Spieler (Stichgewinner) kann jetzt spielen
+        if (!getCurrentPlayer().isHuman) {
+            setTimeout(playCPUCard, 1000);
+        }
+    }
+}/**
  * Bayerisches Schafkopf - Hauptspiel-Logik
  * Koordiniert Spielverlauf, Regeln und Benutzerinteraktionen
  * MIT INLINE ASS-AUSWAHL (kein Modal)
@@ -9,6 +77,9 @@
  */
 function newGame() {
     logGameAction('Neues Spiel gestartet');
+    
+    // Continue-Button verstecken falls noch sichtbar
+    hideContinueButton();
     
     // Spielzustand initialisieren
     initializeGameState({
@@ -217,12 +288,13 @@ function findPartnerWithAce(suit) {
         
         if (hasAce) {
             gameState.calledAcePlayer = i;
-            // Partnerschaft setzen: Spieler 0 und gefundener Partner vs. Rest
-            gameState.playerPartnership[0] = 0; // Team 0
-            gameState.playerPartnership[i] = 0; // Team 0  
-            gameState.playerPartnership[1] = i === 1 ? 1 : 1; // Team 1
-            gameState.playerPartnership[2] = i === 2 ? 1 : 1; // Team 1  
-            gameState.playerPartnership[3] = i === 3 ? 1 : 1; // Team 1
+            
+            // KORRIGIERTE Partnerschaft setzen:
+            // Sie (0) und Partner (i) = Team 0, alle anderen = Team 1
+            gameState.playerPartnership[0] = 0; // Sie: Team 0
+            gameState.playerPartnership[1] = (i === 1) ? 0 : 1; // Anna: Team 0 wenn Partner, sonst Team 1
+            gameState.playerPartnership[2] = (i === 2) ? 0 : 1; // Hans: Team 0 wenn Partner, sonst Team 1
+            gameState.playerPartnership[3] = (i === 3) ? 0 : 1; // Sepp: Team 0 wenn Partner, sonst Team 1
             
             if (gameState.debugMode) {
                 // Definiere Suit-Namen lokal (FIX!)
@@ -233,6 +305,7 @@ function findPartnerWithAce(suit) {
                     'herz': 'Herz'
                 };
                 console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suitNames[suit]}-Ass`);
+                console.log('Team-Zuordnung:', gameState.playerPartnership);
             }
             return;
         }
@@ -280,6 +353,12 @@ function playCard(suit, value) {
     // Validierung: Ist der Spieler am Zug?
     if (!currentPlayer.isHuman && gameState.currentPlayer === 0) {
         showModal('Fehler', 'Sie sind nicht am Zug!');
+        return;
+    }
+    
+    // WICHTIG: Prüfen ob Stich bereits voll ist (Bugfix!)
+    if (gameState.currentTrick.length >= 4) {
+        console.warn('Versuch zu spielen, aber Stich ist bereits voll');
         return;
     }
     
@@ -340,21 +419,8 @@ function evaluateTrick() {
     // UI aktualisieren
     updateUI();
     
-    // Prüfen ob Spiel beendet
-    if (isGameFinished()) {
-        setTimeout(endGame, 2000);
-    } else {
-        // Nächster Stich
-        setTimeout(() => {
-            updateUI();
-            updateGameStatus();
-            
-            // Nächster Spieler (Stichgewinner) spielen lassen
-            if (!getCurrentPlayer().isHuman) {
-                setTimeout(playCPUCard, 1000);
-            }
-        }, 2000);
-    }
+    // NEUES VERHALTEN: Stich bleibt liegen, "Weiter"-Button anzeigen
+    showContinueButton();
 }
 
 /**
@@ -365,6 +431,12 @@ function playCPUCard() {
     
     if (currentPlayer.isHuman) {
         console.warn('CPU-Spielfunktion für menschlichen Spieler aufgerufen');
+        return;
+    }
+    
+    // WICHTIG: Prüfen ob aktueller Stich schon voll ist (Bugfix!)
+    if (gameState.currentTrick.length >= 4) {
+        console.warn('CPU versucht zu spielen, aber Stich ist bereits voll');
         return;
     }
     
@@ -755,4 +827,7 @@ if (typeof window !== 'undefined') {
     // Neue Funktionen für Ass-Auswahl
     window.selectAceForCall = selectAceForCall;
     window.cancelAceSelection = cancelAceSelection;
+    
+    // Neue Funktion für Continue-Button
+    window.continueAfterTrick = continueAfterTrick;
 }

@@ -264,25 +264,52 @@ function isGameFinished() {
 }
 
 /**
- * Beendet das aktuelle Spiel und ermittelt Gewinner
+ * Beendet das aktuelle Spiel und ermittelt Gewinner (KORRIGIERT: Berücksichtigt Rufspiel-Teams)
  * @returns {Object} Spielergebnis
  */
 function finishGame() {
     gameState.gamePhase = 'finished';
     gameState.gamesPlayed++;
     
-    // Vereinfachte Gewinner-Ermittlung (später erweitern für Partnerschaften)
-    const humanPlayer = gameState.players[0];
-    const cpuPoints = gameState.players.slice(1).reduce((sum, p) => sum + p.points, 0);
+    let result;
     
-    const result = {
-        humanPoints: humanPlayer.points,
-        cpuPoints: cpuPoints,
-        humanWins: humanPlayer.points >= 61,
-        gameType: gameState.gameType,
-        roundNumber: gameState.roundNumber,
-        tricksPlayed: gameState.trickNumber
-    };
+    // Korrekte Team-basierte Auswertung für Rufspiel
+    if (gameState.gameType === 'rufspiel' && gameState.calledAcePlayer >= 0) {
+        // Team-Punkte berechnen
+        const team0Points = gameState.players
+            .filter((p, i) => gameState.playerPartnership[i] === 0)
+            .reduce((sum, p) => sum + p.points, 0);
+        const team1Points = gameState.players
+            .filter((p, i) => gameState.playerPartnership[i] === 1)
+            .reduce((sum, p) => sum + p.points, 0);
+        
+        const teamWins = team0Points >= 61;
+        
+        result = {
+            humanPoints: gameState.players[0].points, // Individuelle Punkte für Kompatibilität
+            cpuPoints: gameState.players.slice(1).reduce((sum, p) => sum + p.points, 0),
+            humanWins: teamWins, // Basiert jetzt auf Team-Ergebnis!
+            teamPoints: [team0Points, team1Points],
+            gameType: gameState.gameType,
+            roundNumber: gameState.roundNumber,
+            tricksPlayed: gameState.trickNumber,
+            isTeamGame: true
+        };
+    } else {
+        // Vereinfachte Gewinner-Ermittlung für andere Spieltypen
+        const humanPlayer = gameState.players[0];
+        const cpuPoints = gameState.players.slice(1).reduce((sum, p) => sum + p.points, 0);
+        
+        result = {
+            humanPoints: humanPlayer.points,
+            cpuPoints: cpuPoints,
+            humanWins: humanPlayer.points >= 61,
+            gameType: gameState.gameType,
+            roundNumber: gameState.roundNumber,
+            tricksPlayed: gameState.trickNumber,
+            isTeamGame: false
+        };
+    }
     
     logGameAction('Spiel beendet', result);
     

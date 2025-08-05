@@ -41,8 +41,9 @@ function updatePlayerCards() {
         if (!cardsContainer) return;
         
         if (player.isHuman || gameState.debugMode) {
-            // Karten sichtbar anzeigen
-            cardsContainer.innerHTML = player.cards.map(card => 
+            // Karten sichtbar anzeigen - mit korrekter Sortierung für die Anzeige
+            const sortedCards = sortCardsForDisplay([...player.cards]);
+            cardsContainer.innerHTML = sortedCards.map(card => 
                 createCardHTML(card, canPlayCard(card, index), false)
             ).join('');
         } else {
@@ -159,22 +160,36 @@ function updateGameStatus(message = null) {
 }
 
 /**
- * Zeigt den aktuellen Stich in der Mitte an (ÜBERARBEITET: Reihe statt Grid)
+ * Zeigt den aktuellen Stich in der Mitte an (ERWEITERT: Auch letzter Stich nach Abschluss)
  */
 function updateTrickDisplay() {
     const trickArea = document.getElementById('trick-area');
     if (!trickArea) return;
     
-    if (gameState.currentTrick.length === 0) {
+    let displayTrick = null;
+    let isCompletedTrick = false;
+    
+    if (gameState.currentTrick.length > 0) {
+        // Aktueller Stich läuft
+        displayTrick = gameState.currentTrick;
+    } else if (gameState.completedTricks.length > 0) {
+        // Zeige letzten abgeschlossenen Stich wenn kein aktueller Stich
+        const lastTrick = gameState.completedTricks[gameState.completedTricks.length - 1];
+        displayTrick = lastTrick.cards;
+        isCompletedTrick = true;
+    }
+    
+    if (!displayTrick || displayTrick.length === 0) {
         trickArea.innerHTML = '';
         return;
     }
     
     // Karten in einer Reihe anzeigen, erste Karte links
-    trickArea.innerHTML = gameState.currentTrick.map((trickCard, index) => {
+    trickArea.innerHTML = displayTrick.map((trickCard, index) => {
         const playerName = gameState.players[trickCard.player].name;
+        const completedClass = isCompletedTrick ? ' completed-trick' : '';
         return `
-            <div class="trick-card" title="${playerName}">
+            <div class="trick-card${completedClass}" title="${playerName}">
                 ${createCardHTML(trickCard.card, false, false)}
                 <div style="position: absolute; bottom: -20px; font-size: 10px; color: #aaa;">
                     ${playerName}
@@ -325,19 +340,13 @@ function handleCardClick(suit, value) {
 }
 
 /**
- * Animiert das Ausspielen einer Karte
+ * Animiert das Ausspielen einer Karte (DEAKTIVIERT - keine Animation)
  * @param {Object} card - Die gespielte Karte
  * @param {number} playerIndex - Index des Spielers
  */
 function animateCardPlay(card, playerIndex) {
-    // Einfache Animation - kann später erweitert werden
-    const playerElement = document.getElementById(`player-${playerIndex}`);
-    if (playerElement) {
-        playerElement.style.transform = 'scale(1.05)';
-        setTimeout(() => {
-            playerElement.style.transform = '';
-        }, 200);
-    }
+    // Animation entfernt für besseres Spielgefühl
+    // Keine Animation mehr
 }
 
 /**

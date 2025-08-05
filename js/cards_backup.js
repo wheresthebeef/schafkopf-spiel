@@ -141,7 +141,7 @@ function shuffleDeck(deck) {
 
 /**
  * Setzt den Trumpf-Status für alle Karten im Deck
- * Ober und Unter sind immer Trumpf, dazu alle Herz-Karten  
+ * Ober und Unter sind immer Trumpf, dazu alle Herz-Karten
  * @param {Array} deck - Das Kartendeck
  */
 function setTrumpStatus(deck) {
@@ -183,58 +183,7 @@ function setTrumpStatus(deck) {
 }
 
 /**
- * Sortiert Karten nach Schafkopf-Regeln für die Anzeige
- * Reihenfolge: Alle Ober (Eichel,Gras,Herz,Schelle), Alle Unter (Eichel,Gras,Herz,Schelle), 
- * Herz-Karten (Ass,10,K,9,8,7), andere Farben alphabetisch (Ass,10,K,9,8,7)
- * @param {Array} cards - Array von Karten
- * @returns {Array} Sortierte Karten
- */
-function sortCardsForDisplay(cards) {
-    return cards.sort((a, b) => {
-        // Definiere Anzeige-Prioritäten
-        const getDisplayPriority = (card) => {
-            // Ober haben höchste Priorität (100-110)
-            if (card.value === 'ober') {
-                switch (card.suit) {
-                    case 'eichel': return 104;
-                    case 'gras': return 103;
-                    case 'herz': return 102;
-                    case 'schellen': return 101;
-                }
-            }
-            
-            // Unter haben zweithöchste Priorität (90-99)
-            if (card.value === 'unter') {
-                switch (card.suit) {
-                    case 'eichel': return 94;
-                    case 'gras': return 93;
-                    case 'herz': return 92;
-                    case 'schellen': return 91;
-                }
-            }
-            
-            // Herz-Karten (außer Ober/Unter) haben Priorität 70-79 (NACH den Untern!)
-            if (card.suit === 'herz') {
-                return 70 + card.order;
-            }
-            
-            // Andere Farben: Eichel(60-69), Gras(40-49), Schellen(20-29)
-            let basePriority = 0;
-            switch (card.suit) {
-                case 'eichel': basePriority = 60; break;
-                case 'gras': basePriority = 40; break;
-                case 'schellen': basePriority = 20; break;
-            }
-            
-            return basePriority + card.order;
-        };
-        
-        return getDisplayPriority(b) - getDisplayPriority(a);
-    });
-}
-
-/**
- * Sortiert Karten nach Schafkopf-Regeln für die Spiellogik
+ * Sortiert Karten nach Schafkopf-Regeln
  * Trümpfe zuerst (nach Trumpf-Reihenfolge), dann Farben alphabetisch
  * @param {Array} cards - Array von Karten
  * @returns {Array} Sortierte Karten
@@ -280,8 +229,8 @@ function dealCards(deck, playerCount = 4) {
         hands[playerIndex].push(deck[i]);
     }
     
-    // Jede Hand mit der neuen Display-Sortierung sortieren
-    hands.forEach(hand => sortCardsForDisplay(hand));
+    // Jede Hand sortieren
+    hands.forEach(hand => sortCards(hand));
     
     return hands;
 }
@@ -449,4 +398,4 @@ function validateDeck(deck) {
 }
 
 // Export für andere Module (falls ES6 Module verwendet werden)
-// export { suits, values, createDeck, shuffleDeck, setTrumpStatus, sortCards, sortCardsForDisplay, dealCards, isCardHigher, findCard, removeCard, countPoints, debugCards, findAces, findTrumps, findSuitCards, validateDeck };
+// export { suits, values, createDeck, shuffleDeck, setTrumpStatus, sortCards, dealCards, isCardHigher, findCard, removeCard, countPoints, debugCards, findAces, findTrumps, findSuitCards, validateDeck };
