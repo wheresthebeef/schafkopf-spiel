@@ -172,7 +172,9 @@ function setTrumpStatus(deck) {
         // Herz-Karten (außer Ober/Unter) sind auch Trumpf
         else if (card.suit === 'herz') {
             card.isTrump = true;
-            card.trumpOrder = card.order; // Normale Reihenfolge für Herz-Karten
+            // Herz-Karten haben NIEDRIGERE trumpOrder als Unter (1-10)
+            // Damit die Unter höher stechen als alle Herz-Karten
+            card.trumpOrder = card.order - 10; // Ass=4, Zehn=3, König=2, 9=(-1), 8=(-2), 7=(-3)
         }
         // Alle anderen Karten sind kein Trumpf
         else {
@@ -350,6 +352,23 @@ function removeCard(cards, suit, value) {
  */
 function countPoints(cards) {
     return cards.reduce((sum, card) => sum + card.points, 0);
+}
+
+/**
+ * Debug-Funktion: Zeigt die komplette Trumpf-Reihenfolge an
+ * @param {Array} deck - Das Kartendeck
+ */
+function debugTrumpOrder(deck) {
+    const trumps = deck.filter(card => card.isTrump)
+        .sort((a, b) => b.trumpOrder - a.trumpOrder);
+    
+    console.log('=== TRUMPF-REIHENFOLGE (höchste zuerst) ===');
+    trumps.forEach((card, index) => {
+        console.log(`${index + 1}. ${card.symbol}${card.short} (${card.suit} ${card.value}) - trumpOrder: ${card.trumpOrder}`);
+    });
+    console.log('==========================================');
+    
+    return trumps;
 }
 
 /**

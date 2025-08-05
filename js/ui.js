@@ -4,7 +4,7 @@
  */
 
 /**
- * Erstellt HTML für eine Karte
+ * Erstellt HTML für eine Karte (ERWEITERT: Unterstützt Kartenbilder)
  * @param {Object} card - Kartenobjekt
  * @param {boolean} isPlayable - Ob die Karte spielbar ist
  * @param {boolean} showBack - Ob Kartenrückseite angezeigt werden soll
@@ -12,24 +12,147 @@
  */
 function createCardHTML(card, isPlayable = false, showBack = false) {
     if (showBack) {
-        return `<div class="card card-back">🃏</div>`;
+        return createCardBackHTML();
     }
     
     const playableClass = isPlayable ? ' playable' : '';
     const colorClass = card.color === 'red' ? ' red' : (card.color === 'green' ? ' green' : '');
     const trumpClass = card.isTrump ? ' trump' : '';
     
+    // Prüfen ob Kartenbilder verwendet werden sollen
+    if (shouldUseCardImages()) {
+        return createCardImageHTML(card, playableClass, colorClass, trumpClass, isPlayable);
+    } else {
+        return createCardSymbolHTML(card, playableClass, colorClass, trumpClass, isPlayable);
+    }
+}
+
+/**
+ * Erstellt HTML für Kartenrückseite
+ * @returns {string} HTML für Kartenrückseite
+ */
+function createCardBackHTML() {
+    if (shouldUseCardImages()) {
+        const backImagePath = getCardImagePath('back', 'back');
+        return `
+            <div class="card card-back">
+                <img src="${backImagePath}" alt="Kartenrückseite" class="card-image" 
+                     onerror="this.style.display='none'; this.parentNode.innerHTML='🃏';">
+            </div>
+        `;
+    } else {
+        return `<div class="card card-back">🃏</div>`;
+    }
+}
+
+/**
+ * Erstellt HTML für Karte mit Bild
+ * @param {Object} card - Kartenobjekt 
+ * @param {string} playableClass - CSS-Klasse für spielbare Karten
+ * @param {string} colorClass - CSS-Klasse für Kartenfarbe
+ * @param {string} trumpClass - CSS-Klasse für Trumpfkarten
+ * @param {boolean} isPlayable - Ob Karte spielbar ist
+ * @returns {string} HTML mit Kartenbild
+ */
+function createCardImageHTML(card, playableClass, colorClass, trumpClass, isPlayable) {
+    const imagePath = getCardImagePath(card.suit, card.value);
+    const clickHandler = isPlayable ? `onclick="handleCardClick('${card.suit}', '${card.value}')"` : '';
+    
+    return `
+        <div class="card card-image-container${colorClass}${playableClass}${trumpClass}" 
+             data-suit="${card.suit}" 
+             data-value="${card.value}"
+             data-card-id="${card.id}"
+             ${clickHandler}
+             title="${card.name}">
+            <img src="${imagePath}" alt="${card.name}" class="card-image"
+                 onerror="handleImageError(this, '${card.suit}', '${card.value}')"
+                 loading="lazy">
+        </div>
+    `;
+}
+
+/**
+ * Erstellt HTML für Karte mit Symbolen (Original-Version)
+ * @param {Object} card - Kartenobjekt
+ * @param {string} playableClass - CSS-Klasse für spielbare Karten
+ * @param {string} colorClass - CSS-Klasse für Kartenfarbe  
+ * @param {string} trumpClass - CSS-Klasse für Trumpfkarten
+ * @param {boolean} isPlayable - Ob Karte spielbar ist
+ * @returns {string} HTML mit Kartensymbolen
+ */
+function createCardSymbolHTML(card, playableClass, colorClass, trumpClass, isPlayable) {
+    const clickHandler = isPlayable ? `onclick="handleCardClick('${card.suit}', '${card.value}')"` : '';
+    
     return `
         <div class="card${colorClass}${playableClass}${trumpClass}" 
              data-suit="${card.suit}" 
              data-value="${card.value}"
              data-card-id="${card.id}"
-             onclick="handleCardClick('${card.suit}', '${card.value}')"
+             ${clickHandler}
              title="${card.name}">
             <div class="suit-symbol">${card.symbol}</div>
             <div>${card.short}</div>
         </div>
     `;
+}
+
+/**
+ * Fallback-HTML für Karten wenn Bild nicht geladen werden kann
+ * @param {Object} card - Kartenobjekt
+ * @returns {string} Fallback-HTML
+ */
+function createCardSymbolFallback(card) {
+    return `
+        <div class="suit-symbol">${card.symbol}</div>
+        <div>${card.short}</div>
+    `;
+}
+
+/**
+ * Ermittelt den Pfad zu einem Kartenbild
+ * @param {string} suit - Kartenfarbe
+ * @param {string} value - Kartenwert  
+ * @returns {string} Pfad zum Kartenbild
+ */
+function getCardImagePath(suit, value) {
+    if (suit === 'back' && value === 'back') {
+        return 'assets/cards/card_back.png';
+    }
+    return `assets/cards/${suit}_${value}.png`;
+}
+
+/**
+ * Prüft ob Kartenbilder verwendet werden sollen
+ * @returns {boolean} true wenn Kartenbilder verfügbar sind
+ */
+function shouldUseCardImages() {
+    // Prüfen ob Kartenbilder-Modus aktiviert ist
+    if (gameState && gameState.useCardImages !== undefined) {
+        return gameState.useCardImages;
+    }
+    
+    // Standard: Bilder verwenden wenn verfügbar
+    return window.cardImagesAvailable !== false;
+}
+
+/**
+ * Aktiviert/Deaktiviert Kartenbilder-Modus
+ * @param {boolean} enabled - true für Kartenbilder, false für Symbole
+ */
+function setCardImagesMode(enabled) {
+    if (gameState) {
+        gameState.useCardImages = enabled;
+    }
+    window.cardImagesAvailable = enabled;
+    
+    // UI neu laden
+    updateUI();
+    
+    const mode = enabled ? 'Kartenbilder' : 'Kartensymbole';
+    showToast(`${mode} aktiviert`, 2000);
+    
+    logGameAction('Kartendarstellung geändert', { useImages: enabled });
 }
 
 /**
@@ -168,6 +291,7 @@ function updateTrickDisplay() {
     
     let displayTrick = null;
     let isCompletedTrick = false;
+    let winnerIndex = -1;
     
     if (gameState.currentTrick.length > 0) {
         // Aktueller Stich läuft
@@ -177,6 +301,18 @@ function updateTrickDisplay() {
         const lastTrick = gameState.completedTricks[gameState.completedTricks.length - 1];
         displayTrick = lastTrick.cards;
         isCompletedTrick = true;
+        
+        // Ermitteln welche Karte gewonnen hat
+        let highestCard = displayTrick[0].card;
+        winnerIndex = 0;
+        
+        for (let i = 1; i < displayTrick.length; i++) {
+            const currentCard = displayTrick[i].card;
+            if (isCardHigher(currentCard, highestCard)) {
+                highestCard = currentCard;
+                winnerIndex = i;
+            }
+        }
     }
     
     if (!displayTrick || displayTrick.length === 0) {
@@ -188,8 +324,10 @@ function updateTrickDisplay() {
     trickArea.innerHTML = displayTrick.map((trickCard, index) => {
         const playerName = gameState.players[trickCard.player].name;
         const completedClass = isCompletedTrick ? ' completed-trick' : '';
+        const winningClass = (isCompletedTrick && index === winnerIndex) ? ' trick-winner' : '';
+        
         return `
-            <div class="trick-card${completedClass}" title="${playerName}">
+            <div class="trick-card${completedClass}${winningClass}" title="${playerName}">
                 ${createCardHTML(trickCard.card, false, false)}
                 <div style="position: absolute; bottom: -20px; font-size: 10px; color: #aaa;">
                     ${playerName}
@@ -245,13 +383,20 @@ function updateTrumpInfo() {
 }
 
 /**
- * Aktualisiert den Debug-Button
+ * Aktualisiert den Debug-Button und Card-Images-Button
  */
 function updateDebugButton() {
     const debugButton = document.getElementById('debug-btn');
     if (debugButton) {
         debugButton.textContent = `Debug: ${gameState.debugMode ? 'AN' : 'AUS'}`;
         debugButton.classList.toggle('debug-active', gameState.debugMode);
+    }
+    
+    const cardImagesButton = document.getElementById('card-images-btn');
+    if (cardImagesButton) {
+        const useImages = shouldUseCardImages();
+        cardImagesButton.textContent = useImages ? 'Kartenbilder' : 'Kartensymbole';
+        cardImagesButton.classList.toggle('images-active', useImages);
     }
 }
 
@@ -337,6 +482,70 @@ function handleCardClick(suit, value) {
     }
     
     playCard(suit, value);
+}
+
+/**
+ * Behandelt Fehler beim Laden von Kartenbildern
+ * @param {HTMLImageElement} img - Das fehlgeschlagene Bild-Element
+ * @param {string} suit - Kartenfarbe
+ * @param {string} value - Kartenwert
+ */
+function handleImageError(img, suit, value) {
+    // Bild verstecken
+    img.style.display = 'none';
+    
+    // Karte aus gameState finden für Symbole
+    const card = findCardInGameState(suit, value);
+    if (card) {
+        // Fallback-Content mit Symbolen einfügen
+        const container = img.parentNode;
+        container.classList.add('fallback');
+        container.innerHTML = `
+            <div class="suit-symbol">${card.symbol}</div>
+            <div>${card.short}</div>
+        `;
+        
+        // Click-Handler wiederherstellen falls nötig
+        const isPlayable = container.classList.contains('playable');
+        if (isPlayable) {
+            container.onclick = () => handleCardClick(suit, value);
+        }
+    }
+}
+
+/**
+ * Findet eine Karte im aktuellen Spielzustand
+ * @param {string} suit - Kartenfarbe
+ * @param {string} value - Kartenwert
+ * @returns {Object|null} Karte oder null
+ */
+function findCardInGameState(suit, value) {
+    // In allen Spielerkarten suchen
+    for (const player of gameState.players) {
+        const card = player.cards.find(c => c.suit === suit && c.value === value);
+        if (card) return card;
+    }
+    
+    // In aktuellen Stichen suchen
+    for (const trickCard of gameState.currentTrick) {
+        if (trickCard.card.suit === suit && trickCard.card.value === value) {
+            return trickCard.card;
+        }
+    }
+    
+    // In abgeschlossenen Stichen suchen
+    for (const completedTrick of gameState.completedTricks) {
+        for (const trickCard of completedTrick.cards) {
+            if (trickCard.card.suit === suit && trickCard.card.value === value) {
+                return trickCard.card;
+            }
+        }
+    }
+    
+    // Fallback: Karte aus Standarddeck erstellen
+    const deck = createDeck();
+    setTrumpStatus(deck);
+    return deck.find(c => c.suit === suit && c.value === value) || null;
 }
 
 /**

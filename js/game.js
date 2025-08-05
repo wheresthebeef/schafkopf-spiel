@@ -114,6 +114,12 @@ function newGame() {
         gameState.players.forEach((player, index) => {
             debugCards(player.cards, `${player.name} (${index})`);
         });
+        
+        // Trumpf-Reihenfolge anzeigen (nur beim ersten Spiel)
+        if (!window.trumpOrderShown) {
+            debugTrumpOrder(shuffledDeck);
+            window.trumpOrderShown = true;
+        }
     }
 }
 
@@ -371,9 +377,10 @@ function playCard(suit, value) {
     
     const card = currentPlayer.cards[cardIndex];
     
-    // Regelvalidierung
-    if (!canPlayCard(card, gameState.currentPlayer)) {
-        showModal('Ungültiger Zug', 'Diese Karte können Sie jetzt nicht spielen.');
+    // Regelvalidierung mit spezifischer Fehlermeldung
+    const validation = validateCardPlay(card, gameState.currentPlayer, gameState.currentTrick, currentPlayer.cards);
+    if (!validation.valid) {
+        showModal('Unerlaubter Zug', validation.reason);
         return;
     }
     
@@ -596,8 +603,9 @@ KARTENWERTE:
 
 SPIELREGELN:
 • Bedienungspflicht: Angespielte Farbe muss bedient werden
+• SAU-ZWANG: Wenn die Farbe des gerufenen Asses ausgespielt wird, muss der Partner das Ass spielen!
 • Trumpfzwang: Bei Trumpf muss Trumpf zugegeben werden
-• Stichzwang: Höhere Karte muss gespielt werden (wenn möglich)
+• KEIN STICHZWANG: Sie können niedrige Karten spielen und ‘schmieren’ (hohe Karten in sichere Stiche)
 
 STEUERUNG:
 • Karte anklicken zum Spielen
@@ -670,7 +678,15 @@ function toggleDebugMode() {
 }
 
 /**
- * Prüft ob eine Karte gespielt werden kann (Regelvalidierung)
+ * Schaltet zwischen Kartenbildern und Symbolen um
+ */
+function toggleCardImages() {
+    const currentMode = shouldUseCardImages();
+    setCardImagesMode(!currentMode);
+}
+
+/**
+ * Prüft ob eine Karte gespielt werden kann (Regelvalidierung mit Sau-Zwang)
  * @param {Object} card - Die zu prüfende Karte
  * @param {number} playerIndex - Index des Spielers
  * @returns {boolean} true wenn die Karte gespielt werden kann
@@ -681,32 +697,11 @@ function canPlayCard(card, playerIndex) {
         return false;
     }
     
-    // Erster Spieler im Stich kann alles spielen
-    if (gameState.currentTrick.length === 0) {
-        return true;
-    }
-    
-    const leadCard = gameState.currentTrick[0].card;
+    // Vollständige Regelvalidierung mit Sau-Zwang verwenden
     const playerCards = gameState.players[playerIndex].cards;
+    const validation = validateCardPlay(card, playerIndex, gameState.currentTrick, playerCards);
     
-    // Trumpf wurde angespielt
-    if (leadCard.isTrump) {
-        // Wenn Spieler Trumpf hat, muss Trumpf gespielt werden
-        if (card.isTrump) {
-            return true;
-        }
-        // Wenn Spieler keinen Trumpf hat, kann beliebige Karte gespielt werden
-        return !playerCards.some(c => c.isTrump);
-    } 
-    // Farbe wurde angespielt
-    else {
-        // Gleiche Farbe muss bedient werden (wenn vorhanden)
-        if (card.suit === leadCard.suit && !card.isTrump) {
-            return true;
-        }
-        // Wenn Spieler die Farbe nicht hat, kann beliebige Karte gespielt werden
-        return !playerCards.some(c => c.suit === leadCard.suit && !c.isTrump);
-    }
+    return validation.valid;
 }
 
 /**
@@ -818,8 +813,10 @@ if (typeof window !== 'undefined') {
     window.showRules = showRules;
     window.showStats = showStats;
     window.toggleDebugMode = toggleDebugMode;
+    window.toggleCardImages = toggleCardImages;
     window.closeModal = closeModal;
     window.handleCardClick = handleCardClick;
+    window.handleImageError = handleImageError;
     window.debugUI = debugUI;
     window.exportGameData = exportGameData;
     window.importGameData = importGameData;

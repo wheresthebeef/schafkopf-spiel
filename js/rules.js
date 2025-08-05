@@ -33,7 +33,7 @@ function validateCardPlay(card, playerIndex, currentTrick, playerCards) {
     }
     
     // Farbe wurde angespielt  
-    return validateSuitFollow(card, leadCard, playerCards);
+    return validateSuitFollow(card, leadCard, playerCards, playerIndex);
 }
 
 /**
@@ -57,23 +57,58 @@ function validateTrumpFollow(card, playerCards) {
 }
 
 /**
- * Validiert das Bedienen einer Farbe
+ * Validiert das Bedienen einer Farbe (ERWEITERT: Sau-Zwang für Rufspiel)
  * @param {Object} card - Die zu spielende Karte
  * @param {Object} leadCard - Angespielte Karte
  * @param {Array} playerCards - Karten des Spielers
+ * @param {number} playerIndex - Index des Spielers
  * @returns {Object} Validierungsergebnis
  */
-function validateSuitFollow(card, leadCard, playerCards) {
+function validateSuitFollow(card, leadCard, playerCards, playerIndex) {
     // Prüfe ob Spieler die angespielte Farbe hat (ohne Trümpfe)
     const hasSuit = playerCards.some(c => 
         c.suit === leadCard.suit && !c.isTrump
     );
     
-    // Wenn Spieler die Farbe hat, muss sie bedient werden
+    // SAU-ZWANG REGEL: Wenn Farbe des gerufenen Asses ausgespielt wird
+    if (gameState.gameType === 'rufspiel' && gameState.calledAce && 
+        leadCard.suit === gameState.calledAce && !leadCard.isTrump) {
+        
+        // Prüfen ob dieser Spieler das gerufene Ass hat
+        const hasCalledAce = playerCards.some(c => 
+            c.suit === gameState.calledAce && c.value === 'sau'
+        );
+        
+        if (hasCalledAce) {
+            // Spieler MUSS das gerufene Ass spielen
+            if (!(card.suit === gameState.calledAce && card.value === 'sau')) {
+                const suitNames = {
+                    'eichel': 'Eichel',
+                    'gras': 'Gras',
+                    'schellen': 'Schellen',
+                    'herz': 'Herz'
+                };
+                return {
+                    valid: false,
+                    reason: `Sie müssen das gerufene ${suitNames[gameState.calledAce]}-Ass spielen!`
+                };
+            }
+            // Korrektes gerufenes Ass gespielt
+            return { valid: true, reason: 'Gerufenes Ass korrekt gespielt' };
+        }
+    }
+    
+    // Standard-Farbzwang: Wenn Spieler die Farbe hat, muss sie bedient werden
     if (hasSuit && (card.suit !== leadCard.suit || card.isTrump)) {
+        const suitNames = {
+            'eichel': 'Eichel',
+            'gras': 'Gras',
+            'schellen': 'Schellen',
+            'herz': 'Herz'
+        };
         return {
             valid: false,
-            reason: `Sie müssen ${suits[leadCard.suit].name} bedienen.`
+            reason: `Sie müssen ${suitNames[leadCard.suit]} bedienen.`
         };
     }
     
@@ -112,43 +147,6 @@ function determineTrickWinner(trickCards) {
         winningCard: winningCard,
         points: points
     };
-}
-
-/**
- * Prüft Stichzwang (höhere Karte spielen wenn möglich)
- * @param {Object} card - Die zu spielende Karte
- * @param {Array} currentTrick - Aktueller Stich
- * @param {Array} playerCards - Karten des Spielers
- * @returns {Object} Validierungsergebnis
- */
-function validateStichzwang(card, currentTrick, playerCards) {
-    if (currentTrick.length === 0) {
-        return { valid: true, reason: 'Ausspielen - kein Stichzwang' };
-    }
-    
-    // Aktuell höchste Karte im Stich finden
-    let highestCard = currentTrick[0].card;
-    for (let i = 1; i < currentTrick.length; i++) {
-        if (isCardHigher(currentTrick[i].card, highestCard)) {
-            highestCard = currentTrick[i].card;
-        }
-    }
-    
-    // Kann der Spieler eine höhere Karte spielen?
-    const canPlayHigher = playerCards.some(c => 
-        isCardHigher(c, highestCard) && 
-        validateCardPlay(c, 0, currentTrick, playerCards).valid
-    );
-    
-    // Wenn ja, muss er es auch tun
-    if (canPlayHigher && !isCardHigher(card, highestCard)) {
-        return {
-            valid: false,
-            reason: 'Sie müssen stechen (höhere Karte spielen).'
-        };
-    }
-    
-    return { valid: true, reason: 'Stichzwang befolgt' };
 }
 
 /**
@@ -326,11 +324,6 @@ function findCardByPreference(cards, preferenceOrder) {
 function debugValidation(card, playerIndex, currentTrick, playerCards) {
     const validation = validateCardPlay(card, playerIndex, currentTrick, playerCards);
     console.log(`Regelvalidierung für ${card.symbol}${card.short}:`, validation);
-    
-    if (currentTrick.length > 0) {
-        const stichzwang = validateStichzwang(card, currentTrick, playerCards);
-        console.log('Stichzwang:', stichzwang);
-    }
 }
 
 // Exportierte Konstanten für Spielregeln
