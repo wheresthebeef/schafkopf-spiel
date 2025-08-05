@@ -172,7 +172,6 @@ function showAceSelectionButtons(availableAces) {
         <div class="ace-selection-buttons-inline">
             ${availableAces.map(ace => `
                 <button class="btn ace-btn-inline" onclick="selectAceForCall('${ace.suit}')">
-                    <span class="ace-symbol">${ace.symbol}</span>
                     <span class="ace-name">${ace.name}</span>
                 </button>
             `).join('')}
@@ -206,9 +205,9 @@ function getAvailableAcesForCall(playerCards) {
     
     // Definiere die rufbaren Farben (Herz ist Trumpf, daher nicht rufbar)
     const callableSuits = {
-        'eichel': { name: 'Eichel', symbol: '🌰' },
-        'gras': { name: 'Gras', symbol: '🍀' },
-        'schellen': { name: 'Schellen', symbol: '🔔' }
+        'eichel': { name: 'Eichel' },
+        'gras': { name: 'Gras' },
+        'schellen': { name: 'Schellen' }
     };
     
     Object.keys(callableSuits).forEach(suit => {
@@ -231,8 +230,7 @@ function getAvailableAcesForCall(playerCards) {
         if (hasSuitCard) {
             availableAces.push({
                 suit: suit,
-                name: `${callableSuits[suit].name}-Ass`,
-                symbol: callableSuits[suit].symbol
+                name: `${callableSuits[suit].name}-Ass`
             });
         }
     });
@@ -705,42 +703,233 @@ function canPlayCard(card, playerIndex) {
 }
 
 /**
- * Einfache KI-Funktion zur Kartenauswahl
+ * Intelligente KI-Funktion zur Kartenauswahl mit Schmier-Logik
  * @param {Array} playableCards - Array spielbarer Karten
  * @param {number} playerIndex - Index des CPU-Spielers
  * @returns {Object} Ausgewählte Karte
  */
 function selectCardWithAI(playableCards, playerIndex) {
-    // Sehr einfache KI - kann später erweitert werden
+    // Sicherheitscheck
+    if (playableCards.length === 0) {
+        console.warn('Keine spielbaren Karten für KI!');
+        return null;
+    }
     
     // Wenn nur eine Karte spielbar ist
     if (playableCards.length === 1) {
         return playableCards[0];
     }
     
-    // Strategie basierend auf Stichposition
+    // Erster Spieler im Stich: Einfache Ausspielllogik
     if (gameState.currentTrick.length === 0) {
-        // Erster Spieler: Niedrige Karte ausspielen
-        return playableCards.reduce((lowest, card) => 
-            card.points < lowest.points ? card : lowest
-        );
-    } else {
-        // Folgender Spieler: Versuche zu stechen oder niedrige Karte abwerfen
-        const leadCard = gameState.currentTrick[0].card;
-        const canWin = playableCards.filter(card => isCardHigher(card, leadCard));
+        return selectLeadCard(playableCards, playerIndex);
+    }
+    
+    // Folgender Spieler: Intelligente Schmier-Logik
+    return selectFollowCard(playableCards, playerIndex);
+}
+
+/**
+ * Wählt eine Karte zum Ausspielen (erster Spieler im Stich)
+ * @param {Array} playableCards - Spielbare Karten
+ * @param {number} playerIndex - Spieler-Index
+ * @returns {Object} Gewählte Karte
+ */
+function selectLeadCard(playableCards, playerIndex) {
+    // Einfache Strategie: Mittlere Karte ausspielen
+    // Nicht die höchste (zu wertvoll), nicht die niedrigste (zu schwach)
+    
+    // Trümpfe bevorzugen wenn vorhanden
+    const trumps = playableCards.filter(card => card.isTrump);
+    const nonTrumps = playableCards.filter(card => !card.isTrump);
+    
+    if (trumps.length > 0 && Math.random() > 0.7) {
+        // 30% Chance einen mittleren Trumpf zu spielen
+        trumps.sort((a, b) => b.trumpOrder - a.trumpOrder);
+        const middleIndex = Math.floor(trumps.length / 2);
+        return trumps[middleIndex];
+    }
+    
+    if (nonTrumps.length > 0) {
+        // Bevorzuge Farben wo wenig Karten auf der Hand sind
+        const suitCounts = {};
+        nonTrumps.forEach(card => {
+            suitCounts[card.suit] = (suitCounts[card.suit] || 0) + 1;
+        });
         
-        if (canWin.length > 0) {
-            // Niedrigste Karte die sticht
-            return canWin.reduce((lowest, card) => 
-                card.trumpOrder < lowest.trumpOrder || card.order < lowest.order ? card : lowest
-            );
-        } else {
-            // Niedrigste Karte abwerfen
-            return playableCards.reduce((lowest, card) => 
-                card.points < lowest.points ? card : lowest
+        const shortSuits = nonTrumps.filter(card => suitCounts[card.suit] <= 2);
+        if (shortSuits.length > 0) {
+            // Niedrige Karte aus kurzer Farbe
+            return shortSuits.reduce((lowest, card) => 
+                card.order < lowest.order ? card : lowest
             );
         }
     }
+    
+    // Fallback: Niedrigste Punktekarte
+    return playableCards.reduce((lowest, card) => 
+        card.points < lowest.points ? card : lowest
+    );
+}
+
+/**
+ * Wählt eine Karte als Folgespieler mit intelligenter Schmier-Logik
+ * @param {Array} playableCards - Spielbare Karten
+ * @param {number} playerIndex - Spieler-Index
+ * @returns {Object} Gewählte Karte
+ */
+function selectFollowCard(playableCards, playerIndex) {
+    // Aktuellen Stichgewinner ermitteln
+    const currentTrickWinner = getCurrentTrickWinner();
+    
+    if (!currentTrickWinner) {
+        // Fallback wenn Gewinner nicht ermittelt werden kann
+        return playableCards[0];
+    }
+    
+    const winnerIndex = currentTrickWinner.playerIndex;
+    const isTeammate = areTeammates(playerIndex, winnerIndex);
+    
+    // Debug-Ausgabe
+    if (gameState.debugMode) {
+        const winnerName = gameState.players[winnerIndex].name;
+        const playerName = gameState.players[playerIndex].name;
+        const relationship = isTeammate ? 'Partner' : 'Gegner';
+        console.log(`🧠 KI ${playerName}: ${winnerName} führt (${relationship})`);
+    }
+    
+    // Kann ich den Stich noch gewinnen?
+    const canWin = playableCards.filter(card => 
+        isCardHigher(card, currentTrickWinner.card)
+    );
+    
+    if (canWin.length > 0) {
+        // Ich kann stechen!
+        if (isTeammate) {
+            // Partner führt - nur stechen wenn sehr viele Punkte im Stich
+            const trickPoints = getTrickPoints(gameState.currentTrick);
+            if (trickPoints >= 20) {
+                // Viele Punkte: Mit niedrigster stechender Karte übernehmen
+                return canWin.reduce((lowest, card) => 
+                    card.trumpOrder < lowest.trumpOrder || card.order < lowest.order ? card : lowest
+                );
+            } else {
+                // Wenig Punkte: Partner gewinnen lassen, schmieren
+                return selectSchmierCard(playableCards, true);
+            }
+        } else {
+            // Gegner führt - immer stechen wenn möglich!
+            return canWin.reduce((lowest, card) => 
+                card.trumpOrder < lowest.trumpOrder || card.order < lowest.order ? card : lowest
+            );
+        }
+    } else {
+        // Ich kann nicht stechen
+        if (isTeammate) {
+            // Partner gewinnt - SCHMIEREN!
+            return selectSchmierCard(playableCards, true);
+        } else {
+            // Gegner gewinnt - niedrigste Karte abwerfen
+            return selectSchmierCard(playableCards, false);
+        }
+    }
+}
+
+/**
+ * Ermittelt den aktuellen Gewinner des Stichs
+ * @returns {Object|null} {playerIndex, card} oder null
+ */
+function getCurrentTrickWinner() {
+    if (gameState.currentTrick.length === 0) {
+        return null;
+    }
+    
+    let winner = gameState.currentTrick[0];
+    
+    for (let i = 1; i < gameState.currentTrick.length; i++) {
+        const current = gameState.currentTrick[i];
+        if (isCardHigher(current.card, winner.card)) {
+            winner = current;
+        }
+    }
+    
+    return {
+        playerIndex: winner.player,
+        card: winner.card
+    };
+}
+
+/**
+ * Prüft ob zwei Spieler im selben Team sind
+ * @param {number} player1 - Erster Spieler
+ * @param {number} player2 - Zweiter Spieler
+ * @returns {boolean} true wenn im selben Team
+ */
+function areTeammates(player1, player2) {
+    // Bei Rufspiel: Team basierend auf Partnership-Array
+    if (gameState.gameType === 'rufspiel') {
+        return gameState.playerPartnership[player1] === gameState.playerPartnership[player2];
+    }
+    
+    // Bei Solo: Solist gegen alle anderen
+    // (Für spätere Solo-Implementierung)
+    return false;
+}
+
+/**
+ * Wählt eine geeignete Karte zum Schmieren oder Abwerfen
+ * @param {Array} playableCards - Spielbare Karten
+ * @param {boolean} shouldSchmier - true = schmieren, false = abwerfen
+ * @returns {Object} Gewählte Karte
+ */
+function selectSchmierCard(playableCards, shouldSchmier) {
+    if (shouldSchmier) {
+        // SCHMIEREN: Höchste Punktekarte spielen (aber intelligent)
+        
+        // Keine Asse wegschmieren wenn noch früh im Spiel
+        const tricksPlayed = gameState.completedTricks.length;
+        const avoidAces = tricksPlayed < 3;
+        
+        let candidates = playableCards;
+        if (avoidAces) {
+            const nonAces = playableCards.filter(card => card.value !== 'sau');
+            if (nonAces.length > 0) {
+                candidates = nonAces;
+            }
+        }
+        
+        // Höchste Punktekarte
+        const highestPoints = candidates.reduce((highest, card) => 
+            card.points > highest.points ? card : highest
+        );
+        
+        if (gameState.debugMode) {
+            console.log(`💰 Schmiere ${highestPoints.symbol}${highestPoints.short} (${highestPoints.points} Punkte)`);
+        }
+        
+        return highestPoints;
+        
+    } else {
+        // ABWERFEN: Niedrigste Punktekarte
+        const lowestPoints = playableCards.reduce((lowest, card) => 
+            card.points < lowest.points ? card : lowest
+        );
+        
+        if (gameState.debugMode) {
+            console.log(`🗑️  Werfe ab ${lowestPoints.symbol}${lowestPoints.short} (${lowestPoints.points} Punkte)`);
+        }
+        
+        return lowestPoints;
+    }
+}
+
+/**
+ * Berechnet die Punkte im aktuellen Stich
+ * @param {Array} trickCards - Karten im Stich
+ * @returns {number} Gesamtpunkte
+ */
+function getTrickPoints(trickCards) {
+    return trickCards.reduce((sum, trickCard) => sum + trickCard.card.points, 0);
 }
 
 /**
