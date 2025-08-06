@@ -108,7 +108,6 @@ function newGame() {
     // Ass-Auswahl anzeigen (INLINE, kein Modal!)
     showAceSelection();
     
-    // Debug-Ausgabe
     if (gameState.debugMode) {
         console.log('=== Neues Spiel ===');
         gameState.players.forEach((player, index) => {
@@ -120,6 +119,9 @@ function newGame() {
             debugTrumpOrder(shuffledDeck);
             window.trumpOrderShown = true;
         }
+        
+        // Ruffarbe-Tracking zurücksetzen
+        initializeCalledSuitTracking();
     }
 }
 
@@ -246,6 +248,7 @@ function selectAceForCall(suit) {
     // Gerufenes Ass im Spielzustand speichern
     gameState.calledAce = suit;
     gameState.gameType = 'rufspiel';
+    gameState.calledSuitPlayed = false; // KORRIGIERT: Ruffarbe ist NICHT gespielt beim Festlegen!
     
     // Partner finden (wer das gerufene Ass hat)
     findPartnerWithAce(suit);
@@ -260,6 +263,18 @@ function selectAceForCall(suit) {
         suit: suit, 
         partner: gameState.calledAcePlayer 
     });
+    
+    // DEBUG: Status anzeigen (ohne "gespielt"-Meldung)
+    if (gameState.debugMode) {
+        const suitNames = {
+            'eichel': 'Eichel',
+            'gras': 'Gras',
+            'schellen': 'Schellen',
+            'herz': 'Herz'
+        };
+        console.log(`🎯 ${suitNames[suit]}-Ass gerufen - Partner ist ${gameState.players[gameState.calledAcePlayer].name}`);
+        console.log(`⚠️  Ruffarbe darf erst nach dem ersten Ausspielen abgeworfen werden!`);
+    }
 }
 
 /**
@@ -333,6 +348,14 @@ function startGameAfterAceSelection() {
     if (gameState.debugMode && gameState.calledAcePlayer >= 0) {
         const partnerName = gameState.players[gameState.calledAcePlayer].name;
         showToast(`Ihr Partner: ${partnerName}`, 3000);
+        
+        // NEUE DEBUG-INFO: Trumpf-Strategie-Hinweis
+        console.log('=== TRUMPF-STRATEGIE ===');
+        console.log('Als spielende Partei sollten Sie:');
+        console.log('1. Trümpfe ausspielen um Kontrolle zu übernehmen');
+        console.log('2. Abwechselnd hohe und niedrige Trümpfe spielen');
+        console.log('3. Partner wird entsprechend mitspielen');
+        console.log('========================');
     }
 }
 
@@ -794,8 +817,29 @@ function selectFollowCard(playableCards, playerIndex) {
     if (gameState.debugMode) {
         const winnerName = gameState.players[winnerIndex].name;
         const playerName = gameState.players[playerIndex].name;
-        const relationship = isTeammate ? 'Partner' : 'Gegner';
+        
+        // NEU: Partnerschaft-Status prüfen
+        const partnershipKnown = hasCalledSuitBeenPlayed();
+        let relationship;
+        
+        if (!partnershipKnown) {
+            // Partnerschaften noch unbekannt
+            if ((playerIndex === 0 && winnerIndex === gameState.calledAcePlayer) ||
+                (winnerIndex === 0 && playerIndex === gameState.calledAcePlayer)) {
+                relationship = 'Partner (bekannt)';
+            } else {
+                relationship = 'Unbekannt';
+            }
+        } else {
+            // Partnerschaften bekannt
+            relationship = isTeammate ? 'Partner' : 'Gegner';
+        }
+        
         console.log(`🧠 KI ${playerName}: ${winnerName} führt (${relationship})`);
+        
+        if (!partnershipKnown) {
+            console.log(`⚠️  Partnerschaften noch unbekannt - KI spielt vorsichtig`);
+        }
     }
     
     // Kann ich den Stich noch gewinnen?
@@ -805,6 +849,18 @@ function selectFollowCard(playableCards, playerIndex) {
     
     if (canWin.length > 0) {
         // Ich kann stechen!
+        
+        // NEU: Bei unbekannten Partnerschaften immer versuchen zu stechen
+        if (!hasCalledSuitBeenPlayed()) {
+            if (gameState.debugMode) {
+                console.log(`🎯 Steche da Partnerschaften unbekannt`);
+            }
+            return canWin.reduce((lowest, card) => 
+                card.trumpOrder < lowest.trumpOrder || card.order < lowest.order ? card : lowest
+            );
+        }
+        
+        // Partnerschaften bekannt - normale Team-Logik
         if (isTeammate) {
             // Partner führt - nur stechen wenn sehr viele Punkte im Stich
             const trickPoints = getTrickPoints(gameState.currentTrick);
@@ -825,6 +881,16 @@ function selectFollowCard(playableCards, playerIndex) {
         }
     } else {
         // Ich kann nicht stechen
+        
+        // NEU: Bei unbekannten Partnerschaften vorsichtig abwerfen
+        if (!hasCalledSuitBeenPlayed()) {
+            if (gameState.debugMode) {
+                console.log(`🤷 Kann nicht stechen, Partnerschaften unbekannt - werfe niedrig ab`);
+            }
+            return selectSchmierCard(playableCards, false);
+        }
+        
+        // Partnerschaften bekannt - normale Team-Logik
         if (isTeammate) {
             // Partner gewinnt - SCHMIEREN!
             return selectSchmierCard(playableCards, true);
@@ -860,14 +926,26 @@ function getCurrentTrickWinner() {
 }
 
 /**
- * Prüft ob zwei Spieler im selben Team sind
+ * Prüft ob zwei Spieler im selben Team sind (KORRIGIERT: Berücksichtigt unbekannte Partnerschaften)
  * @param {number} player1 - Erster Spieler
  * @param {number} player2 - Zweiter Spieler
  * @returns {boolean} true wenn im selben Team
  */
 function areTeammates(player1, player2) {
-    // Bei Rufspiel: Team basierend auf Partnership-Array
+    // Bei Rufspiel: Team nur bekannt wenn Ruffarbe bereits gespielt wurde!
     if (gameState.gameType === 'rufspiel') {
+        // WICHTIGER FIX: Solange Ruffarbe nicht gespielt wurde, wissen die KIs nicht wer Partner ist!
+        if (!hasCalledSuitBeenPlayed()) {
+            // Partnerschaften sind noch unbekannt - jeder spielt für sich
+            // Ausnahme: Der menschliche Spieler und der tatsächliche Partner kennen sich
+            if ((player1 === 0 && player2 === gameState.calledAcePlayer) || 
+                (player2 === 0 && player1 === gameState.calledAcePlayer)) {
+                return true; // Echter Partner-Spieler und menschlicher Spieler
+            }
+            return false; // Alle anderen wissen noch nichts
+        }
+        
+        // Ruffarbe wurde gespielt - jetzt sind Partnerschaften bekannt
         return gameState.playerPartnership[player1] === gameState.playerPartnership[player2];
     }
     
@@ -933,6 +1011,17 @@ function getTrickPoints(trickCards) {
 }
 
 /**
+ * Prüft ob die Partnerschaften im Rufspiel bereits bekannt sind
+ * @returns {boolean} true wenn Partnerschaften bekannt sind
+ */
+function arePartnershipsKnown() {
+    if (gameState.gameType !== 'rufspiel') {
+        return true; // Bei Solo etc. sind Partnerschaften immer klar
+    }
+    return hasCalledSuitBeenPlayed();
+}
+
+/**
  * Behandelt Fenstergröße-Änderungen
  */
 function handleResize() {
@@ -991,7 +1080,7 @@ function importGameData(data) {
     }
 }
 
-// Spiel beim Laden der Seite initialisieren
+    // Spiel beim Laden der Seite initialisieren
 if (typeof window !== 'undefined') {
     window.addEventListener('load', initializeGame);
 }
@@ -1016,4 +1105,7 @@ if (typeof window !== 'undefined') {
     
     // Neue Funktion für Continue-Button
     window.continueAfterTrick = continueAfterTrick;
+    
+    // NEU: Debug-Funktion für Ruf-Ass-Status
+    window.debugCalledAceStatus = debugCalledAceStatus;
 }

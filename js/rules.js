@@ -1,6 +1,6 @@
 /**
  * Bayerisches Schafkopf - Spielregeln und Validierung
- * Implementiert die offiziellen Schafkopf-Regeln
+ * Implementiert die offiziellen Schafkopf-Regeln inkl. korrekter Ruf-Ass-Regeln
  */
 
 /**
@@ -20,16 +20,16 @@ function validateCardPlay(card, playerIndex, currentTrick, playerCards) {
         };
     }
     
-    // Erster Spieler im Stich kann alles spielen
+    // Erster Spieler im Stich: Spezielle Regeln für Ruf-Ass
     if (currentTrick.length === 0) {
-        return { valid: true, reason: 'Ausspielen erlaubt' };
+        return validateLeadCard(card, playerIndex, playerCards);
     }
     
     const leadCard = currentTrick[0].card;
     
     // Trumpf wurde angespielt
     if (leadCard.isTrump) {
-        return validateTrumpFollow(card, playerCards);
+        return validateTrumpFollow(card, playerCards, playerIndex);
     }
     
     // Farbe wurde angespielt  
@@ -37,16 +37,79 @@ function validateCardPlay(card, playerIndex, currentTrick, playerCards) {
 }
 
 /**
- * Validiert das Bedienen von Trumpf
+ * Validiert das Ausspielen (erster Spieler im Stich)
  * @param {Object} card - Die zu spielende Karte
+ * @param {number} playerIndex - Index des Spielers
  * @param {Array} playerCards - Karten des Spielers
  * @returns {Object} Validierungsergebnis
  */
-function validateTrumpFollow(card, playerCards) {
+function validateLeadCard(card, playerIndex, playerCards) {
+    const suitNames = {
+        'eichel': 'Eichel',
+        'gras': 'Gras',
+        'schellen': 'Schellen',
+        'herz': 'Herz'
+    };
+    
+    // KORRIGIERTE REGEL: Ruf-Ass Ausspielen-Regeln für den Partner
+    if (gameState.gameType === 'rufspiel' && gameState.calledAce && 
+        playerIndex === gameState.calledAcePlayer) {
+        
+        // Das gerufene Ass darf JEDERZEIT ausgespielt werden
+        if (card.suit === gameState.calledAce && card.value === 'sau') {
+            // Ruf-Ass ausspielen ist immer erlaubt und markiert die Ruffarbe als gespielt
+            markCalledSuitPlayed();
+            return { valid: true, reason: 'Gerufenes Ass ausgespielt' };
+        }
+        
+        // DAVONLAUFEN: Andere Karten der Ruffarbe nur bei 4+ Karten der Farbe
+        if (card.suit === gameState.calledAce && !card.isTrump && card.value !== 'sau') {
+            const calledSuitCards = playerCards.filter(c => 
+                c.suit === gameState.calledAce && !c.isTrump
+            );
+            
+            // Prüfen ob bereits davongelaufen wurde ODER Davonlaufen möglich ist (4+ Karten)
+            if (!hasRunAwayFromCalledSuit() && calledSuitCards.length < 4) {
+                return {
+                    valid: false,
+                    reason: `Davonlaufen: Sie benötigen 4+ ${suitNames[gameState.calledAce]}-Karten um eine andere Karte als das Ass auszuspielen.`
+                };
+            }
+            // Davonlaufen oder bereits davongelaufen - markieren dass Ruffarbe gespielt wurde
+            markCalledSuitPlayed();
+            return { valid: true, reason: 'Davonlaufen oder Ruffarbe bereits gespielt' };
+        }
+    }
+    
+    return { valid: true, reason: 'Ausspielen erlaubt' };
+}
+
+/**
+ * Validiert das Bedienen von Trumpf
+ * @param {Object} card - Die zu spielende Karte
+ * @param {Array} playerCards - Karten des Spielers
+ * @param {number} playerIndex - Index des Spielers
+ * @returns {Object} Validierungsergebnis
+ */
+function validateTrumpFollow(card, playerCards, playerIndex) {
     const hasTrump = playerCards.some(c => c.isTrump);
     
     // Wenn Spieler Trumpf hat, muss Trumpf gespielt werden
     if (hasTrump && !card.isTrump) {
+        // NEUE AUSNAHME: Ruf-Ass darf bei Trumpf nicht abgeworfen werden!
+        if (isCardCalledAce(card, playerIndex)) {
+            const suitNames = {
+                'eichel': 'Eichel',
+                'gras': 'Gras',
+                'schellen': 'Schellen',
+                'herz': 'Herz'
+            };
+            return {
+                valid: false,
+                reason: `Das gerufene ${suitNames[gameState.calledAce]}-Ass darf nicht abgeworfen werden! Sie müssen Trumpf bedienen.`
+            };
+        }
+        
         return {
             valid: false,
             reason: 'Sie müssen Trumpf bedienen.'
@@ -57,7 +120,7 @@ function validateTrumpFollow(card, playerCards) {
 }
 
 /**
- * Validiert das Bedienen einer Farbe (ERWEITERT: Sau-Zwang für Rufspiel)
+ * Validiert das Bedienen einer Farbe (ERWEITERT: Komplette Sau-Zwang und Abwurf-Regeln)
  * @param {Object} card - Die zu spielende Karte
  * @param {Object} leadCard - Angespielte Karte
  * @param {Array} playerCards - Karten des Spielers
@@ -65,6 +128,13 @@ function validateTrumpFollow(card, playerCards) {
  * @returns {Object} Validierungsergebnis
  */
 function validateSuitFollow(card, leadCard, playerCards, playerIndex) {
+    const suitNames = {
+        'eichel': 'Eichel',
+        'gras': 'Gras',
+        'schellen': 'Schellen',
+        'herz': 'Herz'
+    };
+    
     // Prüfe ob Spieler die angespielte Farbe hat (ohne Trümpfe)
     const hasSuit = playerCards.some(c => 
         c.suit === leadCard.suit && !c.isTrump
@@ -82,30 +152,44 @@ function validateSuitFollow(card, leadCard, playerCards, playerIndex) {
         if (hasCalledAce) {
             // Spieler MUSS das gerufene Ass spielen
             if (!(card.suit === gameState.calledAce && card.value === 'sau')) {
-                const suitNames = {
-                    'eichel': 'Eichel',
-                    'gras': 'Gras',
-                    'schellen': 'Schellen',
-                    'herz': 'Herz'
-                };
                 return {
                     valid: false,
                     reason: `Sie müssen das gerufene ${suitNames[gameState.calledAce]}-Ass spielen!`
                 };
             }
-            // Korrektes gerufenes Ass gespielt
+            // Korrektes gerufenes Ass gespielt - markieren dass Ruffarbe angespielt wurde
+            markCalledSuitPlayed();
             return { valid: true, reason: 'Gerufenes Ass korrekt gespielt' };
+        } else {
+            // Andere Spieler spielen die Ruffarbe an - auch markieren
+            markCalledSuitPlayed();
+        }
+    }
+    
+    // NEUE REGEL: Ruf-Ass darf nicht abgeworfen werden (außer Ruffarbe wurde bereits gespielt)
+    if (gameState.gameType === 'rufspiel' && gameState.calledAce && 
+        playerIndex === gameState.calledAcePlayer && 
+        isCardCalledAce(card, playerIndex)) {
+        
+        // Prüfen ob Ruffarbe bereits gespielt wurde
+        if (!hasCalledSuitBeenPlayed()) {
+            return {
+                valid: false,
+                reason: `Das gerufene ${suitNames[gameState.calledAce]}-Ass darf nicht abgeworfen werden! Die ${suitNames[gameState.calledAce]}-Farbe muss erst angespielt werden.`
+            };
         }
     }
     
     // Standard-Farbzwang: Wenn Spieler die Farbe hat, muss sie bedient werden
     if (hasSuit && (card.suit !== leadCard.suit || card.isTrump)) {
-        const suitNames = {
-            'eichel': 'Eichel',
-            'gras': 'Gras',
-            'schellen': 'Schellen',
-            'herz': 'Herz'
-        };
+        // NEUE AUSNAHME: Ruf-Ass darf auch hier nicht abgeworfen werden!
+        if (isCardCalledAce(card, playerIndex) && !hasCalledSuitBeenPlayed()) {
+            return {
+                valid: false,
+                reason: `Das gerufene ${suitNames[gameState.calledAce]}-Ass darf nicht abgeworfen werden! Sie müssen ${suitNames[leadCard.suit]} bedienen.`
+            };
+        }
+        
         return {
             valid: false,
             reason: `Sie müssen ${suitNames[leadCard.suit]} bedienen.`
@@ -113,6 +197,93 @@ function validateSuitFollow(card, leadCard, playerCards, playerIndex) {
     }
     
     return { valid: true, reason: 'Farbe korrekt bedient' };
+}
+
+/**
+ * Prüft ob eine Karte das gerufene Ass ist
+ * @param {Object} card - Zu prüfende Karte
+ * @param {number} playerIndex - Index des Spielers
+ * @returns {boolean} true wenn es das gerufene Ass ist
+ */
+function isCardCalledAce(card, playerIndex) {
+    return gameState.gameType === 'rufspiel' && 
+           gameState.calledAce && 
+           playerIndex === gameState.calledAcePlayer &&
+           card.suit === gameState.calledAce && 
+           card.value === 'sau';
+}
+
+/**
+ * Prüft ob die Ruffarbe bereits angespielt wurde
+ * @returns {boolean} true wenn Ruffarbe bereits gespielt wurde
+ */
+function hasCalledSuitBeenPlayed() {
+    if (!gameState.calledAce || gameState.calledSuitPlayed === undefined) {
+        return false;
+    }
+    return gameState.calledSuitPlayed;
+}
+
+/**
+ * Markiert dass die Ruffarbe angespielt wurde
+ */
+function markCalledSuitPlayed() {
+    if (gameState.calledAce && !gameState.calledSuitPlayed) {
+        gameState.calledSuitPlayed = true;
+        
+        if (gameState.debugMode) {
+            const suitNames = {
+                'eichel': 'Eichel',
+                'gras': 'Gras',
+                'schellen': 'Schellen',
+                'herz': 'Herz'
+            };
+            console.log(`🎯 ${suitNames[gameState.calledAce]}-Farbe wurde angespielt - Ruf-Ass darf jetzt abgeworfen werden`);
+        }
+    }
+}
+
+/**
+ * Prüft ob "Davonlaufen" möglich ist (4+ Karten der Ruffarbe)
+ * @param {Array} playerCards - Karten des Spielers
+ * @param {string} calledSuit - Ruffarbe
+ * @returns {boolean} true wenn Davonlaufen möglich
+ */
+function canRunAwayFromCalledSuit(playerCards, calledSuit) {
+    const calledSuitCards = playerCards.filter(c => 
+        c.suit === calledSuit && !c.isTrump
+    );
+    return calledSuitCards.length >= 4;
+}
+
+/**
+ * Prüft ob bereits von der Ruffarbe davongelaufen wurde
+ * @returns {boolean} true wenn bereits davongelaufen
+ */
+function hasRunAwayFromCalledSuit() {
+    if (!gameState.calledAce) return false;
+    
+    // Prüfen ob in vergangenen Stichen jemand die Ruffarbe angespielt hat (ohne das Ass)
+    for (const completedTrick of gameState.completedTricks) {
+        const leadCard = completedTrick.cards[0].card;
+        if (leadCard.suit === gameState.calledAce && 
+            !leadCard.isTrump && 
+            leadCard.value !== 'sau') {
+            return true;
+        }
+    }
+    
+    // Auch im aktuellen Stich prüfen
+    if (gameState.currentTrick.length > 0) {
+        const leadCard = gameState.currentTrick[0].card;
+        if (leadCard.suit === gameState.calledAce && 
+            !leadCard.isTrump && 
+            leadCard.value !== 'sau') {
+            return true;
+        }
+    }
+    
+    return false;
 }
 
 /**
@@ -324,6 +495,43 @@ function findCardByPreference(cards, preferenceOrder) {
 function debugValidation(card, playerIndex, currentTrick, playerCards) {
     const validation = validateCardPlay(card, playerIndex, currentTrick, playerCards);
     console.log(`Regelvalidierung für ${card.symbol}${card.short}:`, validation);
+}
+
+/**
+ * Initialisiert die Ruffarbe-Tracking für eine neue Runde
+ */
+function initializeCalledSuitTracking() {
+    gameState.calledSuitPlayed = false;
+}
+
+/**
+ * Debug-Funktion: Zeigt Ruf-Ass Status an
+ */
+function debugCalledAceStatus() {
+    if (gameState.gameType === 'rufspiel' && gameState.calledAce && gameState.calledAcePlayer >= 0) {
+        const suitNames = {
+            'eichel': 'Eichel',
+            'gras': 'Gras',
+            'schellen': 'Schellen',
+            'herz': 'Herz'
+        };
+        
+        const partnerName = gameState.players[gameState.calledAcePlayer].name;
+        const aceCards = gameState.players[gameState.calledAcePlayer].cards.filter(c => 
+            c.suit === gameState.calledAce && !c.isTrump
+        );
+        const canRunAway = aceCards.length >= 4;
+        const hasPlayedSuit = hasCalledSuitBeenPlayed();
+        
+        console.log('=== RUF-ASS STATUS ===');
+        console.log(`Gerufenes Ass: ${suitNames[gameState.calledAce]}-Ass`);
+        console.log(`Partner: ${partnerName}`);
+        console.log(`Karten der Ruffarbe: ${aceCards.length}`);
+        console.log(`Davonlaufen möglich: ${canRunAway ? 'Ja' : 'Nein'}`);
+        console.log(`Ruffarbe bereits gespielt: ${hasPlayedSuit ? 'Ja' : 'Nein'}`);
+        console.log(`Ass darf abgeworfen werden: ${hasPlayedSuit ? 'Ja' : 'Nein'}`);
+        console.log('======================');
+    }
 }
 
 // Exportierte Konstanten für Spielregeln

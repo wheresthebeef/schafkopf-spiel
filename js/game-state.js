@@ -104,6 +104,7 @@ function initializeGameState(options = {}) {
         trumpSuit: 'herz',
         calledAce: null,
         calledAcePlayer: -1,
+        calledSuitPlayed: false, // NEU: Tracking ob Ruffarbe bereits gespielt wurde
         
         // Partnerschaften
         playerPartnership: [0, 1, 2, 3],
@@ -137,6 +138,9 @@ function startNewRound() {
     gameState.trickNumber = 0;
     gameState.completedTricks = [];
     gameState.gamePhase = 'playing';
+    
+    // Ruffarbe-Tracking zurücksetzen
+    gameState.calledSuitPlayed = false;
     
     // Spieler-Rundendaten zurücksetzen
     gameState.players.forEach(player => {

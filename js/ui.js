@@ -667,6 +667,9 @@ function debugUI() {
     console.log('Partner:', gameState.calledAcePlayer >= 0 ? gameState.players[gameState.calledAcePlayer].name : 'None');
     console.log('Partnerships:', gameState.playerPartnership);
     console.log('Game Log:', exportGameLog().slice(-5)); // Letzte 5 Einträge
+    
+    // NEU: Ruf-Ass Debug-Status anzeigen
+    debugCalledAceStatus();
 }
 
 // Event-Listener beim Laden initialisieren
