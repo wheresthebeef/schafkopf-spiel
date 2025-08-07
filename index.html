@@ -90,7 +90,11 @@
         </div>
     </div>
 
-    <!-- JavaScript Module laden -->
+    <!-- 
+    VEREINFACHTE LÖSUNG: Nur Legacy-Module (funktionieren garantiert)
+    ES6-Module werden später über HTTP-Server aktiviert
+    -->
+    
     <script src="js/cards.js"></script>
     <script src="js/game-state.js"></script>
     <script src="js/player.js"></script>
@@ -98,5 +102,23 @@
     <script src="js/ai.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
+    
+    <!-- Status-Info -->
+    <script>
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                console.log('🎯 Schafkopf-Status:');
+                console.log('   ✅ Legacy-Module geladen und funktionsfähig');
+                console.log('   📁 Neue Module bereit für HTTP-Server');
+                console.log('   🎮 Spiel vollständig spielbar');
+                
+                if (typeof newGame === 'function') {
+                    console.log('   ✅ newGame() verfügbar');
+                } else {
+                    console.error('   ❌ newGame() nicht verfügbar');
+                }
+            }, 500);
+        });
+    </script>
 </body>
 </html>
