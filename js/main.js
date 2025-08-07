@@ -13,6 +13,10 @@ import { createDeck, setTrumpStatus } from './cards/cards.js';
 import { shuffleDeck, dealCards } from './cards/deck.js';
 import { sortCardsForDisplay } from './cards/card-utils.js';
 
+// AI-Module importieren
+import { botManager } from './ai/bot-manager.js';
+import { initializeAISystem, selectCardWithAI } from './ai/ai-bridge.js';
+
 /**
  * Startet ein neues Spiel
  */
@@ -39,6 +43,17 @@ function newGame() {
     hands.forEach((hand, index) => {
         gameState.players[index].cards = hand;
     });
+    
+    // AI-System initialisieren (Spieler 1-3 sind Bots)
+    initializeAISystem({
+        aiType: 'qlearning',
+        playerConfigs: {
+            1: { explorationRate: 0.3, learningRate: 0.1 },
+            2: { explorationRate: 0.25, learningRate: 0.12 },
+            3: { explorationRate: 0.35, learningRate: 0.08 }
+        }
+    });
+    logGameAction('🧠 Q-Learning AI-System initialisiert für alle Bot-Spieler');
     
     // Spielphase auf Ass-Auswahl setzen
     setGamePhase(GAME_PHASES.BIDDING);
@@ -460,8 +475,8 @@ function playCPUCard() {
         }
     }
     
-    // KI-Entscheidung
-    const selectedCard = selectCardWithAI(playableCards, gameState.currentPlayer);
+    // Bot-Entscheidung
+    const selectedCard = selectCardWithBot(playableCards, gameState.currentPlayer);
     
     // Karte spielen
     const cardIndex = currentPlayer.cards.indexOf(selectedCard);
@@ -561,7 +576,7 @@ if (typeof window !== 'undefined') {
     // Hilfsfunktionen aus anderen Modulen (werden bei Bedarf nachgeladen)
     window.canPlayCard = canPlayCard;
     window.validateCardPlay = validateCardPlay;
-    window.selectCardWithAI = selectCardWithAI;
+    window.selectCardWithBot = selectCardWithBot;
     window.determineTrickWinner = determineTrickWinner;
     window.isGameFinished = isGameFinished;
     window.getCurrentPlayer = getCurrentPlayer;
