@@ -4,8 +4,8 @@
  * Ermöglicht A/B Testing zwischen alter und neuer AI
  */
 
-// Legacy-Bot-System importieren
-import '../strategic-bots.js';
+// Legacy-Bot-System importieren (wird zur Laufzeit geladen)
+// import '../strategic-bots.js';
 
 // Neues AI-System importieren
 import { selectCardWithAI, notifyAITrickCompleted, notifyAIGameCompleted } from './ai-bridge.js';

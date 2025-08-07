@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-System Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .test-container { background: white; padding: 20px; border-radius: 8px; margin: 10px 0; }
+        .success { color: green; } .error { color: red; } .info { color: blue; }
+        .console { background: #1e1e1e; color: #00ff00; padding: 15px; font-family: monospace; 
+                   border-radius: 4px; margin: 10px 0; white-space: pre-wrap; }
+        button { padding: 10px 20px; margin: 5px; font-size: 16px; cursor: pointer; }
+        .btn-success { background: #28a745; color: white; border: none; }
+        .btn-warning { background: #ffc107; color: black; border: none; }
+        .btn-info { background: #17a2b8; color: white; border: none; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Q-Learning AI System Test</h1>
+    
+    <div class="test-container">
+        <h2>🔍 Import-Tests</h2>
+        <div id="import-status">Teste Module-Imports...</div>
+        <div class="console" id="import-console"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🤖 AI-Funktionen</h2>
+        <button class="btn-success" onclick="testAIQuick()">Quick Test</button>
+        <button class="btn-warning" onclick="testAIFull()">Vollständige Tests</button>
+        <button class="btn-info" onclick="testAIPerformance()">Performance Test</button>
+        <div class="console" id="ai-console"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>🎮 Integration-Test</h2>
+        <button class="btn-success" onclick="testIntegration()">Integration Test</button>
+        <div class="console" id="integration-console"></div>
+    </div>
+
+    <script type="module">
+        const importConsole = document.getElementById('import-console');
+        const aiConsole = document.getElementById('ai-console');
+        const integrationConsole = document.getElementById('integration-console');
+        const importStatus = document.getElementById('import-status');
+        
+        function log(element, message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : '📝';
+            element.textContent += `[${timestamp}] ${prefix} ${message}\n`;
+            console.log(message);
+        }
+        
+        // Test 1: Module-Imports
+        async function testImports() {
+            try {
+                log(importConsole, 'Teste q-learning.js...');
+                const qlearning = await import('./js/ai/q-learning.js');
+                log(importConsole, 'q-learning.js ✅', 'success');
+                
+                log(importConsole, 'Teste card-memory.js...');
+                const cardMemory = await import('./js/ai/card-memory.js');
+                log(importConsole, 'card-memory.js ✅', 'success');
+                
+                log(importConsole, 'Teste bot-manager.js...');
+                const botManager = await import('./js/ai/bot-manager.js');
+                log(importConsole, 'bot-manager.js ✅', 'success');
+                
+                log(importConsole, 'Teste ai-bridge.js...');
+                const aiBridge = await import('./js/ai/ai-bridge.js');
+                log(importConsole, 'ai-bridge.js ✅', 'success');
+                
+                log(importConsole, 'Teste ai-migration.js...');
+                const aiMigration = await import('./js/ai/ai-migration.js');
+                log(importConsole, 'ai-migration.js ✅', 'success');
+                
+                log(importConsole, 'Teste ai-testing.js...');
+                const aiTesting = await import('./js/ai/ai-testing.js');
+                log(importConsole, 'ai-testing.js ✅', 'success');
+                
+                importStatus.innerHTML = '<span class="success">✅ Alle Module erfolgreich geladen!</span>';
+                
+                return true;
+            } catch (error) {
+                log(importConsole, `Import-Fehler: ${error.message}`, 'error');
+                importStatus.innerHTML = '<span class="error">❌ Module-Import fehlgeschlagen</span>';
+                
+                // Fallback zu Browser-AI
+                log(importConsole, 'Lade Browser-AI Fallback...');
+                try {
+                    const script = document.createElement('script');
+                    script.src = './js/ai/browser-ai.js';
+                    script.onload = () => {
+                        log(importConsole, 'Browser-AI Fallback geladen ✅', 'success');
+                        importStatus.innerHTML = '<span class="success">✅ Browser-AI Fallback aktiv</span>';
+                    };
+                    document.head.appendChild(script);
+                } catch (fallbackError) {
+                    log(importConsole, `Fallback-Fehler: ${fallbackError.message}`, 'error');
+                }
+                
+                return false;
+            }
+        }
+        
+        // Global verfügbare Test-Funktionen
+        window.testAIQuick = function() {
+            aiConsole.textContent = '';
+            log(aiConsole, 'Starte Quick-Test...');
+            
+            if (window.aiQuickTest) {
+                const result = window.aiQuickTest();
+                log(aiConsole, `Quick-Test Ergebnis: ${result ? 'BESTANDEN' : 'FEHLGESCHLAGEN'}`, 
+                    result ? 'success' : 'error');
+            } else {
+                log(aiConsole, 'aiQuickTest() nicht verfügbar', 'error');
+            }
+        };
+        
+        window.testAIFull = function() {
+            aiConsole.textContent = '';
+            log(aiConsole, 'Starte vollständige Tests...');
+            
+            if (window.runAITests) {
+                const result = window.runAITests();
+                log(aiConsole, 'Vollständige Tests abgeschlossen');
+            } else {
+                log(aiConsole, 'runAITests() nicht verfügbar', 'error');
+            }
+        };
+        
+        window.testAIPerformance = function() {
+            aiConsole.textContent = '';
+            log(aiConsole, 'Starte Performance-Test...');
+            
+            if (window.aiPerformanceBenchmark) {
+                const result = window.aiPerformanceBenchmark();
+                log(aiConsole, 'Performance-Test abgeschlossen');
+            } else {
+                log(aiConsole, 'aiPerformanceBenchmark() nicht verfügbar', 'error');
+            }
+        };
+        
+        window.testIntegration = function() {
+            integrationConsole.textContent = '';
+            log(integrationConsole, 'Teste Integration...');
+            
+            // Teste verfügbare Funktionen
+            const functions = ['aiQuickTest', 'runAITests', 'aiDebug', 'aiStats', 
+                             'migrateToNewAI', 'aiPerformanceBenchmark'];
+            
+            let available = 0;
+            functions.forEach(func => {
+                if (window[func]) {
+                    log(integrationConsole, `${func}() ✅`, 'success');
+                    available++;
+                } else {
+                    log(integrationConsole, `${func}() ❌`, 'error');
+                }
+            });
+            
+            log(integrationConsole, `Integration: ${available}/${functions.length} Funktionen verfügbar`);
+            
+            if (available > 0) {
+                log(integrationConsole, 'AI-System ist bereit! 🎉', 'success');
+            } else {
+                log(integrationConsole, 'AI-System nicht verfügbar', 'error');
+            }
+        };
+        
+        // Auto-Start
+        window.addEventListener('load', () => {
+            setTimeout(testImports, 1000);
+        });
+    </script>
+</body>
+</html>

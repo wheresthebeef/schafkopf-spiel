@@ -4,7 +4,7 @@
  * Stellt einheitliche Bot-Interface bereit
  */
 
-import { botManager } from './ai/bot-manager.js';
+import { botManager } from './bot-manager.js';
 
 /**
  * Legacy-kompatible Bot-Funktion
