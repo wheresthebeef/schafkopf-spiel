@@ -90,11 +90,72 @@
         </div>
     </div>
 
-    <!-- 
-    VEREINFACHTE LÖSUNG: Nur Legacy-Module (funktionieren garantiert)
-    ES6-Module werden später über HTTP-Server aktiviert
-    -->
+    <!-- AI-SYSTEM INTEGRATION -->
+    <script type="module">
+        // AI-Module laden und global verfügbar machen
+        async function initializeAISystem() {
+            try {
+                console.log('🤖 Lade Q-Learning AI-System...');
+                
+                // AI-Module importieren
+                await import('./js/ai/ai-testing.js');
+                await import('./js/ai/ai-bridge.js');
+                await import('./js/ai/ai-migration.js');
+                
+                console.log('✅ AI-Module erfolgreich geladen!');
+                console.log('📝 Verfügbare Commands:');
+                console.log('   runAITests() - Vollständige Test-Suite');
+                console.log('   aiQuickTest() - Schnell-Test');
+                console.log('   aiDebug() - AI-Status anzeigen');
+                console.log('   aiStats() - Performance-Statistiken');
+                console.log('   migrateToNewAI() - Auf Q-Learning umstellen');
+                console.log('   enableABTesting() - A/B Testing aktivieren');
+                console.log('   aiPerformanceBenchmark() - Performance-Tests');
+                
+                // Auto-Test wenn URL-Parameter vorhanden
+                if (window.location.search.includes('aitest=true')) {
+                    console.log('🧪 Auto-Test gestartet...');
+                    setTimeout(() => {
+                        if (window.runAITests) {
+                            window.runAITests();
+                        }
+                    }, 2000);
+                }
+                
+            } catch (error) {
+                console.error('❌ Fehler beim Laden der AI-Module:', error);
+                console.log('🔄 Lade Browser-AI Fallback...');
+                
+                // Fallback: Browser-AI laden
+                const script = document.createElement('script');
+                script.src = './js/ai/browser-ai.js';
+                script.onload = () => {
+                    console.log('✅ Browser-AI Fallback geladen!');
+                    // Auto-Test auch für Browser-AI
+                    if (window.location.search.includes('aitest=true')) {
+                        setTimeout(() => {
+                            if (window.runAITests) {
+                                window.runAITests();
+                            }
+                        }, 1000);
+                    }
+                };
+                script.onerror = () => {
+                    console.error('❌ Browser-AI Fallback konnte nicht geladen werden');
+                    console.log('🔄 Verwende nur Legacy-Bots');
+                };
+                document.head.appendChild(script);
+            }
+        }
+        
+        // AI-System nach dem Laden der Seite initialisieren
+        window.addEventListener('load', () => {
+            setTimeout(initializeAISystem, 1000);
+        });
+        
+    </script>
     
+    <!-- LEGACY SYSTEM (Fallback) -->
     <script src="js/cards.js"></script>
     <script src="js/game-state.js"></script>
     <script src="js/player.js"></script>
@@ -103,17 +164,19 @@
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
     
-    <!-- Status-Info -->
+    <!-- Status-Info und Spiel-Bereitschaft -->
     <script>
         window.addEventListener('load', () => {
             setTimeout(() => {
-                console.log('🎯 Schafkopf-Status:');
+                console.log('🎯 Bayerisches Schafkopf - Status:');
                 console.log('   ✅ Legacy-Module geladen und funktionsfähig');
-                console.log('   📁 Neue Module bereit für HTTP-Server');
+                console.log('   🤖 Q-Learning AI-System wird geladen...');
                 console.log('   🎮 Spiel vollständig spielbar');
                 
                 if (typeof newGame === 'function') {
-                    console.log('   ✅ newGame() verfügbar');
+                    console.log('   ✅ newGame() verfügbar - Spiel bereit!');
+                    console.log('');
+                    console.log('🎆 Probiere die AI-Commands in 2-3 Sekunden aus!');
                 } else {
                     console.error('   ❌ newGame() nicht verfügbar');
                 }
