@@ -149,10 +149,11 @@ export class AITestSuite {
             if (!ai) throw new Error('AI-Initialisierung fehlgeschlagen');
             if (ai.learningRate !== 0.15) throw new Error('Konfiguration nicht übernommen');
             
-            // Test: Mehrere AIs
-            botManager.initializeAllBots('qlearning');
+            // Test: Mehrere AIs (aber nur für Spieler 1-3, da Spieler 0 = Mensch)
+            botManager.initializeAI(2, 'qlearning');
+            botManager.initializeAI(3, 'qlearning');
             
-            if (botManager.aiPlayers.size !== 4) { // 1 + 3 neue = 4 total
+            if (botManager.aiPlayers.size !== 3) { // Nur 3 Bots (Spieler 1,2,3)
                 throw new Error(`Falsche Anzahl AIs: ${botManager.aiPlayers.size}`);
             }
             
@@ -167,25 +168,27 @@ export class AITestSuite {
         await this.runTest('AI Kartenauswahl', () => {
             const ai = new SchafkopfQLearning(1);
             
-            // Mock-Karten
+            // Mock-Karten (korrekte Struktur)
             const playableCards = [
-                { suit: 'herz', value: 'ass' },
-                { suit: 'gras', value: '7' },
-                { suit: 'eichel', value: 'ober' }
+                { suit: 'herz', value: 'ass', points: 11, isTrump: true },
+                { suit: 'gras', value: '7', points: 0, isTrump: false },
+                { suit: 'eichel', value: 'ober', points: 3, isTrump: true }
             ];
             
-            // Mock-Spielkontext
+            // Mock-Spielkontext (vollständig)
             const gameContext = {
                 currentTrick: [],
                 trickNumber: 0,
                 players: [
-                    { hand: [], totalScore: 0 },
-                    { hand: [], totalScore: 0 },
-                    { hand: [], totalScore: 0 },
-                    { hand: [], totalScore: 0 }
+                    { hand: [], totalScore: 0, isHuman: true },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false }
                 ],
                 gameType: 'rufspiel',
-                trumpSuit: 'herz'
+                trumpSuit: 'herz',
+                calledAce: null,
+                caller: 0
             };
             
             // Test: Kartenauswahl
@@ -210,9 +213,16 @@ export class AITestSuite {
             const gameContext = {
                 currentTrick: [],
                 trickNumber: 0,
-                players: [{ hand: [], totalScore: 0 }],
+                players: [
+                    { hand: [], totalScore: 0, isHuman: true },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false }
+                ],
                 gameType: 'rufspiel',
-                trumpSuit: 'herz'
+                trumpSuit: 'herz',
+                calledAce: null,
+                caller: 0
             };
             
             const state = ai.encodeGameState(gameContext);
@@ -273,18 +283,25 @@ export class AITestSuite {
             const ai = new SchafkopfQLearning(1);
             const iterations = 1000;
             
-            // Mock-Daten
+            // Mock-Daten (korrekte Struktur)
             const playableCards = [
-                { suit: 'herz', value: 'ass' },
-                { suit: 'gras', value: '7' }
+                { suit: 'herz', value: 'ass', points: 11, isTrump: true },
+                { suit: 'gras', value: '7', points: 0, isTrump: false }
             ];
             
             const gameContext = {
                 currentTrick: [],
                 trickNumber: 0,
-                players: [{ hand: [], totalScore: 0 }],
+                players: [
+                    { hand: [], totalScore: 0, isHuman: true },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false },
+                    { hand: [], totalScore: 0, isHuman: false }
+                ],
                 gameType: 'rufspiel',
-                trumpSuit: 'herz'
+                trumpSuit: 'herz',
+                calledAce: null,
+                caller: 0
             };
             
             // Performance-Test
@@ -319,16 +336,23 @@ export class AITestSuite {
                     // Simuliere Trick für alle Bots
                     for (let player = 1; player <= 3; player++) {
                         const playableCards = [
-                            { suit: 'herz', value: 'ass' },
-                            { suit: 'gras', value: '7' }
+                            { suit: 'herz', value: 'ass', points: 11, isTrump: true },
+                            { suit: 'gras', value: '7', points: 0, isTrump: false }
                         ];
                         
                         const gameContext = {
                             currentTrick: [],
                             trickNumber: trick,
-                            players: [{ hand: [], totalScore: 0 }],
+                            players: [
+                                { hand: [], totalScore: 0, isHuman: true },
+                                { hand: [], totalScore: 0, isHuman: false },
+                                { hand: [], totalScore: 0, isHuman: false },
+                                { hand: [], totalScore: 0, isHuman: false }
+                            ],
                             gameType: 'rufspiel',
-                            trumpSuit: 'herz'
+                            trumpSuit: 'herz',
+                            calledAce: null,
+                            caller: 0
                         };
                         
                         const card = botManager.selectCard(player, playableCards, gameContext);
@@ -399,18 +423,25 @@ export class AITestSuite {
         const iterations = 10000;
         
         const playableCards = [
-            { suit: 'herz', value: 'ass' },
-            { suit: 'gras', value: '7' },
-            { suit: 'eichel', value: 'ober' },
-            { suit: 'schellen', value: '10' }
+            { suit: 'herz', value: 'ass', points: 11, isTrump: true },
+            { suit: 'gras', value: '7', points: 0, isTrump: false },
+            { suit: 'eichel', value: 'ober', points: 3, isTrump: true },
+            { suit: 'schellen', value: '10', points: 10, isTrump: false }
         ];
         
         const gameContext = {
             currentTrick: [],
             trickNumber: 3,
-            players: [{ hand: [], totalScore: 0 }],
+            players: [
+                { hand: [], totalScore: 0, isHuman: true },
+                { hand: [], totalScore: 0, isHuman: false },
+                { hand: [], totalScore: 0, isHuman: false },
+                { hand: [], totalScore: 0, isHuman: false }
+            ],
             gameType: 'rufspiel',
-            trumpSuit: 'herz'
+            trumpSuit: 'herz',
+            calledAce: null,
+            caller: 0
         };
         
         // Benchmark 1: Kartenauswahl
@@ -450,8 +481,23 @@ export async function quickTest() {
     try {
         // Basis-Funktionalität testen
         const ai = new SchafkopfQLearning(1);
-        const playableCards = [{ suit: 'herz', value: 'ass' }];
-        const gameContext = { currentTrick: [], trickNumber: 0, players: [{}], gameType: 'rufspiel', trumpSuit: 'herz' };
+        const playableCards = [
+            { suit: 'herz', value: 'ass', points: 11, isTrump: true }
+        ];
+        const gameContext = {
+            currentTrick: [],
+            trickNumber: 0,
+            players: [
+                { hand: [], totalScore: 0, isHuman: true },
+                { hand: [], totalScore: 0, isHuman: false },
+                { hand: [], totalScore: 0, isHuman: false },
+                { hand: [], totalScore: 0, isHuman: false }
+            ],
+            gameType: 'rufspiel',
+            trumpSuit: 'herz',
+            calledAce: null,
+            caller: 0
+        };
         
         const card = ai.selectCard(playableCards, gameContext);
         
