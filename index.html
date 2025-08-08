@@ -101,6 +101,7 @@
                 await import('./js/ai/ai-testing.js');
                 await import('./js/ai/ai-bridge.js');
                 await import('./js/ai/ai-migration.js');
+                await import('./js/ai/human-feedback.js');
                 
                 console.log('✅ AI-Module erfolgreich geladen!');
                 console.log('📝 Verfügbare Commands:');
@@ -111,6 +112,8 @@
                 console.log('   migrateToNewAI() - Auf Q-Learning umstellen');
                 console.log('   enableABTesting() - A/B Testing aktivieren');
                 console.log('   aiPerformanceBenchmark() - Performance-Tests');
+                console.log('   🧑‍🏫 enableHumanTraining() - Human-in-the-Loop Learning');
+                console.log('   getHumanFeedbackStats() - Feedback-Statistiken');
                 
                 // Auto-Test wenn URL-Parameter vorhanden
                 if (window.location.search.includes('aitest=true')) {

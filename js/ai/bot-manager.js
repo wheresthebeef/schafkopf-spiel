@@ -5,6 +5,7 @@
  */
 
 import { SchafkopfQLearning, qLearningMonitor } from './q-learning.js';
+import { humanFeedback } from './human-feedback.js';
 
 /**
  * Bot-Manager verwaltet alle AI-Typen
@@ -118,6 +119,11 @@ export class BotManager {
             }
             
             selectedCard = aiData.instance.selectCard(playableCards, gameContext);
+            
+            // Human Feedback Integration
+            if (selectedCard && humanFeedback.isEnabled) {
+                humanFeedback.recordAIMove(playerId, selectedCard, playableCards, gameContext);
+            }
             
         } catch (error) {
             console.error(`❌ AI-Fehler für Spieler ${playerId}:`, error);

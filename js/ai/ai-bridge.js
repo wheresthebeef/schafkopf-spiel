@@ -5,6 +5,7 @@
  */
 
 import { botManager } from './bot-manager.js';
+import { humanFeedback } from './human-feedback.js';
 
 /**
  * Legacy-kompatible Bot-Funktion
@@ -245,6 +246,56 @@ export function trainAllAIs(iterations = 100) {
     }
 }
 
+/**
+ * Human-in-the-Loop Training aktivieren
+ */
+export function enableHumanTraining() {
+    try {
+        humanFeedback.enable();
+        console.log('🧑‍🏫 AI-Training durch menschliches Feedback aktiviert!');
+        console.log('Du kannst jetzt AI-Züge bewerten und bessere Vorschläge machen.');
+        return true;
+    } catch (error) {
+        console.error('❌ Fehler beim Aktivieren des Human Training:', error);
+        return false;
+    }
+}
+
+/**
+ * Human-in-the-Loop Training deaktivieren
+ */
+export function disableHumanTraining() {
+    try {
+        humanFeedback.disable();
+        console.log('❌ AI-Training deaktiviert');
+        return true;
+    } catch (error) {
+        console.error('❌ Fehler beim Deaktivieren des Human Training:', error);
+        return false;
+    }
+}
+
+/**
+ * Human Feedback Statistiken
+ */
+export function getHumanFeedbackStats() {
+    return humanFeedback.getFeedbackStats();
+}
+
+/**
+ * Speichere Human Feedback
+ */
+export function saveHumanFeedback() {
+    return humanFeedback.save();
+}
+
+/**
+ * Lade Human Feedback
+ */
+export function loadHumanFeedback() {
+    return humanFeedback.load();
+}
+
 // Browser-globale Funktionen verfügbar machen
 if (typeof window !== 'undefined') {
     window.aiDebug = debugAI;
@@ -254,4 +305,11 @@ if (typeof window !== 'undefined') {
     window.aiReset = resetAllAIs;
     window.aiTrain = trainAllAIs;
     window.aiSwitch = switchBotAI;
+    
+    // Human Training Commands
+    window.enableHumanTraining = enableHumanTraining;
+    window.disableHumanTraining = disableHumanTraining;
+    window.getHumanFeedbackStats = getHumanFeedbackStats;
+    window.saveHumanFeedback = saveHumanFeedback;
+    window.loadHumanFeedback = loadHumanFeedback;
 }
