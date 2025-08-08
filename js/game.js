@@ -449,10 +449,7 @@ function evaluateTrick() {
     
     // NEUES FEATURE: Post-Game Training für diesen Stich
     if (window.postGameTraining) {
-        console.log('🔍 DEBUG: Rufe endTrickTracking() auf...');
         window.postGameTraining.endTrickTracking();
-    } else {
-        console.log('⚠️ DEBUG: window.postGameTraining ist nicht verfügbar');
     }
     
     // NEUES VERHALTEN: Stich bleibt liegen, "Weiter"-Button anzeigen
