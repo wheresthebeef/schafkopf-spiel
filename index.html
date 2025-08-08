@@ -92,11 +92,14 @@
 
     <!-- AI-SYSTEM INTEGRATION -->
     <script type="module">
-        // Verwende den Global AI Loader für zuverlässiges Laden
-        import { loadAISystem } from './js/ai/global-ai-loader.js';
+        // Verwende den Simplified AI Loader für bessere Fehlerbehandlung
+        import { loadAISystem } from './js/ai/simple-ai-loader.js';
         
         // Debug-Helper für Problemdiagnose
         import './js/ai/debug-helper.js';
+        
+        // Emergency-System falls Module nicht laden
+        import './js/ai/emergency-human-training.js';
         
         // AI-System nach dem Laden der Seite initialisieren
         window.addEventListener('load', async () => {

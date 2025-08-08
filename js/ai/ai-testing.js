@@ -27,7 +27,7 @@ export class AITestSuite {
         console.log('🚀 Starte umfassende AI-Tests...');
         
         // Basis-Tests
-        await this.testQLearnign_Initialization();
+        await this.testQLearning_Initialization();
         await this.testCardMemory();
         await this.testBotManager();
         
@@ -88,7 +88,7 @@ export class AITestSuite {
     /**
      * Test 1: Q-Learning Initialisierung
      */
-    async testQLearnign_Initialization() {
+    async testQLearning_Initialization() {
         await this.runTest('Q-Learning Initialisierung', () => {
             const ai = new SchafkopfQLearning(1, {
                 learningRate: 0.1,
