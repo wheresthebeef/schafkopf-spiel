@@ -23,12 +23,74 @@ function initWorkingHumanTraining() {
         gameIntegrationActive: false,
         monitorInterval: null,
         
+        // Rundenende-Tracking
+        currentRoundMoves: [],
+        isTrackingRound: false,
+        
         enable() {
             console.log('✅ Human Training wird aktiviert...');
             this.isEnabled = true;
             this.createWorkingUI();
             this.startGameMonitoring();
             return true;
+        },
+        
+        // SCHRITT 1: Rundenende-Erkennung
+        startRoundTracking() {
+            console.log('🎯 Runden-Tracking gestartet');
+            this.isTrackingRound = true;
+            this.currentRoundMoves = [];
+            
+            // Visuelles Feedback im UI
+            const statusElement = document.getElementById('training-status');
+            if (statusElement) {
+                statusElement.textContent = 'Runde wird aufgezeichnet...';
+                statusElement.style.color = '#28a745';
+            }
+            
+            // Test-Button ändern
+            const button = event.target;
+            if (button) {
+                button.textContent = '✅ Runde läuft';
+                button.style.background = '#28a745';
+                button.onclick = () => this.endRoundTracking();
+            }
+        },
+        
+        endRoundTracking() {
+            console.log('🏁 Runde beendet - ' + this.currentRoundMoves.length + ' Züge aufgezeichnet');
+            this.isTrackingRound = false;
+            
+            // UI zurücksetzen
+            const statusElement = document.getElementById('training-status');
+            if (statusElement) {
+                statusElement.textContent = 'Bereit';
+                statusElement.style.color = '#333';
+            }
+            
+            if (this.currentRoundMoves.length > 0) {
+                this.showPostGameReview();
+            } else {
+                // Zeige Hinweis falls keine Züge aufgezeichnet
+                this.showFeedbackMessage('🚨 Keine Züge aufgezeichnet - simuliere welche!', 'warning');
+            }
+            
+            // Button zurücksetzen
+            setTimeout(() => {
+                const buttons = document.querySelectorAll('button');
+                buttons.forEach(btn => {
+                    if (btn.textContent.includes('Runde läuft')) {
+                        btn.textContent = '🎯 Start Runde';
+                        btn.style.background = '#fd7e14';
+                        btn.onclick = () => this.startRoundTracking();
+                    }
+                });
+            }, 100);
+        },
+        
+        showPostGameReview() {
+            console.log('📝 Post-Game Review wird angezeigt...');
+            // TODO: Schritt 2 - UI für Post-Game Review
         },
         
         disable() {
@@ -88,8 +150,12 @@ function initWorkingHumanTraining() {
                             🎯 Test: Bot-Zug simulieren
                         </button>
                         <button onclick="workingHumanTraining.showHelp()" 
-                                style="width: 100%; padding: 8px; background: #6c757d !important; color: white !important; border: none; border-radius: 4px; cursor: pointer;">
+                                style="width: 48%; padding: 8px; background: #6c757d !important; color: white !important; border: none; border-radius: 4px; cursor: pointer; margin-right: 2%;">
                             ❓ Hilfe anzeigen
+                        </button>
+                        <button onclick="workingHumanTraining.startRoundTracking()" 
+                                style="width: 48%; padding: 8px; background: #fd7e14 !important; color: white !important; border: none; border-radius: 4px; cursor: pointer; font-size: 10px;">
+                            🎯 Start Runde
                         </button>
                     </div>
                     
@@ -151,6 +217,24 @@ function initWorkingHumanTraining() {
             const value = values[Math.floor(Math.random() * values.length)];
             
             const moveId = Date.now();
+            
+            // Falls Runden-Tracking aktiv ist, zu currentRoundMoves hinzufügen
+            if (this.isTrackingRound) {
+                const move = {
+                    player: player,
+                    card: `${suit} ${value}`,
+                    timestamp: moveId,
+                    trickNumber: this.currentRoundMoves.length + 1
+                };
+                this.currentRoundMoves.push(move);
+                console.log(`🎯 Zug ${this.currentRoundMoves.length} aufgezeichnet: ${player} - ${suit} ${value}`);
+                
+                // Zeige Fortschritt
+                const statusElement = document.getElementById('training-status');
+                if (statusElement) {
+                    statusElement.textContent = `Runde läuft (${this.currentRoundMoves.length} Züge)`;
+                }
+            }
             
             this.addMoveToUI(player, suit, value, moveId);
             console.log(`🎯 Simulierter Bot-Zug: ${player} spielt ${suit} ${value}`);
