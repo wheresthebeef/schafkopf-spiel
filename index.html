@@ -92,68 +92,54 @@
 
     <!-- AI-SYSTEM INTEGRATION -->
     <script type="module">
-        // AI-Module laden und global verfügbar machen
-        async function initializeAISystem() {
-            try {
-                console.log('🤖 Lade Q-Learning AI-System...');
-                
-                // AI-Module importieren
-                await import('./js/ai/ai-testing.js');
-                await import('./js/ai/ai-bridge.js');
-                await import('./js/ai/ai-migration.js');
-                await import('./js/ai/human-feedback.js');
-                
-                console.log('✅ AI-Module erfolgreich geladen!');
-                console.log('📝 Verfügbare Commands:');
-                console.log('   runAITests() - Vollständige Test-Suite');
-                console.log('   aiQuickTest() - Schnell-Test');
-                console.log('   aiDebug() - AI-Status anzeigen');
-                console.log('   aiStats() - Performance-Statistiken');
-                console.log('   migrateToNewAI() - Auf Q-Learning umstellen');
-                console.log('   enableABTesting() - A/B Testing aktivieren');
-                console.log('   aiPerformanceBenchmark() - Performance-Tests');
-                console.log('   🧑‍🏫 enableHumanTraining() - Human-in-the-Loop Learning');
-                console.log('   getHumanFeedbackStats() - Feedback-Statistiken');
-                
-                // Auto-Test wenn URL-Parameter vorhanden
-                if (window.location.search.includes('aitest=true')) {
-                    console.log('🧪 Auto-Test gestartet...');
-                    setTimeout(() => {
-                        if (window.runAITests) {
-                            window.runAITests();
-                        }
-                    }, 2000);
-                }
-                
-            } catch (error) {
-                console.error('❌ Fehler beim Laden der AI-Module:', error);
-                console.log('🔄 Lade Browser-AI Fallback...');
-                
-                // Fallback: Browser-AI laden
-                const script = document.createElement('script');
-                script.src = './js/ai/browser-ai.js';
-                script.onload = () => {
-                    console.log('✅ Browser-AI Fallback geladen!');
-                    // Auto-Test auch für Browser-AI
-                    if (window.location.search.includes('aitest=true')) {
-                        setTimeout(() => {
-                            if (window.runAITests) {
-                                window.runAITests();
-                            }
-                        }, 1000);
-                    }
-                };
-                script.onerror = () => {
-                    console.error('❌ Browser-AI Fallback konnte nicht geladen werden');
-                    console.log('🔄 Verwende nur Legacy-Bots');
-                };
-                document.head.appendChild(script);
-            }
-        }
+        // Verwende den Global AI Loader für zuverlässiges Laden
+        import { loadAISystem } from './js/ai/global-ai-loader.js';
+        
+        // Debug-Helper für Problemdiagnose
+        import './js/ai/debug-helper.js';
         
         // AI-System nach dem Laden der Seite initialisieren
-        window.addEventListener('load', () => {
-            setTimeout(initializeAISystem, 1000);
+        window.addEventListener('load', async () => {
+            console.log('🎮 Seite geladen, starte AI-System...');
+            
+            // Kurz warten damit Legacy-Module geladen sind
+            setTimeout(async () => {
+                try {
+                    const success = await loadAISystem();
+                    
+                    if (success) {
+                        console.log('🎯 AI-System bereit!');
+                        
+                        // Auto-Test wenn URL-Parameter vorhanden
+                        if (window.location.search.includes('aitest=true')) {
+                            console.log('🧪 Auto-Test gestartet...');
+                            setTimeout(() => {
+                                if (window.runAITests) {
+                                    window.runAITests();
+                                }
+                            }, 1000);
+                        }
+                        
+                    } else {
+                        console.log('🔄 Lade Browser-AI Fallback...');
+                        
+                        // Fallback: Browser-AI laden
+                        const script = document.createElement('script');
+                        script.src = './js/ai/browser-ai.js';
+                        script.onload = () => {
+                            console.log('✅ Browser-AI Fallback geladen!');
+                        };
+                        script.onerror = () => {
+                            console.error('❌ Browser-AI Fallback konnte nicht geladen werden');
+                            console.log('🔄 Verwende nur Legacy-Bots');
+                        };
+                        document.head.appendChild(script);
+                    }
+                    
+                } catch (error) {
+                    console.error('❌ Schwerer Fehler beim AI-System laden:', error);
+                }
+            }, 1500);
         });
         
     </script>
