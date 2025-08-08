@@ -349,9 +349,10 @@ window.postGameTraining = {
         const modal = this.createReviewModal(trickMoves);
         document.body.appendChild(modal);
         
-        // Modal anzeigen
+        // Modal anzeigen und DANN Drag & Drop aktivieren
         setTimeout(() => {
             modal.classList.add('show');
+            this.makeDraggable(modal); // NACH dem Anzeigen aktivieren
         }, 10);
     },
     
@@ -379,9 +380,6 @@ window.postGameTraining = {
             </div>
         `;
         
-        // Drag & Drop Funktionalität hinzufügen
-        this.makeDraggable(modal);
-        
         return modal;
     },
     
@@ -389,58 +387,58 @@ window.postGameTraining = {
         const modalContent = modal.querySelector('#draggable-modal');
         const header = modal.querySelector('#modal-header');
         
+        console.log('🔍 DEBUG: makeDraggable aufgerufen', modalContent, header);
+        
+        if (!modalContent || !header) {
+            console.error('Modal oder Header nicht gefunden!');
+            return;
+        }
+        
         let isDragging = false;
-        let currentX;
-        let currentY;
+        let currentX = 20; // Startwerte
+        let currentY = 20;
         let initialX;
         let initialY;
-        let xOffset = 0;
-        let yOffset = 0;
+        let xOffset = 20;
+        let yOffset = 20;
         
-        header.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-        
-        function dragStart(e) {
+        // Event-Listener direkt an Header
+        header.onmousedown = function(e) {
+            console.log('🔍 Mouse down auf header');
+            e.preventDefault();
+            
+            isDragging = true;
             initialX = e.clientX - xOffset;
             initialY = e.clientY - yOffset;
             
-            if (e.target === header || header.contains(e.target)) {
-                isDragging = true;
-                modalContent.style.cursor = 'grabbing';
-            }
-        }
-        
-        function drag(e) {
-            if (isDragging) {
-                e.preventDefault();
-                
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-                
-                xOffset = currentX;
-                yOffset = currentY;
-                
-                // Grenzen des Viewports beachten
-                const rect = modalContent.getBoundingClientRect();
-                const maxX = window.innerWidth - rect.width;
-                const maxY = window.innerHeight - rect.height;
-                
-                currentX = Math.max(0, Math.min(currentX, maxX));
-                currentY = Math.max(0, Math.min(currentY, maxY));
-                
-                modalContent.style.left = currentX + 'px';
-                modalContent.style.top = currentY + 'px';
-            }
-        }
-        
-        function dragEnd(e) {
-            initialX = currentX;
-            initialY = currentY;
+            header.style.cursor = 'grabbing';
             
-            isDragging = false;
-            modalContent.style.cursor = 'move';
-        }
+            // Document-Listener für Bewegung
+            document.onmousemove = function(e) {
+                if (isDragging) {
+                    e.preventDefault();
+                    
+                    currentX = e.clientX - initialX;
+                    currentY = e.clientY - initialY;
+                    
+                    xOffset = currentX;
+                    yOffset = currentY;
+                    
+                    modalContent.style.left = currentX + 'px';
+                    modalContent.style.top = currentY + 'px';
+                    
+                    console.log('🔍 Dragging to:', currentX, currentY);
+                }
+            };
+            
+            document.onmouseup = function() {
+                console.log('🔍 Mouse up');
+                isDragging = false;
+                header.style.cursor = 'move';
+                document.onmousemove = null;
+                document.onmouseup = null;
+            };
+        };
     },
     
     createMoveReviewHTML: function(move, index) {
