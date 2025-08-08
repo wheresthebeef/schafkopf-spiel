@@ -340,13 +340,19 @@ window.postGameTraining = {
     },
     
     showTrickReview: function(trickMoves) {
+        console.log('🔍 DEBUG: showTrickReview() aufgerufen mit', trickMoves.length, 'Zügen');
+        
         // Modal-Container erstellen
         const modal = this.createReviewModal(trickMoves);
+        console.log('🔍 DEBUG: Modal erstellt:', modal);
+        
         document.body.appendChild(modal);
+        console.log('🔍 DEBUG: Modal zu DOM hinzugefügt');
         
         // Modal anzeigen
         setTimeout(() => {
             modal.classList.add('show');
+            console.log('🔍 DEBUG: Modal-Show-Klasse hinzugefügt');
         }, 10);
     },
     
