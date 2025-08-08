@@ -46,16 +46,17 @@ window.postGameTraining = {
             
             .modal-content {
                 position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
+                top: 20px;
+                left: 20px;
+                transform: none;
                 background: white;
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                max-width: 600px;
-                width: 90%;
-                max-height: 80vh;
+                max-width: 500px;
+                width: 400px;
+                max-height: 70vh;
                 overflow-y: auto;
+                cursor: move;
             }
             
             .modal-header {
@@ -64,6 +65,10 @@ window.postGameTraining = {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
+                cursor: move;
+                user-select: none;
+                background: #f8f9fa;
+                border-radius: 12px 12px 0 0;
             }
             
             .modal-header h3 {
@@ -340,19 +345,13 @@ window.postGameTraining = {
     },
     
     showTrickReview: function(trickMoves) {
-        console.log('🔍 DEBUG: showTrickReview() aufgerufen mit', trickMoves.length, 'Zügen');
-        
         // Modal-Container erstellen
         const modal = this.createReviewModal(trickMoves);
-        console.log('🔍 DEBUG: Modal erstellt:', modal);
-        
         document.body.appendChild(modal);
-        console.log('🔍 DEBUG: Modal zu DOM hinzugefügt');
         
         // Modal anzeigen
         setTimeout(() => {
             modal.classList.add('show');
-            console.log('🔍 DEBUG: Modal-Show-Klasse hinzugefügt');
         }, 10);
     },
     
@@ -363,8 +362,8 @@ window.postGameTraining = {
         
         modal.innerHTML = `
             <div class="modal-backdrop" onclick="postGameTraining.closeReviewModal()"></div>
-            <div class="modal-content">
-                <div class="modal-header">
+            <div class="modal-content" id="draggable-modal">
+                <div class="modal-header" id="modal-header">
                     <h3>🏆 Stich-Bewertung</h3>
                     <button class="modal-close" onclick="postGameTraining.closeReviewModal()">×</button>
                 </div>
@@ -380,7 +379,68 @@ window.postGameTraining = {
             </div>
         `;
         
+        // Drag & Drop Funktionalität hinzufügen
+        this.makeDraggable(modal);
+        
         return modal;
+    },
+    
+    makeDraggable: function(modal) {
+        const modalContent = modal.querySelector('#draggable-modal');
+        const header = modal.querySelector('#modal-header');
+        
+        let isDragging = false;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+        let xOffset = 0;
+        let yOffset = 0;
+        
+        header.addEventListener('mousedown', dragStart);
+        document.addEventListener('mousemove', drag);
+        document.addEventListener('mouseup', dragEnd);
+        
+        function dragStart(e) {
+            initialX = e.clientX - xOffset;
+            initialY = e.clientY - yOffset;
+            
+            if (e.target === header || header.contains(e.target)) {
+                isDragging = true;
+                modalContent.style.cursor = 'grabbing';
+            }
+        }
+        
+        function drag(e) {
+            if (isDragging) {
+                e.preventDefault();
+                
+                currentX = e.clientX - initialX;
+                currentY = e.clientY - initialY;
+                
+                xOffset = currentX;
+                yOffset = currentY;
+                
+                // Grenzen des Viewports beachten
+                const rect = modalContent.getBoundingClientRect();
+                const maxX = window.innerWidth - rect.width;
+                const maxY = window.innerHeight - rect.height;
+                
+                currentX = Math.max(0, Math.min(currentX, maxX));
+                currentY = Math.max(0, Math.min(currentY, maxY));
+                
+                modalContent.style.left = currentX + 'px';
+                modalContent.style.top = currentY + 'px';
+            }
+        }
+        
+        function dragEnd(e) {
+            initialX = currentX;
+            initialY = currentY;
+            
+            isDragging = false;
+            modalContent.style.cursor = 'move';
+        }
     },
     
     createMoveReviewHTML: function(move, index) {
