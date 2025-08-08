@@ -65,10 +65,10 @@ function initWorkingHumanTraining() {
             
             ui.innerHTML = `
                 <div style="background: #007bff; color: white; padding: 12px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 16px;">🧑‍🏫 AI Training</h3>
+                    <h3 style="margin: 0; font-size: 16px; color: white;">🧑‍🏫 AI Training</h3>
                     <button onclick="workingHumanTraining.disable()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
                 </div>
-                <div style="padding: 15px;">
+                <div style="padding: 15px; color: #333; background: white;">
                     <div style="margin-bottom: 15px;">
                         <button id="start-game-integration" onclick="workingHumanTraining.startGameIntegration()" 
                                 style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
@@ -76,9 +76,9 @@ function initWorkingHumanTraining() {
                         </button>
                     </div>
                     
-                    <div style="margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 12px;">
-                        <strong>Status:</strong> <span id="training-status">Bereit</span><br>
-                        <strong>Feedback gegeben:</strong> <span id="feedback-counter">0</span>
+                    <div style="margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 12px; color: #333;">
+                        <strong style="color: #333;">Status:</strong> <span id="training-status" style="color: #333;">Bereit</span><br>
+                        <strong style="color: #333;">Feedback gegeben:</strong> <span id="feedback-counter" style="color: #333;">0</span>
                     </div>
                     
                     <div style="margin-bottom: 10px;">
@@ -93,7 +93,7 @@ function initWorkingHumanTraining() {
                     </div>
                     
                     <div id="feedback-area" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
-                        <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px;">Bot-Züge bewerten:</div>
+                        <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #333;">Bot-Züge bewerten:</div>
                         <div id="moves-container"></div>
                     </div>
                 </div>
@@ -166,6 +166,7 @@ function initWorkingHumanTraining() {
                 border-radius: 4px;
                 padding: 10px;
                 margin: 8px 0;
+                color: #333;
             `;
             
             moveDiv.innerHTML = `
@@ -258,6 +259,7 @@ function initWorkingHumanTraining() {
                 z-index: 10001;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 max-width: 400px;
+                color: #333;
             `;
             
             helpDiv.innerHTML = `
