@@ -347,15 +347,18 @@ function init() {
         }
     };
     
-    // CSS hinzufügen
-    const style = document.createElement('style');
-    style.textContent = '@keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }';
-    document.head.appendChild(style);
-    
+    // Global verfügbar machen - SOFORT
     window.postGameTraining = training;
     window.enableHumanTraining = () => training.enable();
     window.disableHumanTraining = () => training.disable();
     window.getHumanFeedbackStats = () => training.stats;
+    
+    console.log('✅ postGameTraining ist jetzt global verfügbar!');
+    
+    // CSS hinzufügen
+    const style = document.createElement('style');
+    style.textContent = '@keyframes slideIn { from { opacity: 0; transform: translateX(100px); } to { opacity: 1; transform: translateX(0); } }';
+    document.head.appendChild(style);
     
     console.log('✅ Post-Game AI Training System vollständig geladen!');
     console.log('🎮 Kommandos:');
