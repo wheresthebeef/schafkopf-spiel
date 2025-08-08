@@ -293,12 +293,15 @@ function initWorkingHumanTraining() {
         }
     };
     
-    // Global verfügbar machen
+    // Global verfügbar machen und alte Systeme überschreiben
     window.workingHumanTraining = workingHumanTraining;
     
-    // Override der fehlerhaften Funktionen
+    // KOMPLETT ÜBERSCHREIBEN der fehlerhaften Funktionen
     window.enableHumanTraining = () => {
         console.log('✅ Verwende funktionierendes enableHumanTraining...');
+        // Entferne alte Emergency UIs sofort
+        const oldUIs = document.querySelectorAll('#emergency-human-training-ui, #feedback-container');
+        oldUIs.forEach(ui => ui.remove());
         return window.workingHumanTraining.enable();
     };
     
@@ -309,6 +312,25 @@ function initWorkingHumanTraining() {
     window.getHumanFeedbackStats = () => {
         return window.workingHumanTraining.getFeedbackStats();
     };
+    
+    // Überschreibe auch emergencyHumanTraining falls es existiert
+    window.emergencyHumanTraining = workingHumanTraining;
+    
+    // Force-Override nach kurzer Verzögerung
+    setTimeout(() => {
+        window.enableHumanTraining = () => {
+            console.log('✅ FORCE: Verwende funktionierendes enableHumanTraining...');
+            // Entferne ALLE alten UIs
+            const allOldUIs = document.querySelectorAll('[id*="emergency"], [id*="feedback"]');
+            allOldUIs.forEach(ui => {
+                if (ui.id !== 'working-human-training-ui') {
+                    ui.remove();
+                }
+            });
+            return window.workingHumanTraining.enable();
+        };
+        console.log('✅ Force-Override der enableHumanTraining Funktion abgeschlossen');
+    }, 2000);
     
     console.log('✅ Funktionierendes Human Training System geladen!');
     console.log('💡 Teste: enableHumanTraining()');
