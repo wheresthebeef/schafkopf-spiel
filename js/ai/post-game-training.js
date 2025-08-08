@@ -32,14 +32,35 @@ window.postGameTraining = {
         console.log(`📝 Tracked: ${playerName} spielt ${card}`);
     },
     
+    endTrickTracking: function() {
+        if (!this.enabled || !this.isTrackingRound) return;
+        
+        // Nur Bot-Züge aus dem aktuellen Stich anzeigen
+        const currentTrickMoves = this.currentRoundMoves.slice(-3); // Maximal 3 Bots pro Stich
+        
+        if (currentTrickMoves.length > 0) {
+            console.log('🏼 Stich beendet - Bot-Züge dieses Stichs:');
+            console.table(currentTrickMoves);
+            
+            // TODO: Hier kommt später das Post-Game Review Modal
+            this.showTrickReview(currentTrickMoves);
+        }
+    },
+    
+    showTrickReview: function(trickMoves) {
+        // Vorerst nur Console-Ausgabe - UI kommt als nächstes
+        console.log('🎯 Trick Review würde hier angezeigt werden für:', trickMoves);
+    },
+    
     endRoundTracking: function() {
         if (!this.enabled) return;
         
-        console.log('🏁 Runde beendet - Gesammelte Bot-Züge:');
+        console.log('🏁 Komplette Runde beendet - Alle Bot-Züge:');
         console.table(this.currentRoundMoves);
         
-        // TODO: Hier kommt später das Post-Game Review Modal
+        // Tracking zurücksetzen für nächste Runde
         this.isTrackingRound = false;
+        this.currentRoundMoves = [];
     },
     
     demoGame: function() {

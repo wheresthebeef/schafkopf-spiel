@@ -447,6 +447,11 @@ function evaluateTrick() {
     // UI aktualisieren
     updateUI();
     
+    // NEUES FEATURE: Post-Game Training für diesen Stich
+    if (window.postGameTraining) {
+        window.postGameTraining.endTrickTracking();
+    }
+    
     // NEUES VERHALTEN: Stich bleibt liegen, "Weiter"-Button anzeigen
     showContinueButton();
 }
