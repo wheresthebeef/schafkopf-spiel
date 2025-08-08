@@ -24,8 +24,8 @@ function init() {
         this.createUI();
         return true;
     };
-        
-        createUI() {
+    
+    training.createUI = function() {
             // Remove old UIs
             document.querySelectorAll('#post-game-training-ui, #working-human-training-ui').forEach(ui => ui.remove());
             
