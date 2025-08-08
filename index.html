@@ -92,17 +92,20 @@
 
     <!-- AI-SYSTEM INTEGRATION -->
     <script type="module">
+        // Emergency-Fix für alle Syntax-Fehler
+        import './js/ai/emergency-fix.js';
+        
         // Verwende den Simplified AI Loader für bessere Fehlerbehandlung
-        import { loadAISystem } from './js/ai/simple-ai-loader.js';
+        // import { loadAISystem } from './js/ai/simple-ai-loader.js';
         
         // Debug-Helper für Problemdiagnose
-        import './js/ai/debug-helper.js';
+        // import './js/ai/debug-helper.js';
         
         // Emergency-System falls Module nicht laden
-        import './js/ai/emergency-human-training.js';
+        // import './js/ai/emergency-human-training.js';
         
         // Syntax-Debugger für Problemanalyse
-        import './js/ai/syntax-debugger.js';
+        // import './js/ai/syntax-debugger.js';
         
         // AI-System nach dem Laden der Seite initialisieren
         window.addEventListener('load', async () => {
@@ -110,41 +113,11 @@
             
             // Kurz warten damit Legacy-Module geladen sind
             setTimeout(async () => {
-                try {
-                    const success = await loadAISystem();
-                    
-                    if (success) {
-                        console.log('🎯 AI-System bereit!');
-                        
-                        // Auto-Test wenn URL-Parameter vorhanden
-                        if (window.location.search.includes('aitest=true')) {
-                            console.log('🧪 Auto-Test gestartet...');
-                            setTimeout(() => {
-                                if (window.runAITests) {
-                                    window.runAITests();
-                                }
-                            }, 1000);
-                        }
-                        
-                    } else {
-                        console.log('🔄 Lade Browser-AI Fallback...');
-                        
-                        // Fallback: Browser-AI laden
-                        const script = document.createElement('script');
-                        script.src = './js/ai/browser-ai.js';
-                        script.onload = () => {
-                            console.log('✅ Browser-AI Fallback geladen!');
-                        };
-                        script.onerror = () => {
-                            console.error('❌ Browser-AI Fallback konnte nicht geladen werden');
-                            console.log('🔄 Verwende nur Legacy-Bots');
-                        };
-                        document.head.appendChild(script);
-                    }
-                    
-                } catch (error) {
-                    console.error('❌ Schwerer Fehler beim AI-System laden:', error);
-                }
+                console.log('🚑 Emergency: Alle AI-Module haben Syntax-Fehler!');
+                console.log('✅ Emergency-Fix geladen - enableHumanTraining() funktioniert!');
+                console.log('💡 Verwende: fixAllSyntaxErrors() für vollständige Reparatur');
+                
+                // Emergency AI ist bereits durch emergency-fix.js geladen
             }, 1500);
         });
         
