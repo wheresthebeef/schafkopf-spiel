@@ -33,10 +33,19 @@ window.postGameTraining = {
     },
     
     endTrickTracking: function() {
-        if (!this.enabled || !this.isTrackingRound) return;
+        console.log('🔍 DEBUG: endTrickTracking() aufgerufen');
+        console.log('🔍 DEBUG: enabled =', this.enabled, ', isTrackingRound =', this.isTrackingRound);
+        console.log('🔍 DEBUG: currentRoundMoves.length =', this.currentRoundMoves.length);
+        
+        if (!this.enabled || !this.isTrackingRound) {
+            console.log('🔍 DEBUG: Tracking nicht aktiv - beende');
+            return;
+        }
         
         // Nur Bot-Züge aus dem aktuellen Stich anzeigen
         const currentTrickMoves = this.currentRoundMoves.slice(-3); // Maximal 3 Bots pro Stich
+        
+        console.log('🔍 DEBUG: currentTrickMoves =', currentTrickMoves);
         
         if (currentTrickMoves.length > 0) {
             console.log('🏼 Stich beendet - Bot-Züge dieses Stichs:');
@@ -44,6 +53,8 @@ window.postGameTraining = {
             
             // TODO: Hier kommt später das Post-Game Review Modal
             this.showTrickReview(currentTrickMoves);
+        } else {
+            console.log('🔍 DEBUG: Keine Bot-Züge für diesen Stich gefunden');
         }
     },
     
