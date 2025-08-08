@@ -500,6 +500,19 @@ function playCPUCard() {
         console.log(`${currentPlayer.name} spielt: ${selectedCard.symbol}${selectedCard.short}`);
     }
     
+    // NEUES FEATURE: Bot-Zug für Post-Game Training tracken
+    if (window.postGameTraining && !currentPlayer.isHuman) {
+        window.postGameTraining.trackBotMove(
+            currentPlayer.name,
+            `${selectedCard.symbol}${selectedCard.short}`,
+            {
+                trickNumber: gameState.trickNumber,
+                position: gameState.currentTrick.length,
+                cardPoints: selectedCard.points
+            }
+        );
+    }
+    
     // Nächste Aktion
     if (gameState.currentTrick.length === 4) {
         setTimeout(evaluateTrick, 1000);
@@ -515,6 +528,11 @@ function playCPUCard() {
  * Beendet das Spiel und zeigt Ergebnisse (ÜBERARBEITET: Team-basierte Auswertung)
  */
 function endGame() {
+    // NEUES FEATURE: Post-Game Training abschließen
+    if (window.postGameTraining) {
+        window.postGameTraining.endRoundTracking();
+    }
+    
     const result = finishGame();
     
     let message = `Spiel beendet!\n\n`;
