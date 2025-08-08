@@ -92,8 +92,8 @@
 
     <!-- AI-SYSTEM INTEGRATION -->
     <script type="module">
-        // Funktionierendes Human Training System
-        import './js/ai/working-human-training.js';
+        // Funktionierendes Post-Game Training System
+        import './js/ai/post-game-training.js';
         
         // Alle anderen AI-Module deaktiviert wegen Syntax-Fehlern
         // import './js/ai/emergency-fix.js';
@@ -105,15 +105,22 @@
         
         // AI-System nach dem Laden der Seite initialisieren
         window.addEventListener('load', async () => {
-            console.log('🎮 Seite geladen, starte AI-System...');
+            console.log('🎮 Seite geladen, starte Post-Game AI Training System...');
             
             // Kurz warten damit Legacy-Module geladen sind
             setTimeout(async () => {
-                console.log('✅ Funktionierendes Human Training System geladen!');
-                console.log('💡 Verwende: enableHumanTraining()');
-                console.log('🎯 Jetzt sollte das ECHTE AI-Training Panel erscheinen!');
+                console.log('✅ Post-Game AI Training System bereit!');
+                console.log('📝 Verwende: enableHumanTraining()');
+                console.log('🎯 Test: postGameTraining.demoGame()');
+                console.log('🎲 Vollspiel: postGameTraining.fullGame()');
                 
-                // Das funktionierende System ist bereits durch working-human-training.js geladen
+                // Zeige kleinen Hinweis
+                const hint = document.createElement('div');
+                hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#28a745;color:white;padding:10px;border-radius:6px;z-index:1000;font-size:12px;';
+                hint.innerHTML = '🎮 Post-Game AI Training verfügbar!<br><code>enableHumanTraining()</code>';
+                document.body.appendChild(hint);
+                
+                setTimeout(() => hint.remove(), 5000);
             }, 1500);
         });
         
