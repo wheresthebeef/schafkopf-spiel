@@ -17,17 +17,13 @@ if (document.readyState === 'loading') {
 
 function init() {
     const training = window.postGameTraining;
-        enabled: false,
-        ui: null,
-        moves: [],
-        tracking: false,
-        stats: { games: 0, moves: 0, good: 0, bad: 0, suggestions: 0 },
-        
-        enable() {
-            this.enabled = true;
-            this.createUI();
-            return true;
-        },
+    
+    // Funktionen hinzufügen
+    training.enable = function() {
+        this.enabled = true;
+        this.createUI();
+        return true;
+    };
         
         createUI() {
             // Remove old UIs
