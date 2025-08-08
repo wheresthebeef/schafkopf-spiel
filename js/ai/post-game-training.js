@@ -387,58 +387,98 @@ window.postGameTraining = {
         const modalContent = modal.querySelector('#draggable-modal');
         const header = modal.querySelector('#modal-header');
         
-        console.log('🔍 DEBUG: makeDraggable aufgerufen', modalContent, header);
-        
         if (!modalContent || !header) {
             console.error('Modal oder Header nicht gefunden!');
             return;
         }
         
         let isDragging = false;
-        let currentX = 20; // Startwerte
-        let currentY = 20;
-        let initialX;
-        let initialY;
-        let xOffset = 20;
-        let yOffset = 20;
+        let startX, startY, startLeft, startTop;
         
-        // Event-Listener direkt an Header
-        header.onmousedown = function(e) {
-            console.log('🔍 Mouse down auf header');
+        // FIREFOX-KOMPATIBLE Event-Handler
+        header.addEventListener('mousedown', function(e) {
+            console.log('🔍 Firefox: Mouse down');
+            
+            // Verhindere Text-Selektion
             e.preventDefault();
+            e.stopPropagation();
             
             isDragging = true;
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
+            startX = e.clientX;
+            startY = e.clientY;
+            
+            // Aktuelle Position des Modals
+            const rect = modalContent.getBoundingClientRect();
+            startLeft = rect.left;
+            startTop = rect.top;
             
             header.style.cursor = 'grabbing';
+            document.body.style.userSelect = 'none'; // Verhindere Selektion
             
-            // Document-Listener für Bewegung
-            document.onmousemove = function(e) {
-                if (isDragging) {
-                    e.preventDefault();
-                    
-                    currentX = e.clientX - initialX;
-                    currentY = e.clientY - initialY;
-                    
-                    xOffset = currentX;
-                    yOffset = currentY;
-                    
-                    modalContent.style.left = currentX + 'px';
-                    modalContent.style.top = currentY + 'px';
-                    
-                    console.log('🔍 Dragging to:', currentX, currentY);
-                }
-            };
+            console.log('🔍 Start Position:', startLeft, startTop);
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isDragging) return;
             
-            document.onmouseup = function() {
-                console.log('🔍 Mouse up');
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const deltaX = e.clientX - startX;
+            const deltaY = e.clientY - startY;
+            
+            const newLeft = startLeft + deltaX;
+            const newTop = startTop + deltaY;
+            
+            // Grenzen prüfen
+            const maxLeft = window.innerWidth - modalContent.offsetWidth;
+            const maxTop = window.innerHeight - modalContent.offsetHeight;
+            
+            const finalLeft = Math.max(0, Math.min(newLeft, maxLeft));
+            const finalTop = Math.max(0, Math.min(newTop, maxTop));
+            
+            modalContent.style.left = finalLeft + 'px';
+            modalContent.style.top = finalTop + 'px';
+            
+            console.log('🔍 Dragging:', finalLeft, finalTop);
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            if (isDragging) {
+                console.log('🔍 Mouse up - stop dragging');
                 isDragging = false;
                 header.style.cursor = 'move';
-                document.onmousemove = null;
-                document.onmouseup = null;
-            };
-        };
+                document.body.style.userSelect = ''; // Selektion wieder aktivieren
+            }
+        });
+        
+        // BONUS: Touch-Support für mobile
+        header.addEventListener('touchstart', function(e) {
+            const touch = e.touches[0];
+            const mouseEvent = new MouseEvent('mousedown', {
+                clientX: touch.clientX,
+                clientY: touch.clientY
+            });
+            header.dispatchEvent(mouseEvent);
+        });
+        
+        document.addEventListener('touchmove', function(e) {
+            if (isDragging) {
+                const touch = e.touches[0];
+                const mouseEvent = new MouseEvent('mousemove', {
+                    clientX: touch.clientX,
+                    clientY: touch.clientY
+                });
+                document.dispatchEvent(mouseEvent);
+            }
+        });
+        
+        document.addEventListener('touchend', function(e) {
+            if (isDragging) {
+                const mouseEvent = new MouseEvent('mouseup', {});
+                document.dispatchEvent(mouseEvent);
+            }
+        });
     },
     
     createMoveReviewHTML: function(move, index) {
