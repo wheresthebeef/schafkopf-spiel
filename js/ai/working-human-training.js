@@ -53,7 +53,8 @@ function initWorkingHumanTraining() {
                 top: 100px;
                 right: 20px;
                 width: 320px;
-                background: white;
+                background: white !important;
+                color: #333 !important;
                 border: 2px solid #007bff;
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
@@ -64,36 +65,36 @@ function initWorkingHumanTraining() {
             `;
             
             ui.innerHTML = `
-                <div style="background: #007bff; color: white; padding: 12px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center;">
-                    <h3 style="margin: 0; font-size: 16px; color: white;">🧑‍🏫 AI Training</h3>
-                    <button onclick="workingHumanTraining.disable()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer;">×</button>
+                <div style="background: #007bff !important; color: white !important; padding: 12px; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin: 0; font-size: 16px; color: white !important;">🧑‍🏫 AI Training</h3>
+                    <button onclick="workingHumanTraining.disable()" style="background: none; border: none; color: white !important; font-size: 18px; cursor: pointer;">×</button>
                 </div>
-                <div style="padding: 15px; color: #333; background: white;">
+                <div style="padding: 15px; color: #333 !important; background: white !important;">
                     <div style="margin-bottom: 15px;">
                         <button id="start-game-integration" onclick="workingHumanTraining.startGameIntegration()" 
-                                style="width: 100%; padding: 10px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                                style="width: 100%; padding: 10px; background: #28a745 !important; color: white !important; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
                             🎮 Game Integration starten
                         </button>
                     </div>
                     
-                    <div style="margin-bottom: 15px; padding: 8px; background: #f8f9fa; border-radius: 4px; font-size: 12px; color: #333;">
-                        <strong style="color: #333;">Status:</strong> <span id="training-status" style="color: #333;">Bereit</span><br>
-                        <strong style="color: #333;">Feedback gegeben:</strong> <span id="feedback-counter" style="color: #333;">0</span>
+                    <div style="margin-bottom: 15px; padding: 8px; background: #f8f9fa !important; border-radius: 4px; font-size: 12px; color: #333 !important;">
+                        <strong style="color: #333 !important;">Status:</strong> <span id="training-status" style="color: #333 !important;">Bereit</span><br>
+                        <strong style="color: #333 !important;">Feedback gegeben:</strong> <span id="feedback-counter" style="color: #333 !important;">0</span>
                     </div>
                     
                     <div style="margin-bottom: 10px;">
                         <button onclick="workingHumanTraining.simulateBotMove()" 
-                                style="width: 100%; padding: 8px; background: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 5px;">
+                                style="width: 100%; padding: 8px; background: #17a2b8 !important; color: white !important; border: none; border-radius: 4px; cursor: pointer; margin-bottom: 5px;">
                             🎯 Test: Bot-Zug simulieren
                         </button>
                         <button onclick="workingHumanTraining.showHelp()" 
-                                style="width: 100%; padding: 8px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                                style="width: 100%; padding: 8px; background: #6c757d !important; color: white !important; border: none; border-radius: 4px; cursor: pointer;">
                             ❓ Hilfe anzeigen
                         </button>
                     </div>
                     
                     <div id="feedback-area" style="border-top: 1px solid #dee2e6; padding-top: 10px;">
-                        <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #333;">Bot-Züge bewerten:</div>
+                        <div style="font-weight: bold; font-size: 12px; margin-bottom: 8px; color: #333 !important;">Bot-Züge bewerten:</div>
                         <div id="moves-container"></div>
                     </div>
                 </div>
@@ -161,29 +162,29 @@ function initWorkingHumanTraining() {
             
             const moveDiv = document.createElement('div');
             moveDiv.style.cssText = `
-                background: #f8f9fa;
+                background: #f8f9fa !important;
                 border: 1px solid #dee2e6;
                 border-radius: 4px;
                 padding: 10px;
                 margin: 8px 0;
-                color: #333;
+                color: #333 !important;
             `;
             
             moveDiv.innerHTML = `
-                <div style="font-weight: bold; margin-bottom: 8px; color: #495057;">
+                <div style="font-weight: bold; margin-bottom: 8px; color: #495057 !important;">
                     ${player}: ${suit} ${value}
                 </div>
                 <div style="display: flex; gap: 5px;">
                     <button onclick="workingHumanTraining.giveFeedback('${moveId}', 'good', '${player}', '${suit} ${value}')" 
-                            style="flex: 1; padding: 6px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                            style="flex: 1; padding: 6px; background: #28a745 !important; color: white !important; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
                         👍 Gut
                     </button>
                     <button onclick="workingHumanTraining.giveFeedback('${moveId}', 'bad', '${player}', '${suit} ${value}')" 
-                            style="flex: 1; padding: 6px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                            style="flex: 1; padding: 6px; background: #dc3545 !important; color: white !important; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
                         👎 Schlecht
                     </button>
                     <button onclick="workingHumanTraining.giveFeedback('${moveId}', 'suggest', '${player}', '${suit} ${value}')" 
-                            style="flex: 1; padding: 6px; background: #ffc107; color: black; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
+                            style="flex: 1; padding: 6px; background: #ffc107 !important; color: black !important; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">
                         💡 Besser wäre...
                     </button>
                 </div>
@@ -252,32 +253,32 @@ function initWorkingHumanTraining() {
                 top: 50%;
                 left: 50%;
                 transform: translate(-50%, -50%);
-                background: white;
+                background: white !important;
                 border: 2px solid #007bff;
                 border-radius: 8px;
                 padding: 20px;
                 z-index: 10001;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);
                 max-width: 400px;
-                color: #333;
+                color: #333 !important;
             `;
             
             helpDiv.innerHTML = `
-                <h3 style="margin-top: 0; color: #007bff;">🧑‍🏫 Human Training Hilfe</h3>
-                <p><strong>So funktioniert's:</strong></p>
-                <ul style="margin: 10px 0;">
-                    <li><strong>👍 Gut:</strong> Klicken wenn Bot klug gespielt hat</li>
-                    <li><strong>👎 Schlecht:</strong> Klicken bei dummen Zügen</li>
-                    <li><strong>💡 Besser wäre:</strong> Für Verbesserungsvorschläge</li>
+                <h3 style="margin-top: 0; color: #007bff !important;">🧑‍🏫 Human Training Hilfe</h3>
+                <p style="color: #333 !important;"><strong>So funktioniert's:</strong></p>
+                <ul style="margin: 10px 0; color: #333 !important;">
+                    <li style="color: #333 !important;"><strong>👍 Gut:</strong> Klicken wenn Bot klug gespielt hat</li>
+                    <li style="color: #333 !important;"><strong>👎 Schlecht:</strong> Klicken bei dummen Zügen</li>
+                    <li style="color: #333 !important;"><strong>💡 Besser wäre:</strong> Für Verbesserungsvorschläge</li>
                 </ul>
-                <p><strong>Tipps:</strong></p>
-                <ul style="margin: 10px 0;">
-                    <li>Bewerten Sie Trump-Spiel besonders</li>
-                    <li>Achten Sie auf Punkt-Sammeln</li>
-                    <li>Seien Sie konsequent bei ähnlichen Situationen</li>
+                <p style="color: #333 !important;"><strong>Tipps:</strong></p>
+                <ul style="margin: 10px 0; color: #333 !important;">
+                    <li style="color: #333 !important;">Bewerten Sie Trump-Spiel besonders</li>
+                    <li style="color: #333 !important;">Achten Sie auf Punkt-Sammeln</li>
+                    <li style="color: #333 !important;">Seien Sie konsequent bei ähnlichen Situationen</li>
                 </ul>
                 <button onclick="this.parentElement.remove()" 
-                        style="width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px;">
+                        style="width: 100%; padding: 10px; background: #007bff !important; color: white !important; border: none; border-radius: 4px; cursor: pointer; margin-top: 15px;">
                     Verstanden
                 </button>
             `;
