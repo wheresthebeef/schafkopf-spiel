@@ -1,626 +1,224 @@
 /**
- * Bayerisches Schafkopf - Haupteinstiegspunkt (Refactored)
- * Orchestriert alle Module und stellt eine einheitliche API bereit
+ * Bayerisches Schafkopf - Modern ES6 Entry Point
+ * Refactored Main Module for coordinating all game systems
  */
 
-// Core-Module importieren
-import { initializeGameState, getGameStateInternal, startNewRound, setGamePhase, finishGame } from './core/game-state.js';
-import { GAME_PHASES, GAME_TYPES } from './core/constants.js';
-import { logGameAction } from './core/utils.js';
+// Development flag for refactoring phase
+const REFACTORING_MODE = true;
+const CURRENT_PHASE = 1;
 
-// Cards-Module importieren
-import { createDeck, setTrumpStatus } from './cards/cards.js';
-import { shuffleDeck, dealCards } from './cards/deck.js';
-import { sortCardsForDisplay } from './cards/card-utils.js';
-
-// AI-Module importieren
-import { botManager } from './ai/bot-manager.js';
-import { initializeAISystem, selectCardWithAI } from './ai/ai-bridge.js';
+console.log('🏗️ Schafkopf Main Module (Refactored) - Phase', CURRENT_PHASE);
 
 /**
- * Startet ein neues Spiel
+ * System initialization and module coordination
  */
-function newGame() {
-    logGameAction('Neues Spiel gestartet');
-    
-    // Continue-Button verstecken falls noch sichtbar
-    hideContinueButton();
-    
-    // Spielzustand initialisieren (behält Debug-Modus)
-    const currentDebugMode = window.gameState?.debugMode || true;
-    initializeGameState({
-        debugMode: currentDebugMode
-    });
-    
-    // Deck erstellen und mischen
-    const deck = createDeck();
-    setTrumpStatus(deck);
-    const shuffledDeck = shuffleDeck(deck);
-    
-    // Karten an Spieler verteilen
-    const hands = dealCards(shuffledDeck);
-    const gameState = getGameStateInternal();
-    hands.forEach((hand, index) => {
-        gameState.players[index].cards = hand;
-    });
-    
-    // AI-System initialisieren (Spieler 1-3 sind Bots)
-    initializeAISystem({
-        aiType: 'qlearning',
-        playerConfigs: {
-            1: { explorationRate: 0.3, learningRate: 0.1 },
-            2: { explorationRate: 0.25, learningRate: 0.12 },
-            3: { explorationRate: 0.35, learningRate: 0.08 }
-        }
-    });
-    logGameAction('🧠 Q-Learning AI-System initialisiert für alle Bot-Spieler');
-    
-    // Spielphase auf Ass-Auswahl setzen
-    setGamePhase(GAME_PHASES.BIDDING);
-    gameState.currentPlayer = 0; // Menschlicher Spieler wählt Ass
-    
-    // UI aktualisieren
-    updateUI();
-    updateGameStatus('Wählen Sie ein Ass für das Rufspiel...');
-    
-    // Ass-Auswahl anzeigen
-    showAceSelection();
-    
-    if (gameState.debugMode) {
-        console.log('=== Neues Spiel ===');
-        gameState.players.forEach((player, index) => {
-            debugCards(player.cards, `${player.name} (${index})`);
-        });
+class SchafkopfGameSystem {
+    constructor() {
+        this.phase = CURRENT_PHASE;
+        this.legacyActive = true;
+        this.modulesLoaded = new Set();
+        this.moduleErrors = new Map();
         
-        // Trumpf-Reihenfolge anzeigen (nur beim ersten Spiel)
-        if (!window.trumpOrderShown) {
-            debugTrumpOrder(shuffledDeck);
-            window.trumpOrderShown = true;
+        console.log('🎮 SchafkopfGameSystem initializing...');
+    }
+    
+    /**
+     * Initialize the game system
+     */
+    async init() {
+        console.log('📦 Phase', this.phase, '- System Setup');
+        
+        try {
+            // Phase 1: Preparation only
+            await this.setupPhase1();
+            
+            // Mark system as ready
+            this.ready = true;
+            console.log('✅ Main system ready for Phase 2');
+            
+            // Expose global for debugging
+            window.schafkopfMain = this;
+            
+            return true;
+        } catch (error) {
+            console.error('❌ Main system initialization failed:', error);
+            this.fallbackToLegacy();
+            return false;
         }
     }
-}
-
-/**
- * Zeigt die Ass-Auswahl für das Rufspiel
- */
-function showAceSelection() {
-    const gameState = getGameStateInternal();
-    const humanPlayer = gameState.players[0];
-    const availableAces = getAvailableAcesForCall(humanPlayer.cards);
     
-    if (availableAces.length === 0) {
-        showModal('Kein Ass rufbar', 
-            'Sie können kein Ass rufen. Das Spiel wird als Ramsch gespielt oder Sie können ein Solo ansagen.',
-            () => handleNoAceCallable()
-        );
-        return;
-    }
-    
-    // Ass-Auswahl-Buttons unter den Spielerkarten anzeigen
-    showAceSelectionButtons(availableAces);
-}
-
-/**
- * Zeigt die Ass-Auswahl Buttons unter den Spielerkarten
- * @param {Array} availableAces - Verfügbare Asse
- */
-function showAceSelectionButtons(availableAces) {
-    const cardsContainer = document.getElementById('cards-0');
-    
-    // Prüfen ob bereits Auswahl-Buttons existieren
-    let selectionContainer = document.getElementById('ace-selection-container');
-    if (!selectionContainer) {
-        selectionContainer = document.createElement('div');
-        selectionContainer.id = 'ace-selection-container';
-        selectionContainer.className = 'ace-selection-container';
-        cardsContainer.parentNode.insertBefore(selectionContainer, cardsContainer.nextSibling);
-    }
-    
-    // Ass-Auswahl HTML erstellen
-    selectionContainer.innerHTML = `
-        <div class="ace-selection-prompt">
-            <strong>🃏 Rufspiel: Wählen Sie ein Ass</strong>
-            <div class="ace-selection-help">Herz ist Trumpf - Sie können nur Asse rufen, wenn Sie die passende Farbe haben</div>
-        </div>
-        <div class="ace-selection-buttons-inline">
-            ${availableAces.map(ace => `
-                <button class="btn ace-btn-inline" onclick="selectAceForCall('${ace.suit}')">
-                    <span class="ace-name">${ace.name}</span>
-                </button>
-            `).join('')}
-            <button class="btn cancel-btn-inline" onclick="cancelAceSelection()">
-                Abbrechen
-            </button>
-        </div>
-    `;
-    
-    updateGameStatus('Wählen Sie ein Ass für das Rufspiel...');
-}
-
-/**
- * Entfernt die Ass-Auswahl Buttons
- */
-function hideAceSelectionButtons() {
-    const selectionContainer = document.getElementById('ace-selection-container');
-    if (selectionContainer) {
-        selectionContainer.remove();
-    }
-}
-
-/**
- * Ermittelt welche Asse der Spieler rufen kann
- * @param {Array} playerCards - Karten des Spielers
- * @returns {Array} Array mit rufbaren Assen
- */
-function getAvailableAcesForCall(playerCards) {
-    const availableAces = [];
-    const callableSuits = {
-        'eichel': { name: 'Eichel' },
-        'gras': { name: 'Gras' },
-        'schellen': { name: 'Schellen' }
-    };
-    
-    Object.keys(callableSuits).forEach(suit => {
-        // Prüfen ob Spieler selbst das Ass hat
-        const hasAce = playerCards.some(card => 
-            card.suit === suit && card.value === 'sau'
-        );
+    /**
+     * Phase 1 setup - prepare for future module loading
+     */
+    async setupPhase1() {
+        console.log('🔧 Phase 1: Setup & Structure');
         
-        if (hasAce) return; // Eigenes Ass kann nicht gerufen werden
-        
-        // Prüfen ob Spieler mindestens eine Karte der Farbe hat (außer Ober/Unter)
-        const hasSuitCard = playerCards.some(card => 
-            card.suit === suit && 
-            card.value !== 'ober' && 
-            card.value !== 'unter'
-        );
-        
-        if (hasSuitCard) {
-            availableAces.push({
-                suit: suit,
-                name: `${callableSuits[suit].name}-Ass`
-            });
-        }
-    });
-    
-    return availableAces;
-}
-
-/**
- * Behandelt die Auswahl eines Asses
- * @param {string} suit - Gewählte Farbe des Asses
- */
-function selectAceForCall(suit) {
-    const gameState = getGameStateInternal();
-    
-    // Gerufenes Ass im Spielzustand speichern
-    gameState.calledAce = suit;
-    gameState.gameType = GAME_TYPES.RUFSPIEL.id;
-    gameState.calledSuitPlayed = false;
-    
-    // Partner finden (wer das gerufene Ass hat)
-    findPartnerWithAce(suit);
-    
-    // Ass-Auswahl Buttons entfernen
-    hideAceSelectionButtons();
-    
-    // Spiel starten
-    startGameAfterAceSelection();
-    
-    logGameAction('Ass gerufen', { 
-        suit: suit, 
-        partner: gameState.calledAcePlayer 
-    });
-    
-    if (gameState.debugMode) {
-        const suitNames = {
-            'eichel': 'Eichel',
-            'gras': 'Gras',
-            'schellen': 'Schellen',
-            'herz': 'Herz'
+        // Detect browser capabilities
+        this.browserCapabilities = {
+            esModules: this.supportsESModules(),
+            asyncAwait: this.supportsAsyncAwait(),
+            classes: this.supportsClasses()
         };
-        console.log(`🎯 ${suitNames[suit]}-Ass gerufen - Partner ist ${gameState.players[gameState.calledAcePlayer].name}`);
-        console.log(`⚠️  Ruffarbe darf erst nach dem ersten Ausspielen abgeworfen werden!`);
-    }
-}
-
-/**
- * Bricht die Ass-Auswahl ab
- */
-function cancelAceSelection() {
-    hideAceSelectionButtons();
-    updateGameStatus('Spiel abgebrochen - neues Spiel wird gestartet...');
-    setTimeout(() => {
-        newGame();
-    }, 1000);
-}
-
-/**
- * Findet den Partner anhand des gerufenen Asses
- * @param {string} suit - Farbe des gerufenen Asses
- */
-function findPartnerWithAce(suit) {
-    const gameState = getGameStateInternal();
-    
-    for (let i = 1; i < gameState.players.length; i++) {
-        const hasAce = gameState.players[i].cards.some(card => 
-            card.suit === suit && card.value === 'sau'
-        );
         
-        if (hasAce) {
-            gameState.calledAcePlayer = i;
-            
-            // Partnerschaft setzen: Sie (0) und Partner (i) = Team 0, alle anderen = Team 1
-            gameState.playerPartnership[0] = 0; // Sie: Team 0
-            gameState.playerPartnership[1] = (i === 1) ? 0 : 1;
-            gameState.playerPartnership[2] = (i === 2) ? 0 : 1;
-            gameState.playerPartnership[3] = (i === 3) ? 0 : 1;
-            
-            if (gameState.debugMode) {
-                const suitNames = {
-                    'eichel': 'Eichel',
-                    'gras': 'Gras',
-                    'schellen': 'Schellen',
-                    'herz': 'Herz'
-                };
-                console.log(`Partner gefunden: ${gameState.players[i].name} hat ${suitNames[suit]}-Ass`);
-                console.log('Team-Zuordnung:', gameState.playerPartnership);
+        console.log('🔍 Browser capabilities:', this.browserCapabilities);
+        
+        // Prepare for legacy integration
+        this.prepareLegacyIntegration();
+        
+        // Setup module loading infrastructure
+        this.setupModuleLoader();
+        
+        console.log('✅ Phase 1 setup complete');
+    }
+    
+    /**
+     * Check ES modules support
+     */
+    supportsESModules() {
+        try {
+            new Function('import("data:text/javascript,export default 1")');
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    
+    /**
+     * Check async/await support
+     */
+    supportsAsyncAwait() {
+        try {
+            new Function('async function test() { await 1; }');
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    
+    /**
+     * Check class support
+     */
+    supportsClasses() {
+        try {
+            new Function('class Test {}');
+            return true;
+        } catch {
+            return false;
+        }
+    }
+    
+    /**
+     * Prepare integration with legacy system
+     */
+    prepareLegacyIntegration() {
+        // Create bridge for legacy compatibility
+        window.modernSystem = {
+            phase: this.phase,
+            ready: false,
+            modules: new Set(),
+            bridge: {
+                // Will be populated in future phases
+                game: null,
+                cards: null,
+                rules: null,
+                ai: null,
+                ui: null
             }
-            return;
-        }
-    }
-    
-    // Sollte nicht passieren, aber Fallback
-    console.warn('Gerufenes Ass nicht gefunden!');
-    gameState.calledAcePlayer = -1;
-}
-
-/**
- * Startet das Spiel nach der Ass-Auswahl
- */
-function startGameAfterAceSelection() {
-    const gameState = getGameStateInternal();
-    
-    setGamePhase(GAME_PHASES.PLAYING);
-    gameState.currentPlayer = 0; // Menschlicher Spieler beginnt
-    
-    updateUI();
-    updateGameStatus('Rufspiel gestartet - Sie beginnen!');
-    
-    if (gameState.debugMode && gameState.calledAcePlayer >= 0) {
-        const partnerName = gameState.players[gameState.calledAcePlayer].name;
-        showToast(`Ihr Partner: ${partnerName}`, 3000);
+        };
         
-        console.log('=== TRUMPF-STRATEGIE ===');
-        console.log('Als spielende Partei sollten Sie:');
-        console.log('1. Trümpfe ausspielen um Kontrolle zu übernehmen');
-        console.log('2. Abwechselnd hohe und niedrige Trümpfe spielen');
-        console.log('3. Partner wird entsprechend mitspielen');
-        console.log('========================');
+        console.log('🔗 Legacy bridge prepared');
     }
-}
-
-/**
- * Behandelt den Fall, dass kein Ass gerufen werden kann
- */
-function handleNoAceCallable() {
-    showModal('Neues Spiel', 'Es wird ein neues Spiel gestartet.', () => {
-        newGame();
-    });
-}
-
-/**
- * Zeigt den "Weiter"-Button nach einem abgeschlossenen Stich
- */
-function showContinueButton() {
-    let continueContainer = document.getElementById('continue-container');
-    if (!continueContainer) {
-        continueContainer = document.createElement('div');
-        continueContainer.id = 'continue-container';
-        continueContainer.className = 'continue-container';
+    
+    /**
+     * Setup module loading infrastructure
+     */
+    setupModuleLoader() {
+        this.moduleLoader = {
+            loadOrder: [
+                // Phase 2: Core modules
+                'cards', 'rules',
+                // Phase 3: Game engine
+                'game',
+                // Phase 4: AI system
+                'ai',
+                // Phase 5: UI system
+                'ui'
+            ],
+            loaded: new Set(),
+            errors: new Map()
+        };
         
-        const centerArea = document.querySelector('.center-area');
-        if (centerArea) {
-            centerArea.appendChild(continueContainer);
-        }
+        console.log('📋 Module loader ready for Phase 2');
     }
     
-    const isLastTrick = isGameFinished();
-    const buttonText = isLastTrick ? 'Endergebnis anzeigen' : 'Weiter zur nächsten Runde';
-    const statusText = isLastTrick ? 'Spiel beendet!' : 'Stich abgeschlossen';
+    /**
+     * Future method: Load a specific module
+     */
+    async loadModule(moduleName) {
+        console.log(`📦 [Future] Loading module: ${moduleName}`);
+        // Implementation will be added in Phase 2
+        return Promise.resolve({ name: moduleName, loaded: false, phase: 'future' });
+    }
     
-    continueContainer.innerHTML = `
-        <div class="continue-status">
-            <strong>🎯 ${statusText}</strong>
-        </div>
-        <button class="btn btn-continue" onclick="continueAfterTrick()">
-            ${buttonText}
-        </button>
-    `;
+    /**
+     * Fallback to legacy system
+     */
+    fallbackToLegacy() {
+        console.log('🔄 Falling back to legacy system');
+        this.legacyActive = true;
+        this.modernActive = false;
+        
+        // Ensure legacy compatibility
+        window.modernSystem.fallback = true;
+    }
     
-    continueContainer.style.display = 'block';
+    /**
+     * Get system status
+     */
+    getStatus() {
+        return {
+            phase: this.phase,
+            ready: this.ready || false,
+            legacyActive: this.legacyActive,
+            modernActive: this.modernActive || false,
+            modulesLoaded: Array.from(this.modulesLoaded),
+            capabilities: this.browserCapabilities
+        };
+    }
 }
 
 /**
- * Entfernt den "Weiter"-Button
+ * Initialize the modern system
  */
-function hideContinueButton() {
-    const continueContainer = document.getElementById('continue-container');
-    if (continueContainer) {
-        continueContainer.style.display = 'none';
-    }
-}
-
-/**
- * Wird aufgerufen wenn der "Weiter"-Button geklickt wird
- */
-function continueAfterTrick() {
-    hideContinueButton();
+async function initializeModernSystem() {
+    const system = new SchafkopfGameSystem();
+    const success = await system.init();
     
-    if (isGameFinished()) {
-        endGame();
+    if (success) {
+        console.log('🎯 Modern system initialized successfully');
+        console.log('📊 Status:', system.getStatus());
     } else {
-        updateUI();
-        updateGameStatus();
-        
-        // Nächster Spieler kann spielen
-        if (!getCurrentPlayer().isHuman) {
-            setTimeout(playCPUCard, 1000);
-        }
+        console.log('⚠️ Modern system failed, using legacy');
     }
+    
+    return system;
 }
 
-/**
- * Spielt eine Karte
- * @param {string} suit - Farbe der Karte
- * @param {string} value - Wert der Karte
- */
-function playCard(suit, value) {
-    const gameState = getGameStateInternal();
-    const currentPlayer = getCurrentPlayer();
-    
-    // Validierung: Ist der Spieler am Zug?
-    if (!currentPlayer.isHuman && gameState.currentPlayer === 0) {
-        showModal('Fehler', 'Sie sind nicht am Zug!');
-        return;
-    }
-    
-    // Prüfen ob Stich bereits voll ist
-    if (gameState.currentTrick.length >= 4) {
-        console.warn('Versuch zu spielen, aber Stich ist bereits voll');
-        return;
-    }
-    
-    // Karte in der Hand finden
-    const cardIndex = currentPlayer.cards.findIndex(c => c.suit === suit && c.value === value);
-    if (cardIndex === -1) {
-        showModal('Fehler', 'Diese Karte haben Sie nicht auf der Hand!');
-        return;
-    }
-    
-    const card = currentPlayer.cards[cardIndex];
-    
-    // Regelvalidierung
-    const validation = validateCardPlay(card, gameState.currentPlayer, gameState.currentTrick, currentPlayer.cards);
-    if (!validation.valid) {
-        showModal('Unerlaubter Zug', validation.reason);
-        return;
-    }
-    
-    // Karte spielen
-    currentPlayer.cards.splice(cardIndex, 1);
-    addCardToTrick(card, gameState.currentPlayer);
-    
-    // Animation
-    animateCardPlay(card, gameState.currentPlayer);
-    
-    // UI aktualisieren
-    updateUI();
-    
-    // Nächste Aktion
-    if (gameState.currentTrick.length === 4) {
-        setTimeout(evaluateTrick, 1000);
-    } else {
-        nextPlayer();
-        if (!getCurrentPlayer().isHuman) {
-            setTimeout(playCPUCard, 1500);
-        }
-    }
-}
-
-/**
- * Wertet den aktuellen Stich aus
- */
-function evaluateTrick() {
-    const trickResult = completeTrick();
-    
-    if (!trickResult) {
-        console.error('Fehler beim Auswerten des Stichs');
-        return;
-    }
-    
-    updateGameStatus(`${trickResult.winnerName} gewinnt den Stich (${trickResult.points} Punkte)`);
-    updateUI();
-    showContinueButton();
-}
-
-/**
- * Lässt einen CPU-Spieler eine Karte spielen
- */
-function playCPUCard() {
-    const gameState = getGameStateInternal();
-    const currentPlayer = getCurrentPlayer();
-    
-    if (currentPlayer.isHuman) {
-        console.warn('CPU-Spielfunktion für menschlichen Spieler aufgerufen');
-        return;
-    }
-    
-    if (gameState.currentTrick.length >= 4) {
-        console.warn('CPU versucht zu spielen, aber Stich ist bereits voll');
-        return;
-    }
-    
-    // Spielbare Karten ermitteln
-    const playableCards = currentPlayer.cards.filter(card => 
-        canPlayCard(card, gameState.currentPlayer)
-    );
-    
-    if (playableCards.length === 0) {
-        console.error('CPU hat keine spielbaren Karten');
-        if (currentPlayer.cards.length > 0) {
-            playableCards.push(currentPlayer.cards[0]);
-        } else {
-            return;
-        }
-    }
-    
-    // Bot-Entscheidung
-    const selectedCard = selectCardWithBot(playableCards, gameState.currentPlayer);
-    
-    // Karte spielen
-    const cardIndex = currentPlayer.cards.indexOf(selectedCard);
-    currentPlayer.cards.splice(cardIndex, 1);
-    addCardToTrick(selectedCard, gameState.currentPlayer);
-    
-    animateCardPlay(selectedCard, gameState.currentPlayer);
-    updateUI();
-    
-    if (gameState.debugMode) {
-        console.log(`${currentPlayer.name} spielt: ${selectedCard.symbol}${selectedCard.short}`);
-    }
-    
-    // Nächste Aktion
-    if (gameState.currentTrick.length === 4) {
-        setTimeout(evaluateTrick, 1000);
-    } else {
-        nextPlayer();
-        if (!getCurrentPlayer().isHuman) {
-            setTimeout(playCPUCard, 1500);
-        }
-    }
-}
-
-/**
- * Beendet das Spiel und zeigt Ergebnisse
- */
-function endGame() {
-    const result = finishGame();
-    
-    let message = `Spiel beendet!\n\n`;
-    
-    // Team-basierte Auswertung für Rufspiel
-    if (result.isTeamGame && result.partner) {
-        message += `🎯 Rufspiel-Ergebnis:\n`;
-        message += `Ihr Team (mit ${result.partner}): ${result.teamPoints[0]} Punkte\n`;
-        message += `Gegner-Team: ${result.teamPoints[1]} Punkte\n\n`;
-        
-        const teamWins = result.teamPoints[0] >= 61;
-        
-        if (teamWins) {
-            message += `🎉 Ihr Team hat gewonnen!`;
-            if (result.teamPoints[0] >= 91) {
-                message += ` Mit Schneider! (91+ Punkte)`;
-            }
-        } else {
-            message += `😔 Ihr Team hat verloren.`;
-            if (result.teamPoints[0] <= 30) {
-                message += ` Mit Schneider verloren! (≤30 Punkte)`;
-            }
-        }
-        
-        message += `\n\n📊 Einzelergebnisse:\n`;
-        const gameState = getGameStateInternal();
-        gameState.players.forEach((player, index) => {
-            const teamIcon = gameState.playerPartnership[index] === 0 ? '👥' : '🔥';
-            const teamName = gameState.playerPartnership[index] === 0 ? ' (Ihr Team)' : ' (Gegner)';
-            message += `${teamIcon} ${player.name}${teamName}: ${player.points} Punkte (${player.tricks} Stiche)\n`;
-        });
-    } else {
-        // Fallback für andere Spieltypen
-        message += `Ihre Punkte: ${result.humanPoints}\n`;
-        message += `Resultat: ${result.humanWins ? '🎉 Gewonnen!' : '😔 Verloren'}\n`;
-    }
-    
-    showModal('Spielende', message);
-    updateGameStatus('Spiel beendet');
-}
-
-// Legacy-Funktionen für Kompatibilität mit bestehendem Code
+// Auto-initialize when module loads
 if (typeof window !== 'undefined') {
-    // Spiel-Steuerung
-    window.newGame = newGame;
-    window.playCard = playCard;
-    window.playCPUCard = playCPUCard;
-    window.endGame = endGame;
+    // Browser environment
+    window.initializeModernSystem = initializeModernSystem;
     
-    // Ass-Auswahl
-    window.selectAceForCall = selectAceForCall;
-    window.cancelAceSelection = cancelAceSelection;
-    window.continueAfterTrick = continueAfterTrick;
-    
-    // UI-Funktionen (diese müssen noch aus ui.js importiert werden)
-    window.showRules = showRules;
-    window.showStats = showStats;
-    window.toggleDebugMode = toggleDebugMode;
-    window.toggleCardImages = toggleCardImages;
-    window.closeModal = closeModal;
-    window.handleCardClick = handleCardClick;
-    window.handleImageError = handleImageError;
-    window.debugUI = debugUI;
-    
-    // Export/Import
-    window.exportGameData = exportGameData;
-    window.importGameData = importGameData;
-    
-    // Hilfsfunktionen aus anderen Modulen (werden bei Bedarf nachgeladen)
-    window.canPlayCard = canPlayCard;
-    window.validateCardPlay = validateCardPlay;
-    window.selectCardWithBot = selectCardWithBot;
-    window.determineTrickWinner = determineTrickWinner;
-    window.isGameFinished = isGameFinished;
-    window.getCurrentPlayer = getCurrentPlayer;
-    window.nextPlayer = nextPlayer;
-    window.addCardToTrick = addCardToTrick;
-    window.completeTrick = completeTrick;
-    window.areTeammates = areTeammates;
-    window.hasCalledSuitBeenPlayed = hasCalledSuitBeenPlayed;
-    window.markCalledSuitPlayed = markCalledSuitPlayed;
-    window.updateUI = updateUI;
-    window.updateGameStatus = updateGameStatus;
-    window.showModal = showModal;
-    window.showToast = showToast;
-    window.animateCardPlay = animateCardPlay;
-    window.debugCards = debugCards;
-    window.debugTrumpOrder = debugTrumpOrder;
-    window.exportGameData = exportGameData;
-    window.importGameData = importGameData;
+    // Auto-init after DOM load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeModernSystem);
+    } else {
+        // DOM already loaded
+        setTimeout(initializeModernSystem, 100);
+    }
+} else {
+    // Node.js environment (for testing)
+    module.exports = { SchafkopfGameSystem, initializeModernSystem };
 }
 
-/**
- * Initialisiert das Spiel beim Laden der Seite
- */
-function initializeGame() {
-    console.log('🃏 Bayerisches Schafkopf wird geladen...');
-    
-    // Event-Listener für Fenstergröße
-    window.addEventListener('resize', () => updateUI());
-    
-    // Erstes Spiel starten
-    newGame();
-    
-    console.log('✅ Spiel erfolgreich geladen!');
-    
-    // Willkommensnachricht
-    setTimeout(() => {
-        if (window.gameState?.debugMode) {
-            showToast('Debug-Modus ist aktiv - alle Karten sind sichtbar', 3000);
-        }
-    }, 1000);
-}
-
-// Spiel beim Laden der Seite initialisieren
-if (typeof window !== 'undefined') {
-    window.addEventListener('load', initializeGame);
-    window.initializeGame = initializeGame;
-}
+console.log('📋 main.js loaded - waiting for DOM ready');
