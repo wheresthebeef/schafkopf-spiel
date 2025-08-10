@@ -1,0 +1,4 @@
+# Legacy Backup Directory
+
+This directory will contain backups of legacy files during refactoring.
+Files here are for emergency rollback only.

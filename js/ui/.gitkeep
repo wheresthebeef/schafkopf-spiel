@@ -1,0 +1,7 @@
+# UI Module Directory
+
+This directory contains user interface modules:
+- ui-controller.js - Main UI coordination
+- card-renderer.js - Card display logic
+- interaction-handler.js - User interaction
+- animations.js - UI animations

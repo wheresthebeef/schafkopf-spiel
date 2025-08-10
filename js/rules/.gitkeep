@@ -1,0 +1,7 @@
+# Rules Module Directory
+
+This directory contains the modular rule validation system:
+- base-rules.js - Core Schafkopf rules
+- rufspiel-rules.js - Rufspiel specific rules
+- solo-rules.js - Solo game rules
+- validation.js - Main validation interface

@@ -1,0 +1,7 @@
+# Game Engine Module Directory
+
+This directory contains the core game engine modules:
+- game-state.js - State management
+- game-logic.js - Core game flow
+- trick-handling.js - Trick evaluation
+- scoring.js - Points calculation
