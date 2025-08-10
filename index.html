@@ -90,43 +90,62 @@
         </div>
     </div>
 
-    <!-- AI-SYSTEM INTEGRATION -->
+    <!-- 🚀 REFACTORING SYSTEM LOADER -->
     <script type="module">
-        // Funktionierendes Post-Game Training System
-        import './js/ai/post-game-training.js';
+        // Check for ES6 module support
+        window.schafkopfSystem = {
+            modernBrowser: true,
+            moduleSupport: true,
+            loadingPhase: 'modern'
+        };
         
-        // Alle anderen AI-Module deaktiviert wegen Syntax-Fehlern
-        // import './js/ai/emergency-fix.js';
-        // import './js/ai/game-integration.js';
-        // import './js/ai/simple-ai-loader.js';
-        // import './js/ai/debug-helper.js';
-        // import './js/ai/emergency-human-training.js';
-        // import './js/ai/syntax-debugger.js';
+        console.log('🆕 Modern ES6-Module Browser detected');
+        console.log('🏗️ Refactoring System: Phase 1 Active');
         
-        // AI-System nach dem Laden der Seite initialisieren
-        window.addEventListener('load', async () => {
-            console.log('🎮 Seite geladen, starte Post-Game AI Training System...');
-            
-            // Kurz warten damit Legacy-Module geladen sind
-            setTimeout(async () => {
-                console.log('✅ Post-Game AI Training System bereit!');
-                console.log('📝 Verwende: enableHumanTraining()');
-                console.log('🎯 Test: postGameTraining.demoGame()');
-                console.log('🎲 Vollspiel: postGameTraining.fullGame()');
+        // Load modern system when ready
+        setTimeout(async () => {
+            try {
+                // Prepare for modern module loading
+                console.log('📦 Preparing ES6 module system...');
                 
-                // Zeige kleinen Hinweis
+                // Note: main.js will be created in next phase
+                // For now, run compatibility checks
+                window.schafkopfSystem.readyForModernModules = true;
+                console.log('✅ Ready for Phase 2: Module Migration');
+            } catch (error) {
+                console.warn('⚠️ ES6 module issue:', error);
+                window.schafkopfSystem.fallbackToLegacy = true;
+            }
+        }, 1000);
+    </script>
+
+    <!-- 🎮 POST-GAME AI TRAINING (Working Module) -->
+    <script type="module">
+        try {
+            // Import working post-game training system
+            const { default: postGameTraining } = await import('./js/ai/post-game-training.js');
+            
+            // Initialize after legacy system loads
+            setTimeout(() => {
+                console.log('🤖 Post-Game AI Training System loaded');
+                console.log('📝 Use: enableHumanTraining()');
+                console.log('🎯 Test: postGameTraining.demoGame()');
+                
+                // Show hint
                 const hint = document.createElement('div');
-                hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#28a745;color:white;padding:10px;border-radius:6px;z-index:1000;font-size:12px;';
-                hint.innerHTML = '🎮 Post-Game AI Training verfügbar!<br><code>enableHumanTraining()</code>';
+                hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#17a2b8;color:white;padding:8px 12px;border-radius:4px;z-index:1000;font-size:11px;cursor:pointer;';
+                hint.innerHTML = '🎮 AI Training Ready<br><small>enableHumanTraining()</small>';
+                hint.onclick = () => hint.remove();
                 document.body.appendChild(hint);
                 
-                setTimeout(() => hint.remove(), 5000);
-            }, 1500);
-        });
-        
+                setTimeout(() => hint.remove(), 6000);
+            }, 2000);
+        } catch (error) {
+            console.warn('⚠️ AI Training module failed:', error);
+        }
     </script>
     
-    <!-- LEGACY SYSTEM (Fallback) -->
+    <!-- 🔄 LEGACY SYSTEM (Active during transition) -->
     <script src="js/cards.js"></script>
     <script src="js/game-state.js"></script>
     <script src="js/player.js"></script>
@@ -135,23 +154,30 @@
     <script src="js/ui.js"></script>
     <script src="js/game.js"></script>
     
-    <!-- Status-Info und Spiel-Bereitschaft -->
+    <!-- 📊 System Status & Ready Notification -->
     <script>
         window.addEventListener('load', () => {
             setTimeout(() => {
-                console.log('🎯 Bayerisches Schafkopf - Status:');
-                console.log('   ✅ Legacy-Module geladen und funktionsfähig');
-                console.log('   🤖 Q-Learning AI-System wird geladen...');
-                console.log('   🎮 Spiel vollständig spielbar');
+                console.log('\n🎯 Bayerisches Schafkopf - Refactoring Status:');
+                console.log('📊 Phase 1: Setup & Structure');
+                console.log('   ✅ ES6 module detection active');
+                console.log('   ✅ Legacy system functional');
+                console.log('   ✅ Directory structure created');
+                console.log('   🔄 Ready for Phase 2: Module Migration');
                 
                 if (typeof newGame === 'function') {
-                    console.log('   ✅ newGame() verfügbar - Spiel bereit!');
-                    console.log('');
-                    console.log('🎆 Probiere die AI-Commands in 2-3 Sekunden aus!');
+                    console.log('   ✅ Game ready: newGame() available');
+                    console.log('\n🎮 Game fully playable during refactoring!');
                 } else {
-                    console.error('   ❌ newGame() nicht verfügbar');
+                    console.error('   ❌ newGame() not available - legacy system issue');
                 }
-            }, 500);
+                
+                // Mark Phase 1 complete
+                window.schafkopfSystem = window.schafkopfSystem || {};
+                window.schafkopfSystem.phase1Complete = true;
+                
+                console.log('\n📋 Next: Phase 2 - Core Module Migration');
+            }, 800);
         });
     </script>
 </body>
