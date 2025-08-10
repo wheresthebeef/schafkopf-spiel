@@ -161,75 +161,83 @@
     <script type="module">
         let currentHands = [];
         let cardsModule = null;
-        let systemStatus = {};
+        
+        // Browser capability detection
+        function checkBrowserCapabilities() {
+            const capabilities = {
+                esModules: true, // If we're here, ES modules work
+                asyncAwait: true, // If we're here, async/await works
+                classes: true     // If we're here, classes work
+            };
+            
+            updateBrowserStatus(capabilities);
+            return capabilities;
+        }
         
         // Initialisierung
         async function initializeTest() {
             updateTestResults('🏗️ Initializing Phase 2 test system...\n');
             
             try {
-                // Warte auf das moderne System
-                await waitForModernSystem();
+                // Browser capabilities prüfen
+                const capabilities = checkBrowserCapabilities();
+                updateTestResults('✅ Browser capabilities: ES6 modules supported\n');
                 
-                // Lade das Cards-Modul
+                // Cards Module direkt laden
                 await loadCardsModule();
                 
-                // Führe ersten Test durch
+                // Tests durchführen
                 await runInitialTests();
                 
             } catch (error) {
                 updateTestResults(`❌ Initialization failed: ${error.message}\n`);
                 updateModuleStatus('error', 'Failed to load');
+                console.error('Full error:', error);
             }
-        }
-        
-        async function waitForModernSystem() {
-            updateTestResults('⏳ Waiting for modern system...\n');
-            
-            let attempts = 0;
-            while (!window.schafkopfMain && attempts < 50) {
-                await new Promise(resolve => setTimeout(resolve, 100));
-                attempts++;
-            }
-            
-            if (!window.schafkopfMain) {
-                throw new Error('Modern system not available');
-            }
-            
-            systemStatus = window.schafkopfMain.getStatus();
-            updateTestResults(`✅ Modern system loaded (Phase ${systemStatus.phase})\n`);
-            updateBrowserStatus();
         }
         
         async function loadCardsModule() {
-            updateTestResults('📦 Loading Cards module...\n');
+            updateTestResults('📦 Loading Cards module directly...\n');
             
-            if (window.CardsAPI) {
-                cardsModule = window.CardsAPI;
-                updateTestResults('✅ Cards module loaded from global API\n');
-            } else {
+            try {
+                // Direkter Import des Cards-Moduls
                 cardsModule = await import('./js/cards/index.js');
-                updateTestResults('✅ Cards module loaded via import\n');
+                updateTestResults('✅ Cards module loaded successfully\n');
+                updateModuleStatus('success', 'Cards Module Loaded');
+                return true;
+                
+            } catch (error) {
+                updateTestResults(`❌ Failed to load Cards module: ${error.message}\n`);
+                updateModuleStatus('error', `Load failed: ${error.message}`);
+                throw error;
             }
-            
-            updateModuleStatus('success', 'Loaded & Ready');
         }
         
         async function runInitialTests() {
-            updateTestResults('🧪 Running initial tests...\n');
+            updateTestResults('🧪 Running initial cards tests...\n');
             
-            // Test Cards System
-            const testResult = cardsModule.testSystem();
-            
-            if (testResult.validation.valid) {
-                updateTestResults('✅ Cards system validation: PASSED\n');
-                updateCardsStatus('success', 'All tests passed');
+            try {
+                // Test Cards System
+                const testResult = cardsModule.testCardSystem();
                 
-                // Zeige erste Hand
-                dealNewHand();
-            } else {
-                updateTestResults('❌ Cards system validation: FAILED\n');
-                updateCardsStatus('error', 'Validation failed');
+                if (testResult.validation.valid) {
+                    updateTestResults('✅ Cards system validation: PASSED\n');
+                    updateTestResults(`📦 Deck size: ${testResult.deck.length} cards\n`);
+                    updateTestResults(`🎯 Total points: ${cardsModule.countPoints(testResult.deck)}\n`);
+                    updateCardsStatus('success', 'All tests passed');
+                    
+                    // Zeige erste Hand
+                    dealNewHand();
+                } else {
+                    updateTestResults('❌ Cards system validation: FAILED\n');
+                    if (testResult.validation.errors) {
+                        updateTestResults(`Errors: ${testResult.validation.errors.join(', ')}\n`);
+                    }
+                    updateCardsStatus('error', 'Validation failed');
+                }
+            } catch (error) {
+                updateTestResults(`❌ Initial tests failed: ${error.message}\n`);
+                updateCardsStatus('error', `Test failed: ${error.message}`);
             }
         }
         
@@ -238,10 +246,18 @@
             updateTestResults('\n🧪 Running comprehensive card system test...\n');
             
             try {
-                const testResult = cardsModule.testSystem();
+                const testResult = cardsModule.testCardSystem();
                 updateTestResults(`Deck size: ${testResult.deck.length} cards\n`);
                 updateTestResults(`Validation: ${testResult.validation.valid ? 'PASSED' : 'FAILED'}\n`);
                 updateTestResults(`Players: ${testResult.hands.length}\n`);
+                
+                // Detailed validation
+                const deck = testResult.deck;
+                const trumps = cardsModule.findTrumps(deck);
+                const totalPoints = cardsModule.countPoints(deck);
+                
+                updateTestResults(`Trump cards: ${trumps.length}\n`);
+                updateTestResults(`Total points: ${totalPoints}\n`);
                 
                 if (testResult.validation.errors?.length > 0) {
                     updateTestResults(`Errors: ${testResult.validation.errors.join(', ')}\n`);
@@ -261,10 +277,14 @@
                 const shuffled = cardsModule.shuffleDeck(deck);
                 const hands = cardsModule.dealCards(shuffled);
                 
+                // Sortiere jede Hand für die Anzeige
+                hands.forEach(hand => cardsModule.sortCardsForDisplay(hand));
+                
                 currentHands = hands;
                 displayHands(hands);
                 
                 updateTestResults('✅ New hand dealt successfully\n');
+                updateTestResults(`Each player has ${hands[0].length} cards\n`);
             } catch (error) {
                 updateTestResults(`❌ Deal failed: ${error.message}\n`);
             }
@@ -300,6 +320,9 @@
                 updateTestResults(`Total points: ${cardsModule.countPoints(deck)}\n`);
                 updateTestResults(`Total cards: ${deck.length}\n`);
                 
+                const trumps = cardsModule.findTrumps(deck);
+                updateTestResults(`Trump cards: ${trumps.length}\n`);
+                
                 if (validation.errors.length > 0) {
                     updateTestResults(`Errors: ${validation.errors.join(', ')}\n`);
                 }
@@ -307,6 +330,8 @@
                 if (validation.warnings.length > 0) {
                     updateTestResults(`Warnings: ${validation.warnings.join(', ')}\n`);
                 }
+                
+                updateTestResults('✅ Validation completed\n');
                 
             } catch (error) {
                 updateTestResults(`❌ Validation failed: ${error.message}\n`);
@@ -319,7 +344,7 @@
                 const handElement = document.getElementById(`hand-${index}`);
                 if (handElement) {
                     handElement.innerHTML = hand.map(card => 
-                        `<span class="card ${card.isTrump ? 'trump' : ''}">${card.symbol}${card.short}</span>`
+                        `<span class="card ${card.isTrump ? 'trump' : ''}" title="${card.name}">${card.symbol}${card.short}</span>`
                     ).join('');
                 }
             });
@@ -338,24 +363,17 @@
             document.getElementById('cards-info').textContent = message;
         }
         
-        function updateBrowserStatus() {
+        function updateBrowserStatus(capabilities) {
             const element = document.getElementById('browser-status');
             const info = document.getElementById('browser-info');
             
-            if (systemStatus.capabilities) {
-                const caps = systemStatus.capabilities;
-                info.innerHTML = `
-                    ES Modules: ${caps.esModules ? '✅' : '❌'}<br>
-                    Async/Await: ${caps.asyncAwait ? '✅' : '❌'}<br>
-                    Classes: ${caps.classes ? '✅' : '❌'}
-                `;
-                
-                if (caps.esModules && caps.asyncAwait && caps.classes) {
-                    element.className = 'status-card success';
-                } else {
-                    element.className = 'status-card warning';
-                }
-            }
+            info.innerHTML = `
+                ES Modules: ✅<br>
+                Async/Await: ✅<br>
+                Classes: ✅
+            `;
+            
+            element.className = 'status-card success';
         }
         
         function updateTestResults(message) {
@@ -373,13 +391,16 @@
         document.getElementById('test-results').textContent = 
             '❌ This browser does not support ES6 modules.\n' +
             '💡 Please use a modern browser (Chrome 61+, Firefox 60+, Safari 11+)\n' +
-            '🔄 Falling back to legacy system...';
+            '🔄 The main game still works with legacy JavaScript!';
         
         document.getElementById('module-status').className = 'status-card error';
         document.getElementById('module-info').textContent = 'ES6 modules not supported';
         
         document.getElementById('browser-status').className = 'status-card error';
         document.getElementById('browser-info').textContent = 'Legacy browser detected';
+        
+        document.getElementById('cards-status').className = 'status-card error';
+        document.getElementById('cards-info').textContent = 'Modern cards system unavailable';
     </script>
 </body>
 </html>
