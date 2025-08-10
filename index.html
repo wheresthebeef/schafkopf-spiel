@@ -90,56 +90,60 @@
         </div>
     </div>
 
-    <!-- 🚀 REFACTORING SYSTEM LOADER -->
+    <!-- 🚀 REFACTORING SYSTEM LOADER (FIXED) -->
     <script type="module">
-        // Check for ES6 module support
-        window.schafkopfSystem = {
-            modernBrowser: true,
-            moduleSupport: true,
-            loadingPhase: 'modern'
-        };
-        
         console.log('🆕 Modern ES6-Module Browser detected');
         console.log('🏗️ Refactoring System: Phase 1 Active');
         
-        // Load modern system when ready
-        setTimeout(async () => {
-            try {
-                // Prepare for modern module loading
-                console.log('📦 Preparing ES6 module system...');
-                
-                // Note: main.js will be created in next phase
-                // For now, run compatibility checks
-                window.schafkopfSystem.readyForModernModules = true;
-                console.log('✅ Ready for Phase 2: Module Migration');
-            } catch (error) {
-                console.warn('⚠️ ES6 module issue:', error);
-                window.schafkopfSystem.fallbackToLegacy = true;
-            }
-        }, 1000);
+        // Initialize system globals immediately
+        window.schafkopfSystem = {
+            modernBrowser: true,
+            moduleSupport: true,
+            loadingPhase: 'modern',
+            phase1Complete: false
+        };
+
+        // Load main.js module
+        try {
+            const { initializeModernSystem } = await import('./js/main.js');
+            console.log('📦 main.js module loaded successfully');
+            
+            // Initialize the system
+            const system = await initializeModernSystem();
+            console.log('✅ Modern system initialized');
+            
+            // Make globally available for debugging
+            window.schafkopfMain = system;
+            window.modernSystem.ready = true;
+            window.schafkopfSystem.phase1Complete = true;
+            
+            console.log('🔧 Debug objects available:');
+            console.log('   window.schafkopfMain:', !!window.schafkopfMain);
+            console.log('   window.modernSystem:', !!window.modernSystem);
+            console.log('   window.schafkopfSystem:', !!window.schafkopfSystem);
+            
+        } catch (error) {
+            console.warn('⚠️ ES6 module loading failed:', error);
+            window.schafkopfSystem.fallbackToLegacy = true;
+        }
     </script>
 
     <!-- 🎮 POST-GAME AI TRAINING (Working Module) -->
     <script type="module">
         try {
             // Import working post-game training system
-            const { default: postGameTraining } = await import('./js/ai/post-game-training.js');
+            const postGameModule = await import('./js/ai/post-game-training.js');
+            console.log('🤖 Post-Game AI Training System loaded');
+            console.log('📝 Use: enableHumanTraining()');
             
-            // Initialize after legacy system loads
-            setTimeout(() => {
-                console.log('🤖 Post-Game AI Training System loaded');
-                console.log('📝 Use: enableHumanTraining()');
-                console.log('🎯 Test: postGameTraining.demoGame()');
-                
-                // Show hint
-                const hint = document.createElement('div');
-                hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#17a2b8;color:white;padding:8px 12px;border-radius:4px;z-index:1000;font-size:11px;cursor:pointer;';
-                hint.innerHTML = '🎮 AI Training Ready<br><small>enableHumanTraining()</small>';
-                hint.onclick = () => hint.remove();
-                document.body.appendChild(hint);
-                
-                setTimeout(() => hint.remove(), 6000);
-            }, 2000);
+            // Show hint
+            const hint = document.createElement('div');
+            hint.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#17a2b8;color:white;padding:8px 12px;border-radius:4px;z-index:1000;font-size:11px;cursor:pointer;';
+            hint.innerHTML = '🎮 AI Training Ready<br><small>enableHumanTraining()</small>';
+            hint.onclick = () => hint.remove();
+            document.body.appendChild(hint);
+            
+            setTimeout(() => hint.remove(), 6000);
         } catch (error) {
             console.warn('⚠️ AI Training module failed:', error);
         }
@@ -172,13 +176,37 @@
                     console.error('   ❌ newGame() not available - legacy system issue');
                 }
                 
-                // Mark Phase 1 complete
-                window.schafkopfSystem = window.schafkopfSystem || {};
-                window.schafkopfSystem.phase1Complete = true;
+                // Final debug status
+                console.log('\n🔧 Debug Status Check:');
+                console.log('   schafkopfMain:', window.schafkopfMain ? '✅ Available' : '❌ Missing');
+                console.log('   modernSystem:', window.modernSystem ? '✅ Available' : '❌ Missing');
+                console.log('   schafkopfSystem:', window.schafkopfSystem ? '✅ Available' : '❌ Missing');
+                
+                if (window.schafkopfMain) {
+                    console.log('   System Status:', window.schafkopfMain.getStatus());
+                }
                 
                 console.log('\n📋 Next: Phase 2 - Core Module Migration');
-            }, 800);
+            }, 1200);  // Longer delay to ensure ES6 modules loaded
         });
+        
+        // Add debug helper function
+        window.checkRefactoringStatus = function() {
+            console.log('🔍 Refactoring Status Check:');
+            console.log('schafkopfMain:', window.schafkopfMain);
+            console.log('modernSystem:', window.modernSystem);
+            console.log('schafkopfSystem:', window.schafkopfSystem);
+            
+            if (window.schafkopfMain) {
+                console.log('System Status:', window.schafkopfMain.getStatus());
+            }
+            
+            return {
+                main: !!window.schafkopfMain,
+                modern: !!window.modernSystem,
+                system: !!window.schafkopfSystem
+            };
+        };
     </script>
 </body>
 </html>
