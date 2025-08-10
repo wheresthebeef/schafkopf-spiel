@@ -1,11 +1,12 @@
 /**
  * Bayerisches Schafkopf - Modern ES6 Entry Point
  * Refactored Main Module for coordinating all game systems
+ * Phase 2: Cards Module Integration
  */
 
 // Development flag for refactoring phase
 const REFACTORING_MODE = true;
-const CURRENT_PHASE = 1;
+const CURRENT_PHASE = 2;
 
 console.log('🏗️ Schafkopf Main Module (Refactored) - Phase', CURRENT_PHASE);
 
@@ -18,23 +19,25 @@ class SchafkopfGameSystem {
         this.legacyActive = true;
         this.modulesLoaded = new Set();
         this.moduleErrors = new Map();
+        this.cardsModule = null;
+        this.rulesModule = null;
         
-        console.log('🎮 SchafkopfGameSystem initializing...');
+        console.log('🎮 SchafkopfGameSystem initializing Phase', this.phase, '...');
     }
     
     /**
      * Initialize the game system
      */
     async init() {
-        console.log('📦 Phase', this.phase, '- System Setup');
+        console.log('📦 Phase', this.phase, '- Core Module Integration');
         
         try {
-            // Phase 1: Preparation only
-            await this.setupPhase1();
+            // Phase 2: Load core modules
+            await this.setupPhase2();
             
             // Mark system as ready
             this.ready = true;
-            console.log('✅ Main system ready for Phase 2');
+            console.log('✅ Main system ready for Phase 3');
             
             // Expose global for debugging
             window.schafkopfMain = this;
@@ -48,10 +51,10 @@ class SchafkopfGameSystem {
     }
     
     /**
-     * Phase 1 setup - prepare for future module loading
+     * Phase 2 setup - load cards and rules modules
      */
-    async setupPhase1() {
-        console.log('🔧 Phase 1: Setup & Structure');
+    async setupPhase2() {
+        console.log('🔧 Phase 2: Core Module Integration');
         
         // Detect browser capabilities
         this.browserCapabilities = {
@@ -62,13 +65,81 @@ class SchafkopfGameSystem {
         
         console.log('🔍 Browser capabilities:', this.browserCapabilities);
         
+        if (!this.browserCapabilities.esModules) {
+            throw new Error('ES Modules not supported - falling back to legacy');
+        }
+        
+        // Load Cards Module
+        await this.loadCardsModule();
+        
+        // Load Rules Module (placeholder)
+        await this.loadRulesModule();
+        
         // Prepare for legacy integration
         this.prepareLegacyIntegration();
         
-        // Setup module loading infrastructure
+        // Setup module loader for future phases
         this.setupModuleLoader();
         
-        console.log('✅ Phase 1 setup complete');
+        console.log('✅ Phase 2 setup complete');
+    }
+    
+    /**
+     * Load the new Cards module system
+     */
+    async loadCardsModule() {
+        try {
+            console.log('📦 Loading Cards module...');
+            
+            // Dynamic import of cards module
+            this.cardsModule = await import('./cards/index.js');
+            
+            // Test the cards system
+            const testResult = this.cardsModule.testCardSystem();
+            
+            if (testResult.validation.valid) {
+                this.modulesLoaded.add('cards');
+                console.log('✅ Cards module loaded and tested successfully');
+                
+                // Update legacy bridge
+                window.modernSystem.bridge.cards = this.cardsModule;
+                
+                return true;
+            } else {
+                throw new Error('Cards module validation failed');
+            }
+            
+        } catch (error) {
+            console.error('❌ Failed to load Cards module:', error);
+            this.moduleErrors.set('cards', error);
+            throw error;
+        }
+    }
+    
+    /**
+     * Load the Rules module (placeholder in Phase 2)
+     */
+    async loadRulesModule() {
+        try {
+            console.log('📦 Loading Rules module (placeholder)...');
+            
+            // Dynamic import of rules module
+            this.rulesModule = await import('./rules/index.js');
+            
+            this.modulesLoaded.add('rules');
+            console.log('✅ Rules module loaded (placeholder)');
+            
+            // Update legacy bridge
+            window.modernSystem.bridge.rules = this.rulesModule;
+            
+            return true;
+            
+        } catch (error) {
+            console.error('⚠️ Rules module placeholder load failed:', error);
+            this.moduleErrors.set('rules', error);
+            // Don't throw - rules is still placeholder
+            return false;
+        }
     }
     
     /**
@@ -76,7 +147,7 @@ class SchafkopfGameSystem {
      */
     supportsESModules() {
         try {
-            new Function('import("data:text/javascript,export default 1")');
+            new Function('import("data:text/javascript,export default 1")')();
             return true;
         } catch {
             return false;
@@ -114,50 +185,99 @@ class SchafkopfGameSystem {
         // Create bridge for legacy compatibility
         window.modernSystem = {
             phase: this.phase,
-            ready: false,
-            modules: new Set(),
+            ready: this.ready || false,
+            modules: this.modulesLoaded,
             bridge: {
-                // Will be populated in future phases
+                // Phase 2: Cards and Rules modules
+                cards: this.cardsModule,
+                rules: this.rulesModule,
+                // Future phases
                 game: null,
-                cards: null,
-                rules: null,
                 ai: null,
                 ui: null
             }
         };
         
-        console.log('🔗 Legacy bridge prepared');
+        console.log('🔗 Legacy bridge updated for Phase 2');
     }
     
     /**
-     * Setup module loading infrastructure
+     * Setup module loading infrastructure for future phases
      */
     setupModuleLoader() {
         this.moduleLoader = {
             loadOrder: [
-                // Phase 2: Core modules
+                // Phase 2: Core modules (COMPLETE)
                 'cards', 'rules',
-                // Phase 3: Game engine
+                // Phase 3: Game engine (PLANNED)
                 'game',
-                // Phase 4: AI system
+                // Phase 4: AI system (PLANNED)
                 'ai',
-                // Phase 5: UI system
+                // Phase 5: UI system (PLANNED)
                 'ui'
             ],
-            loaded: new Set(),
-            errors: new Map()
+            loaded: this.modulesLoaded,
+            errors: this.moduleErrors
         };
         
-        console.log('📋 Module loader ready for Phase 2');
+        console.log('📋 Module loader ready for Phase 3');
     }
     
     /**
-     * Future method: Load a specific module
+     * Test the loaded modules
      */
-    async loadModule(moduleName) {
-        console.log(`📦 [Future] Loading module: ${moduleName}`);
-        // Implementation will be added in Phase 2
-        return Promise.resolve({ name: moduleName, loaded: false, phase: 'future' });
+    async testModules() {
+        console.log('🧪 Testing loaded modules...');
+        
+        const results = {
+            cards: false,
+            rules: false
+        };
+        
+        // Test Cards Module
+        if (this.cardsModule) {
+            try {
+                const testResult = this.cardsModule.testCardSystem();
+                results.cards = testResult.validation.valid;
+                console.log('🧪 Cards test:', results.cards ? 'PASSED' : 'FAILED');
+            } catch (error) {
+                console.error('🧪 Cards test failed:', error);
+            }
+        }
+        
+        // Test Rules Module (placeholder)
+        if (this.rulesModule) {
+            try {
+                this.rulesModule.placeholder_validateCardPlay();
+                results.rules = true;
+                console.log('🧪 Rules test: PASSED (placeholder)');
+            } catch (error) {
+                console.error('🧪 Rules test failed:', error);
+            }
+        }
+        
+        return results;
+    }
+    
+    /**
+     * Get Cards API for external use
+     */
+    getCardsAPI() {
+        if (!this.cardsModule) {
+            console.warn('⚠️ Cards module not loaded');
+            return null;
+        }
+        
+        return {
+            createDeck: this.cardsModule.createDeck,
+            shuffleDeck: this.cardsModule.shuffleDeck,
+            dealCards: this.cardsModule.dealCards,
+            sortCardsForDisplay: this.cardsModule.sortCardsForDisplay,
+            isCardHigher: this.cardsModule.isCardHigher,
+            countPoints: this.cardsModule.countPoints,
+            debugCards: this.cardsModule.debugCards,
+            testSystem: this.cardsModule.testCardSystem
+        };
     }
     
     /**
@@ -182,7 +302,10 @@ class SchafkopfGameSystem {
             legacyActive: this.legacyActive,
             modernActive: this.modernActive || false,
             modulesLoaded: Array.from(this.modulesLoaded),
-            capabilities: this.browserCapabilities
+            moduleErrors: Object.fromEntries(this.moduleErrors),
+            capabilities: this.browserCapabilities,
+            cardsLoaded: !!this.cardsModule,
+            rulesLoaded: !!this.rulesModule
         };
     }
 }
@@ -197,6 +320,14 @@ async function initializeModernSystem() {
     if (success) {
         console.log('🎯 Modern system initialized successfully');
         console.log('📊 Status:', system.getStatus());
+        
+        // Run module tests
+        const testResults = await system.testModules();
+        console.log('🧪 Module tests:', testResults);
+        
+        // Expose Cards API globally for debugging
+        window.CardsAPI = system.getCardsAPI();
+        
     } else {
         console.log('⚠️ Modern system failed, using legacy');
     }
@@ -221,4 +352,4 @@ if (typeof window !== 'undefined') {
     module.exports = { SchafkopfGameSystem, initializeModernSystem };
 }
 
-console.log('📋 main.js loaded - waiting for DOM ready');
+console.log('📋 main.js Phase 2 loaded - cards integration ready');
