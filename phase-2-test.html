@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Schafkopf Phase 2 - Cards Module Test</title>
+    <title>Schafkopf Phase 2 - Cards Module Test (Updated)</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -98,13 +98,26 @@
         .button.secondary:hover {
             background: #1976D2;
         }
+        .version {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,255,0,0.8);
+            color: black;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
+    <div class="version">v2.1 - FIXED</div>
+    
     <div class="container">
         <div class="header">
             <h1>🏗️ Schafkopf Refactoring - Phase 2 Test</h1>
-            <p>ES6 Cards Module Integration Test</p>
+            <p>ES6 Cards Module Integration Test (FIXED VERSION)</p>
         </div>
         
         <div class="status">
@@ -128,6 +141,7 @@
             <button class="button secondary" onclick="dealNewHand()">Deal New Hand</button>
             <button class="button secondary" onclick="showTrumpOrder()">Show Trump Order</button>
             <button class="button secondary" onclick="validateDeck()">Validate Deck</button>
+            <button class="button secondary" onclick="clearResults()">Clear Results</button>
         </div>
         
         <div class="container">
@@ -154,34 +168,34 @@
         
         <div class="container">
             <h2>📊 Test Results</h2>
-            <div class="test-results" id="test-results">Initializing Phase 2 test system...</div>
+            <div class="test-results" id="test-results">FIXED VERSION - Initializing Phase 2 test system...</div>
         </div>
     </div>
 
     <script type="module">
+        console.log('🔥 FIXED VERSION v2.1 loading...');
+        
         let currentHands = [];
         let cardsModule = null;
         
         // Browser capability detection
         function checkBrowserCapabilities() {
-            const capabilities = {
-                esModules: true, // If we're here, ES modules work
-                asyncAwait: true, // If we're here, async/await works
-                classes: true     // If we're here, classes work
+            updateTestResults('✅ ES6 Modules supported by browser\n');
+            updateBrowserStatus();
+            return {
+                esModules: true,
+                asyncAwait: true,
+                classes: true
             };
-            
-            updateBrowserStatus(capabilities);
-            return capabilities;
         }
         
         // Initialisierung
         async function initializeTest() {
-            updateTestResults('🏗️ Initializing Phase 2 test system...\n');
+            updateTestResults('🔥 FIXED VERSION - Phase 2 test system starting...\n');
             
             try {
                 // Browser capabilities prüfen
-                const capabilities = checkBrowserCapabilities();
-                updateTestResults('✅ Browser capabilities: ES6 modules supported\n');
+                checkBrowserCapabilities();
                 
                 // Cards Module direkt laden
                 await loadCardsModule();
@@ -189,21 +203,34 @@
                 // Tests durchführen
                 await runInitialTests();
                 
+                updateTestResults('🎉 Initialization completed successfully!\n');
+                
             } catch (error) {
                 updateTestResults(`❌ Initialization failed: ${error.message}\n`);
-                updateModuleStatus('error', 'Failed to load');
-                console.error('Full error:', error);
+                console.error('Full initialization error:', error);
+                updateModuleStatus('error', `Failed: ${error.message}`);
             }
         }
         
         async function loadCardsModule() {
-            updateTestResults('📦 Loading Cards module directly...\n');
+            updateTestResults('📦 Loading Cards module...\n');
+            updateModuleStatus('warning', 'Loading...');
             
             try {
-                // Direkter Import des Cards-Moduls
-                cardsModule = await import('./js/cards/index.js');
-                updateTestResults('✅ Cards module loaded successfully\n');
+                // Direkter Import mit absoluter URL
+                const moduleUrl = new URL('./js/cards/index.js', window.location.href).href;
+                updateTestResults(`📍 Loading from: ${moduleUrl}\n`);
+                
+                cardsModule = await import(moduleUrl);
+                
+                updateTestResults('✅ Cards module loaded successfully!\n');
+                updateTestResults(`📋 Available functions: ${Object.keys(cardsModule).length}\n`);
                 updateModuleStatus('success', 'Cards Module Loaded');
+                
+                // Globale Verfügbarkeit für manuelle Tests
+                window.cardsAPI = cardsModule;
+                updateTestResults('🔧 Module available as window.cardsAPI\n');
+                
                 return true;
                 
             } catch (error) {
@@ -214,7 +241,7 @@
         }
         
         async function runInitialTests() {
-            updateTestResults('🧪 Running initial cards tests...\n');
+            updateTestResults('🧪 Running automatic initial tests...\n');
             
             try {
                 // Test Cards System
@@ -224,9 +251,11 @@
                     updateTestResults('✅ Cards system validation: PASSED\n');
                     updateTestResults(`📦 Deck size: ${testResult.deck.length} cards\n`);
                     updateTestResults(`🎯 Total points: ${cardsModule.countPoints(testResult.deck)}\n`);
+                    updateTestResults(`🃏 Trump cards: ${cardsModule.findTrumps(testResult.deck).length}\n`);
                     updateCardsStatus('success', 'All tests passed');
                     
-                    // Zeige erste Hand
+                    // Automatisch erste Hand zeigen
+                    updateTestResults('🎲 Auto-dealing first hand...\n');
                     dealNewHand();
                 } else {
                     updateTestResults('❌ Cards system validation: FAILED\n');
@@ -238,39 +267,43 @@
             } catch (error) {
                 updateTestResults(`❌ Initial tests failed: ${error.message}\n`);
                 updateCardsStatus('error', `Test failed: ${error.message}`);
+                console.error('Initial test error:', error);
             }
         }
         
         // Test-Funktionen
         window.runCardSystemTest = function() {
-            updateTestResults('\n🧪 Running comprehensive card system test...\n');
+            updateTestResults('\n🧪 === COMPREHENSIVE CARD SYSTEM TEST ===\n');
             
             try {
                 const testResult = cardsModule.testCardSystem();
-                updateTestResults(`Deck size: ${testResult.deck.length} cards\n`);
-                updateTestResults(`Validation: ${testResult.validation.valid ? 'PASSED' : 'FAILED'}\n`);
-                updateTestResults(`Players: ${testResult.hands.length}\n`);
-                
-                // Detailed validation
                 const deck = testResult.deck;
                 const trumps = cardsModule.findTrumps(deck);
                 const totalPoints = cardsModule.countPoints(deck);
                 
-                updateTestResults(`Trump cards: ${trumps.length}\n`);
-                updateTestResults(`Total points: ${totalPoints}\n`);
+                updateTestResults(`📦 Deck size: ${deck.length} cards\n`);
+                updateTestResults(`✅ Validation: ${testResult.validation.valid ? 'PASSED' : 'FAILED'}\n`);
+                updateTestResults(`👥 Players: ${testResult.hands.length}\n`);
+                updateTestResults(`🃏 Trump cards: ${trumps.length}\n`);
+                updateTestResults(`🎯 Total points: ${totalPoints}\n`);
                 
+                // Validation details
                 if (testResult.validation.errors?.length > 0) {
-                    updateTestResults(`Errors: ${testResult.validation.errors.join(', ')}\n`);
+                    updateTestResults(`❌ Errors: ${testResult.validation.errors.join(', ')}\n`);
+                }
+                if (testResult.validation.warnings?.length > 0) {
+                    updateTestResults(`⚠️ Warnings: ${testResult.validation.warnings.join(', ')}\n`);
                 }
                 
-                updateTestResults('✅ Card system test completed\n');
+                updateTestResults('🎉 Card system test completed\n');
             } catch (error) {
                 updateTestResults(`❌ Test failed: ${error.message}\n`);
+                console.error('Card system test error:', error);
             }
         };
         
         window.dealNewHand = function() {
-            updateTestResults('\n🃏 Dealing new hand...\n');
+            updateTestResults('\n🎲 === DEALING NEW HAND ===\n');
             
             try {
                 const deck = cardsModule.createDeck();
@@ -283,59 +316,85 @@
                 currentHands = hands;
                 displayHands(hands);
                 
-                updateTestResults('✅ New hand dealt successfully\n');
-                updateTestResults(`Each player has ${hands[0].length} cards\n`);
+                updateTestResults(`✅ New hand dealt successfully\n`);
+                updateTestResults(`👥 ${hands.length} players, ${hands[0].length} cards each\n`);
+                
+                // Zeige Hand-Details in Konsole
+                hands.forEach((hand, index) => {
+                    const trumpCount = hand.filter(c => c.isTrump).length;
+                    const points = cardsModule.countPoints(hand);
+                    updateTestResults(`Player ${index + 1}: ${trumpCount} trumps, ${points} points\n`);
+                });
+                
             } catch (error) {
                 updateTestResults(`❌ Deal failed: ${error.message}\n`);
+                console.error('Deal error:', error);
             }
         };
         
         window.showTrumpOrder = function() {
-            updateTestResults('\n🎯 Trump order analysis...\n');
+            updateTestResults('\n🎯 === TRUMP ORDER ANALYSIS ===\n');
             
             try {
                 const deck = cardsModule.createDeck();
                 const trumps = cardsModule.findTrumps(deck);
                 
-                updateTestResults(`Total trumps: ${trumps.length}\n`);
+                updateTestResults(`🃏 Total trumps: ${trumps.length}\n`);
+                updateTestResults('🏆 Trump hierarchy (highest first):\n');
                 
                 trumps.sort((a, b) => b.trumpOrder - a.trumpOrder);
                 trumps.forEach((card, index) => {
-                    updateTestResults(`${index + 1}. ${card.symbol}${card.short} (${card.suit} ${card.value}) - Order: ${card.trumpOrder}\n`);
+                    updateTestResults(`${String(index + 1).padStart(2)}. ${card.symbol}${card.short} (${card.suit} ${card.value}) - Order: ${card.trumpOrder}\n`);
                 });
+                
+                updateTestResults('✅ Trump analysis completed\n');
                 
             } catch (error) {
                 updateTestResults(`❌ Trump analysis failed: ${error.message}\n`);
+                console.error('Trump analysis error:', error);
             }
         };
         
         window.validateDeck = function() {
-            updateTestResults('\n🔍 Validating deck...\n');
+            updateTestResults('\n🔍 === DECK VALIDATION ===\n');
             
             try {
                 const deck = cardsModule.createDeck();
                 const validation = cardsModule.validateDeck(deck);
-                
-                updateTestResults(`Valid: ${validation.valid}\n`);
-                updateTestResults(`Total points: ${cardsModule.countPoints(deck)}\n`);
-                updateTestResults(`Total cards: ${deck.length}\n`);
-                
                 const trumps = cardsModule.findTrumps(deck);
-                updateTestResults(`Trump cards: ${trumps.length}\n`);
+                const totalPoints = cardsModule.countPoints(deck);
+                
+                updateTestResults(`✅ Valid: ${validation.valid}\n`);
+                updateTestResults(`📦 Total cards: ${deck.length}\n`);
+                updateTestResults(`🎯 Total points: ${totalPoints}\n`);
+                updateTestResults(`🃏 Trump cards: ${trumps.length}\n`);
                 
                 if (validation.errors.length > 0) {
-                    updateTestResults(`Errors: ${validation.errors.join(', ')}\n`);
+                    updateTestResults(`❌ Errors: ${validation.errors.join(', ')}\n`);
                 }
                 
                 if (validation.warnings.length > 0) {
-                    updateTestResults(`Warnings: ${validation.warnings.join(', ')}\n`);
+                    updateTestResults(`⚠️ Warnings: ${validation.warnings.join(', ')}\n`);
                 }
+                
+                // Suit distribution
+                const suits = ['eichel', 'gras', 'herz', 'schellen'];
+                updateTestResults('\n📊 Suit distribution:\n');
+                suits.forEach(suit => {
+                    const suitCards = deck.filter(c => c.suit === suit);
+                    updateTestResults(`${suit}: ${suitCards.length} cards\n`);
+                });
                 
                 updateTestResults('✅ Validation completed\n');
                 
             } catch (error) {
                 updateTestResults(`❌ Validation failed: ${error.message}\n`);
+                console.error('Validation error:', error);
             }
+        };
+        
+        window.clearResults = function() {
+            document.getElementById('test-results').textContent = 'Results cleared. Ready for new tests...\n';
         };
         
         // Display-Funktionen
@@ -344,7 +403,7 @@
                 const handElement = document.getElementById(`hand-${index}`);
                 if (handElement) {
                     handElement.innerHTML = hand.map(card => 
-                        `<span class="card ${card.isTrump ? 'trump' : ''}" title="${card.name}">${card.symbol}${card.short}</span>`
+                        `<span class="card ${card.isTrump ? 'trump' : ''}" title="${card.name} (${card.points} points)">${card.symbol}${card.short}</span>`
                     ).join('');
                 }
             });
@@ -363,14 +422,15 @@
             document.getElementById('cards-info').textContent = message;
         }
         
-        function updateBrowserStatus(capabilities) {
+        function updateBrowserStatus() {
             const element = document.getElementById('browser-status');
             const info = document.getElementById('browser-info');
             
             info.innerHTML = `
                 ES Modules: ✅<br>
                 Async/Await: ✅<br>
-                Classes: ✅
+                Classes: ✅<br>
+                Browser: Firefox
             `;
             
             element.className = 'status-card success';
@@ -382,8 +442,13 @@
             element.scrollTop = element.scrollHeight;
         }
         
-        // Auto-Start
-        initializeTest();
+        // Auto-Start mit kleiner Verzögerung
+        setTimeout(() => {
+            updateTestResults('🚀 Starting initialization in 1 second...\n');
+            initializeTest();
+        }, 1000);
+        
+        console.log('🔥 Fixed test page script loaded');
     </script>
     
     <!-- Legacy fallback für ältere Browser -->
