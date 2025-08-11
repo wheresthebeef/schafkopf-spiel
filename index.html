@@ -9,18 +9,18 @@
     <meta http-equiv="expires" content="0">
     <meta http-equiv="pragma" content="no-cache">
     
-    <title>Bayerisches Schafkopf - Phase 3 Complete</title>
+    <title>Bayerisches Schafkopf - Secure AI Training</title>
     
     <!-- Use original CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20250111-final">
+    <link rel="stylesheet" href="css/style.css?v=20250111-secure">
     
     <style>
-        /* Phase 3 Complete indicator */
-        .phase3-complete-badge {
+        /* Secure System Badge */
+        .secure-system-badge {
             position: fixed;
             top: 10px;
             right: 10px;
-            background: linear-gradient(135deg, #28a745, #20c997);
+            background: linear-gradient(135deg, #28a745, #1e7e34);
             color: white;
             padding: 0.75rem;
             border-radius: 8px;
@@ -29,14 +29,16 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             cursor: pointer;
             transition: all 0.3s ease;
-            max-width: 200px;
+            max-width: 220px;
+            border: 2px solid rgba(255,255,255,0.3);
         }
         
-        .phase3-complete-badge:hover {
+        .secure-system-badge:hover {
             transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
         }
         
-        .phase3-complete-badge.collapsed {
+        .secure-system-badge.collapsed {
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -46,276 +48,64 @@
             justify-content: center;
         }
         
-        .complete-details {
+        .secure-details {
             display: block;
         }
         
-        .phase3-complete-badge.collapsed .complete-details {
+        .secure-system-badge.collapsed .secure-details {
             display: none;
         }
         
-        .complete-icon {
+        .secure-icon {
             display: none;
         }
         
-        .phase3-complete-badge.collapsed .complete-icon {
+        .secure-system-badge.collapsed .secure-icon {
             display: block;
             font-size: 1.2rem;
         }
         
-        .training-controls {
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-        }
-        
-        .training-toggle {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
+        .dashboard-link {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
             color: white;
             padding: 0.25rem 0.5rem;
             border-radius: 4px;
-            cursor: pointer;
+            text-decoration: none;
             font-size: 0.7rem;
-            margin-right: 0.25rem;
-        }
-        
-        .training-toggle:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .training-toggle.active {
-            background: rgba(255,255,255,0.9);
-            color: #28a745;
-            font-weight: bold;
-        }
-        
-        /* Training Modal CSS with proper text colors */
-        .post-game-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 10000;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-        
-        .post-game-modal.show {
-            opacity: 1;
-        }
-        
-        .post-game-modal .modal-backdrop {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-        }
-        
-        .post-game-modal .modal-content {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            transform: none;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            max-width: 500px;
-            width: 400px;
-            max-height: 70vh;
-            overflow-y: auto;
-            cursor: move;
-            color: #333;
-        }
-        
-        .post-game-modal .modal-header {
-            padding: 20px;
-            border-bottom: 1px solid #eee;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-            user-select: none;
-            background: #f8f9fa;
-            border-radius: 12px 12px 0 0;
-            color: #333;
-        }
-        
-        .post-game-modal .modal-header h3 {
-            margin: 0;
-            color: #333;
-        }
-        
-        .post-game-modal .modal-close {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #999;
-            padding: 0;
-            width: 30px;
-            height: 30px;
-        }
-        
-        .post-game-modal .modal-close:hover {
-            color: #333;
-        }
-        
-        .post-game-modal .modal-body {
-            padding: 20px;
-            color: #333;
-        }
-        
-        .post-game-modal .modal-body p {
-            color: #333;
-            margin-bottom: 15px;
-        }
-        
-        .post-game-modal .moves-review {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-        
-        .post-game-modal .move-review-item {
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            background: #f9f9f9;
-            color: #333;
-        }
-        
-        .post-game-modal .move-info {
-            margin-bottom: 12px;
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .post-game-modal .player-name {
-            color: #2563eb;
-            font-weight: bold;
-        }
-        
-        .post-game-modal .card-display {
-            font-size: 18px;
-            margin: 0 5px;
-            color: #333;
-        }
-        
-        .post-game-modal .card-points {
-            color: #666;
-            font-size: 14px;
-        }
-        
-        .post-game-modal .rating-buttons {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-        }
-        
-        .post-game-modal .rating-btn {
-            padding: 8px 16px;
-            border: 2px solid #ddd;
-            border-radius: 6px;
-            background: white;
-            cursor: pointer;
+            margin-top: 0.25rem;
+            display: inline-block;
             transition: all 0.2s ease;
-            font-size: 14px;
-            color: #333;
         }
         
-        .post-game-modal .rating-btn:hover {
-            border-color: #2563eb;
-        }
-        
-        .post-game-modal .rating-btn.good.selected {
-            background: #22c55e;
-            border-color: #22c55e;
+        .dashboard-link:hover {
+            background: rgba(255,255,255,0.2);
             color: white;
+            text-decoration: none;
         }
         
-        .post-game-modal .rating-btn.bad.selected {
-            background: #ef4444;
-            border-color: #ef4444;
-            color: white;
-        }
-        
-        .post-game-modal .reasoning-section {
-            margin-top: 10px;
-        }
-        
-        .post-game-modal .reasoning-section label {
-            display: block;
-            margin-bottom: 5px;
-            font-size: 14px;
-            color: #666;
-        }
-        
-        .post-game-modal .reasoning-input {
-            width: 100%;
-            min-height: 60px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            resize: vertical;
-            font-family: inherit;
-            color: #333;
-            background: white;
-        }
-        
-        .post-game-modal .modal-footer {
-            padding: 20px;
-            border-top: 1px solid #eee;
-            text-align: right;
-        }
-        
-        .post-game-modal .btn-primary {
-            background: #2563eb;
-            color: white;
-            border: none;
-            padding: 10px 20px;
+        .security-info {
+            background: rgba(255,255,255,0.1);
             border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        
-        .post-game-modal .btn-primary:hover {
-            background: #1d4ed8;
-        }
-        
-        .feedback-toast {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            z-index: 10001;
-            background: #22c55e;
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: slideIn 0.3s ease;
-        }
-        
-        @keyframes slideIn {
-            from { transform: translateX(100%); }
-            to { transform: translateX(0); }
+            padding: 10px;
+            margin-top: 10px;
+            font-size: 0.9em;
+            border-left: 3px solid #28a745;
         }
     </style>
 </head>
 <body>
-    <!-- Phase 3 Complete Badge -->
-    <div class="phase3-complete-badge" id="phase3-badge" onclick="toggleCompleteBadge()">
-        <div class="complete-details">
-            <strong>🎯 Phase 3 Complete!</strong><br>
-            <small>Modular Architecture + AI Training</small>
-            <div class="training-controls">
-                <button class="training-toggle" id="training-btn" onclick="toggleTraining(event)">Training AN</button>
-                <small>Click to collapse</small>
-            </div>
+    <!-- Secure System Badge -->
+    <div class="secure-system-badge" id="secure-badge" onclick="toggleSecureBadge()">
+        <div class="secure-details">
+            <strong>🛡️ Secure AI Training</strong><br>
+            <small>Community-driven bot improvement</small>
+            <br>
+            <a href="training-progress-secure.html" class="dashboard-link" target="_blank">
+                📊 Security Dashboard
+            </a>
         </div>
-        <div class="complete-icon">✅</div>
+        <div class="secure-icon">🛡️</div>
     </div>
 
     <!-- Original Layout -->
@@ -375,7 +165,7 @@
             <!-- Spielfeld-Mitte -->
             <div class="center-area">
                 <div class="game-status" id="game-status">
-                    🎯 Phase 3 Complete! Modular Architecture + Training Ready
+                    🛡️ Secure AI Training System Ready - Rate bot moves to improve global AI!
                 </div>
                 
                 <div class="trick-area" id="trick-area">
@@ -403,19 +193,21 @@
     </div>
 
     <!-- Load Phase 3 scripts -->
-    <script src="js/ui.js?v=20250111-final"></script>
-    <script src="js/game-state.js?v=20250111-final"></script>
-    <script src="js/rules.js?v=20250111-final"></script>
-    <script src="js/cards.js?v=20250111-final"></script>
-    <script src="js/game.js?v=20250111-final"></script>
+    <script src="js/ui.js?v=20250111-secure"></script>
+    <script src="js/game-state.js?v=20250111-secure"></script>
+    <script src="js/rules.js?v=20250111-secure"></script>
+    <script src="js/cards.js?v=20250111-secure"></script>
+    <script src="js/game.js?v=20250111-secure"></script>
     
-    <!-- Load Post-Game Training System -->
-    <script src="js/ai/post-game-training.js?v=20250111-final"></script>
+    <!-- Load Secure Training System -->
+    <script src="github-db-secure.js?v=20250111-secure"></script>
+    <script src="secure-training-integration.js?v=20250111-secure"></script>
+    <script src="js/ai/post-game-training.js?v=20250111-secure"></script>
     
     <script>
         // Badge control functions
-        function toggleCompleteBadge() {
-            const badge = document.getElementById('phase3-badge');
+        function toggleSecureBadge() {
+            const badge = document.getElementById('secure-badge');
             badge.classList.toggle('collapsed');
             
             if (badge.classList.contains('collapsed')) {
@@ -425,73 +217,92 @@
             }
         }
         
-        function toggleTraining(event) {
-            event.stopPropagation();
+        // Enhanced training function that integrates with secure system
+        function submitReview(rating, reasoning) {
+            // Get current game context
+            const reviewData = {
+                botName: window.currentBotPlayer || 'Anna',  // From your game state
+                cardPlayed: window.lastPlayedCard || '♠️A',  // From your game state  
+                rating: rating,                              // 'good' or 'bad'
+                reasoning: reasoning,                        // Optional explanation
+                trickNumber: window.currentTrick || 0,      // From your game state
+                position: window.playerPosition || 'unknown',
+                trumpSuit: window.trumpSuit || 'herz',
+                gameType: window.gameType || 'rufspiel',
+                calledAce: window.calledAce || null
+            };
             
-            const btn = document.getElementById('training-btn');
-            const isActive = btn.classList.contains('active');
+            console.log('🛡️ Submitting secure review:', reviewData);
             
-            if (isActive) {
-                window.postGameTraining.disable();
-                btn.textContent = 'Training AN';
-                btn.classList.remove('active');
+            // Send to secure training system
+            if (window.submitSecureTrainingReview) {
+                window.submitSecureTrainingReview(reviewData);
             } else {
-                window.postGameTraining.enable();
-                btn.textContent = 'Training AUS';
-                btn.classList.add('active');
+                console.warn('Secure training system not loaded');
+                // Fallback to local storage
+                const reviews = JSON.parse(localStorage.getItem('training_reviews') || '[]');
+                reviews.push({
+                    ...reviewData,
+                    id: Date.now().toString(),
+                    timestamp: new Date().toISOString(),
+                    source: 'fallback'
+                });
+                localStorage.setItem('training_reviews', JSON.stringify(reviews));
             }
         }
         
-        // Auto-collapse badge after 8 seconds
+        // Auto-collapse badge after 10 seconds
         setTimeout(() => {
-            const badge = document.getElementById('phase3-badge');
+            const badge = document.getElementById('secure-badge');
             badge.classList.add('collapsed');
-        }, 8000);
+        }, 10000);
         
-        // Phase 3 Complete logging
-        console.log('🎯 PHASE 3 COMPLETE - Main Game Interface Ready!');
-        console.log('✨ Modular Architecture: 37KB monolith → 5 clean modules');
-        console.log('🏆 Training System: Rate bot moves after each trick');
-        console.log('🎮 Perfect game experience on main index.html');
-        
-        // System ready
+        // System initialization
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🛡️ SECURE AI TRAINING SYSTEM - Initializing...');
+            
+            // Check if all required systems are available
             const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
             const available = requiredFunctions.filter(func => typeof window[func] === 'function');
-            const trainingAvailable = window.postGameTraining && typeof window.enableHumanTraining === 'function';
             
-            if (available.length === requiredFunctions.length && trainingAvailable) {
-                updateGameStatus('🎯 Phase 3 Complete! Click "Neues Spiel" to start playing.');
+            if (available.length === requiredFunctions.length) {
+                updateGameStatus('🛡️ Secure AI Training Ready! Rate bot moves to improve global intelligence.');
                 
-                // Auto-enable training
+                // Initialize secure training integration
                 setTimeout(() => {
-                    if (window.postGameTraining && !window.postGameTraining.enabled) {
-                        window.postGameTraining.enable();
-                        const btn = document.getElementById('training-btn');
-                        btn.textContent = 'Training AUS';
-                        btn.classList.add('active');
-                        
-                        updateGameStatus('🏆 Ready! Training active - evaluate bot moves after tricks.');
+                    if (window.secureTrainingIntegration) {
+                        console.log('✅ Secure training integration loaded');
+                        updateGameStatus('🌍 Ready! Your reviews help train the world\'s best Schafkopf AI!');
+                    } else {
+                        console.warn('⚠️ Secure training integration not available');
+                        updateGameStatus('🎮 Game ready! Training system loading...');
                     }
-                }, 3000);
+                }, 2000);
+            } else {
+                console.error('❌ Required game functions missing:', 
+                    requiredFunctions.filter(func => typeof window[func] !== 'function'));
             }
         });
         
-        // Final system info
-        window.schafkopfPhase3 = {
-            status: 'COMPLETE',
-            version: '3.0-final',
-            architecture: 'modular',
+        // System info for debugging
+        window.schafkopfSecure = {
+            status: 'SECURE_READY',
+            version: '4.0-secure',
+            architecture: 'modular-secure',
             features: {
-                modules: 5,
-                training: true,
-                cacheFixed: true,
-                readableModals: true
+                secureDatabase: true,
+                monitoring: true,
+                validation: true,
+                backup: true,
+                community: true
             },
             ready: true
         };
         
-        console.log('🏆 Phase 3 Final Status:', window.schafkopfPhase3);
+        console.log('🛡️ Secure Schafkopf System:', window.schafkopfSecure);
+        console.log('🌍 Global AI Training: Every review makes the bots smarter!');
+        console.log('🔒 Security: Multi-layer validation, rate limiting, spam protection');
+        console.log('📊 Dashboard: Open training-progress-secure.html for insights');
     </script>
 </body>
 </html>
