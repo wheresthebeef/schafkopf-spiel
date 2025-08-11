@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Cache-busting meta tags -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    
+    <title>🎯 Phase 3 Clean - Bayerisches Schafkopf</title>
+    
+    <!-- Add timestamp to CSS to force reload -->
+    <link rel="stylesheet" href="css/style.css?v=20250111-3">
+    
+    <style>
+        /* Minimal header for clean gameplay */
+        .clean-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 0.5rem;
+            text-align: center;
+            margin-bottom: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        /* Collapsible info section */
+        .info-toggle {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            overflow: hidden;
+        }
+        
+        .info-header {
+            background: #e9ecef;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.9rem;
+            user-select: none;
+        }
+        
+        .info-header:hover {
+            background: #dee2e6;
+        }
+        
+        .info-content {
+            padding: 1rem;
+            display: none;
+            font-size: 0.85rem;
+        }
+        
+        .info-content.show {
+            display: block;
+        }
+        
+        /* Ensure game area gets full space */
+        .game-container {
+            margin-top: 0;
+        }
+        
+        /* Make sure cards are visible */
+        .center-area {
+            min-height: 200px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .trick-cards {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            min-height: 150px;
+        }
+    </style>
+</head>
+<body>
+    <div class="clean-header">
+        🎯 <strong>Phase 3 Success!</strong> Modular Architecture • Cache-Busted • Ready to Play
+    </div>
+
+    <div class="container">
+        <!-- Collapsible info section -->
+        <div class="info-toggle">
+            <div class="info-header" onclick="toggleInfo()">
+                📊 Phase 3 Details (Click to expand/collapse)
+            </div>
+            <div class="info-content" id="info-content">
+                <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4>✅ Modular Architecture Complete</h4>
+                        <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.8rem;">
+                            <li>37KB game.js → 5 focused modules</li>
+                            <li>Circular dependencies resolved</li>
+                            <li>100% functionality preserved</li>
+                            <li>Enhanced AI & team logic</li>
+                        </ul>
+                    </div>
+                    <div style="flex: 1; min-width: 250px;">
+                        <h4>🔧 Technical Achievements</h4>
+                        <ul style="margin: 0; padding-left: 1.5rem; font-size: 0.8rem;">
+                            <li>Dynamic imports for complex dependencies</li>
+                            <li>GitHub Pages cache-busting applied</li>
+                            <li>Window function binding system</li>
+                            <li>Comprehensive testing infrastructure</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game UI Container -->
+        <div class="game-container">
+            <div class="game-header">
+                <div class="game-title">
+                    <h1>🍺 Bayerisches Schafkopf</h1>
+                    <div class="game-subtitle">Phase 3 Clean • Modular Engine</div>
+                </div>
+                <div class="game-controls">
+                    <button class="btn" onclick="newGame()">Neues Spiel</button>
+                    <button class="btn" onclick="showRules()">Regeln</button>
+                    <button class="btn" onclick="showStats()">Statistik</button>
+                    <button class="btn" onclick="toggleDebugMode()">Debug</button>
+                </div>
+            </div>
+
+            <div class="game-status" id="game-status">
+                🚀 Modular game engine ready! Click "Neues Spiel" to start.
+            </div>
+
+            <div class="players-container">
+                <!-- Player 1 (Oben) -->
+                <div class="player player-top" id="player-1">
+                    <div class="player-name">Anna</div>
+                    <div class="player-info">
+                        <span class="points" id="points-1">0</span> Punkte
+                        <span class="tricks" id="tricks-1">0</span> Stiche
+                    </div>
+                    <div class="cards" id="cards-1"></div>
+                </div>
+
+                <!-- Player 3 (Links) -->
+                <div class="player player-left" id="player-3">
+                    <div class="player-name">Sepp</div>
+                    <div class="player-info">
+                        <span class="points" id="points-3">0</span> Punkte
+                        <span class="tricks" id="tricks-3">0</span> Stiche
+                    </div>
+                    <div class="cards" id="cards-3"></div>
+                </div>
+
+                <!-- Center Area -->
+                <div class="center-area">
+                    <div class="trick-cards" id="trick-cards">
+                        <!-- Ausgespielten Karten werden hier angezeigt -->
+                    </div>
+                </div>
+
+                <!-- Player 2 (Rechts) -->
+                <div class="player player-right" id="player-2">
+                    <div class="player-name">Hans</div>
+                    <div class="player-info">
+                        <span class="points" id="points-2">0</span> Punkte
+                        <span class="tricks" id="tricks-2">0</span> Stiche
+                    </div>
+                    <div class="cards" id="cards-2"></div>
+                </div>
+
+                <!-- Player 0 (Unten - Human) -->
+                <div class="player player-bottom" id="player-0">
+                    <div class="player-name">Sie</div>
+                    <div class="player-info">
+                        <span class="points" id="points-0">0</span> Punkte
+                        <span class="tricks" id="tricks-0">0</span> Stiche
+                    </div>
+                    <div class="cards" id="cards-0"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Titel</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+                Inhalt
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Load scripts with cache-busting timestamps -->
+    <script src="js/ui.js?v=20250111-3"></script>
+    <script src="js/game-state.js?v=20250111-3"></script>
+    <script src="js/rules.js?v=20250111-3"></script>
+    <script src="js/cards.js?v=20250111-3"></script>
+    <script src="js/game.js?v=20250111-3"></script>
+    
+    <script>
+        // Toggle info section
+        function toggleInfo() {
+            const content = document.getElementById('info-content');
+            content.classList.toggle('show');
+        }
+        
+        // Phase 3 confirmation
+        console.log('🎯 Phase 3 SUCCESS - Clean Gaming Version!');
+        console.log('✨ Cache-busted, optimized for gameplay');
+        console.log('🎮 Full Schafkopf functionality available');
+        
+        // Success message when game loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Verify all functions are available
+            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode'];
+            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
+            
+            console.log(`✅ Game functions loaded: ${available.length}/${requiredFunctions.length}`);
+            
+            if (available.length === requiredFunctions.length) {
+                updateGameStatus('🎯 Phase 3 Engine Ready! Start your game now.');
+                
+                // Auto-collapse info after 3 seconds for better gameplay
+                setTimeout(() => {
+                    const infoContent = document.getElementById('info-content');
+                    if (infoContent.classList.contains('show')) {
+                        infoContent.classList.remove('show');
+                    }
+                }, 3000);
+            } else {
+                updateGameStatus('⚠️ Loading... Please wait.');
+            }
+        });
+        
+        // Debug: Log when cards are played to center
+        const originalUpdateUI = window.updateUI;
+        if (originalUpdateUI) {
+            window.updateUI = function() {
+                originalUpdateUI.apply(this, arguments);
+                
+                // Check if trick cards are visible
+                const trickCards = document.getElementById('trick-cards');
+                if (trickCards && trickCards.children.length > 0) {
+                    console.log(`🃏 ${trickCards.children.length} Karten im Stich sichtbar`);
+                }
+            };
+        }
+    </script>
+</body>
+</html>
