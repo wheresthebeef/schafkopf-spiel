@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Cache-busting meta tags -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    
+    <title>🎯 Phase 3 Final - Bayerisches Schafkopf</title>
+    
+    <!-- Use original CSS -->
+    <link rel="stylesheet" href="css/style.css?v=20250111-4">
+    
+    <style>
+        /* Minimal Phase 3 success indicator */
+        .phase3-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .phase3-badge:hover {
+            transform: scale(1.05);
+        }
+        
+        .phase3-badge.collapsed {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .phase3-details {
+            display: block;
+        }
+        
+        .phase3-badge.collapsed .phase3-details {
+            display: none;
+        }
+        
+        .phase3-icon {
+            display: none;
+        }
+        
+        .phase3-badge.collapsed .phase3-icon {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <!-- Phase 3 Success Badge -->
+    <div class="phase3-badge" id="phase3-badge" onclick="togglePhase3Badge()">
+        <div class="phase3-details">
+            <strong>🎯 Phase 3 Complete!</strong><br>
+            <small>Modular Architecture • Click to collapse</small>
+        </div>
+        <div class="phase3-icon">🎯</div>
+    </div>
+
+    <!-- Original Layout from index.html -->
+    <div class="header">
+        <h1>🍺 Bayerisches Schafkopf</h1>
+        <div class="game-info">
+            <div>Spiel: <span id="game-type">Rufspiel</span></div>
+            <div>Runde: <span id="round-counter">1</span></div>
+            <div>Stiche: <span id="trick-counter">0/8</span></div>
+            <div>Trumpf: Herz</div>
+            <div>Gerufenes Ass: <span id="called-ace">-</span></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="players">
+            <!-- CPU-Spieler 1 (links) -->
+            <div class="player cpu1" id="player-1">
+                <h3>Anna</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-1"></div>
+            </div>
+
+            <!-- CPU-Spieler 2 (oben) -->
+            <div class="player cpu2" id="player-2">
+                <h3>Hans</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-2"></div>
+            </div>
+
+            <!-- CPU-Spieler 3 (rechts) -->
+            <div class="player cpu3" id="player-3">
+                <h3>Sepp</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-3"></div>
+            </div>
+
+            <!-- Menschlicher Spieler (unten) -->
+            <div class="player human active" id="player-0">
+                <h3>Sie</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-0"></div>
+            </div>
+
+            <!-- Spielfeld-Mitte -->
+            <div class="center-area">
+                <div class="game-status" id="game-status">
+                    🚀 Phase 3 Engine Ready - Klicken Sie "Neues Spiel"
+                </div>
+                
+                <div class="trick-area" id="trick-area">
+                    <!-- Hier werden die gespielten Karten angezeigt -->
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">Neues Spiel</button>
+            <button class="btn" onclick="showRules()">Regeln</button>
+            <button class="btn" onclick="showStats()">Statistik</button>
+            <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
+            <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
+        </div>
+    </div>
+
+    <!-- Modal für Dialoge -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Titel</h2>
+            <p id="modal-text">Text</p>
+            <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Load Phase 3 scripts with cache-busting -->
+    <script src="js/ui.js?v=20250111-4"></script>
+    <script src="js/game-state.js?v=20250111-4"></script>
+    <script src="js/rules.js?v=20250111-4"></script>
+    <script src="js/cards.js?v=20250111-4"></script>
+    <script src="js/game.js?v=20250111-4"></script>
+    
+    <script>
+        // Phase 3 badge toggle function
+        function togglePhase3Badge() {
+            const badge = document.getElementById('phase3-badge');
+            badge.classList.toggle('collapsed');
+            
+            // Auto-expand after 5 seconds if collapsed
+            if (badge.classList.contains('collapsed')) {
+                setTimeout(() => {
+                    badge.classList.remove('collapsed');
+                }, 5000);
+            }
+        }
+        
+        // Auto-collapse badge after 5 seconds
+        setTimeout(() => {
+            const badge = document.getElementById('phase3-badge');
+            badge.classList.add('collapsed');
+        }, 5000);
+        
+        // Phase 3 logging
+        console.log('🎯 Phase 3 FINAL - Original Layout + Modular Engine!');
+        console.log('✨ Using index.html layout structure for perfect compatibility');
+        console.log('🎮 All Phase 3 benefits with familiar UI');
+        
+        // System ready confirmation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Phase 3 System Check:');
+            
+            // Verify all functions are available
+            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
+            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
+            
+            console.log(`✅ Game functions: ${available.length}/${requiredFunctions.length} loaded`);
+            available.forEach(func => console.log(`  ✓ ${func}()`));
+            
+            if (available.length === requiredFunctions.length) {
+                updateGameStatus('🎯 Phase 3 Ready! Original layout + modular engine.');
+                
+                // Success confirmation in badge
+                setTimeout(() => {
+                    const badge = document.getElementById('phase3-badge');
+                    if (!badge.classList.contains('collapsed')) {
+                        badge.innerHTML = `
+                            <div class="phase3-details">
+                                <strong>✅ All Systems Go!</strong><br>
+                                <small>Click "Neues Spiel" to play</small>
+                            </div>
+                            <div class="phase3-icon">✅</div>
+                        `;
+                    }
+                }, 2000);
+            } else {
+                updateGameStatus('⚠️ Loading system... Please wait.');
+            }
+        });
+        
+        // Log trick area updates for debugging
+        const originalUpdateUI = window.updateUI;
+        if (originalUpdateUI) {
+            window.updateUI = function() {
+                originalUpdateUI.apply(this, arguments);
+                
+                // Debug: Check trick area
+                const trickArea = document.getElementById('trick-area');
+                if (trickArea && trickArea.children.length > 0) {
+                    console.log(`🃏 ${trickArea.children.length} Karten in trick-area sichtbar`);
+                }
+            };
+        }
+        
+        // Phase 3 module info (for documentation)
+        window.phase3Info = {
+            version: '3.0-final',
+            layout: 'original-index.html',
+            modules: ['flow.js', 'bidding.js', 'ai.js', 'stats.js', 'controls.js'],
+            features: ['modular-architecture', 'dynamic-imports', 'cache-busting'],
+            status: 'complete'
+        };
+        
+        console.log('📊 Phase 3 Info available at: window.phase3Info');
+    </script>
+</body>
+</html>
