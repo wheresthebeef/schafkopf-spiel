@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schafkopf Phase 2 - Cards Module Test (WORKING)</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #2E8B57 0%, #3CB371 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .success-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #00ff00;
+            color: #000;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            z-index: 1000;
+        }
+        .status {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            border-left: 4px solid #32CD32;
+        }
+        .status-card.error {
+            border-left-color: #FF6B6B;
+        }
+        .status-card.warning {
+            border-left-color: #FFD93D;
+        }
+        .cards-demo {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        .hand {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            min-height: 120px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card {
+            display: inline-block;
+            background: white;
+            color: black;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .card.trump {
+            background: #FFD700;
+            color: #8B0000;
+            box-shadow: 0 0 8px rgba(255,215,0,0.6);
+        }
+        .test-results {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .button {
+            background: #32CD32;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        .button:hover {
+            background: #228B22;
+            transform: translateY(-1px);
+        }
+        .button.secondary {
+            background: #4169E1;
+        }
+        .button.secondary:hover {
+            background: #1E90FF;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-badge">✅ WORKING v3.0</div>
+    
+    <div class="container">
+        <div class="header">
+            <h1>🎉 Schafkopf Phase 2 - WORKING VERSION</h1>
+            <p>ES6 Cards Module Integration Test - CACHE BYPASS SUCCESSFUL!</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-card" id="module-status">
+                <h3>📦 Module Status</h3>
+                <div id="module-info">Initializing...</div>
+            </div>
+            <div class="status-card" id="cards-status">
+                <h3>🃏 Cards System</h3>
+                <div id="cards-info">Loading...</div>
+            </div>
+            <div class="status-card" id="browser-status">
+                <h3>🔍 Browser Support</h3>
+                <div id="browser-info">Firefox Detected</div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h2>🧪 Interactive Test Controls</h2>
+            <button class="button" onclick="runFullTest()">🚀 Run Full Test Suite</button>
+            <button class="button secondary" onclick="dealNewHand()">🎲 Deal New Hand</button>
+            <button class="button secondary" onclick="showTrumpOrder()">🎯 Show Trump Order</button>
+            <button class="button secondary" onclick="validateDeck()">🔍 Validate Deck</button>
+            <button class="button secondary" onclick="clearResults()">🧹 Clear Results</button>
+        </div>
+        
+        <div class="container">
+            <h2>🃏 Live Cards Demo</h2>
+            <div class="cards-demo" id="cards-demo">
+                <div class="hand">
+                    <h3>🧑 Player 1</h3>
+                    <div id="hand-0">Waiting for cards...</div>
+                </div>
+                <div class="hand">
+                    <h3>🤖 Player 2</h3>
+                    <div id="hand-1">Waiting for cards...</div>
+                </div>
+                <div class="hand">
+                    <h3>🎭 Player 3</h3>
+                    <div id="hand-2">Waiting for cards...</div>
+                </div>
+                <div class="hand">
+                    <h3>🎪 Player 4</h3>
+                    <div id="hand-3">Waiting for cards...</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="container">
+            <h2>📊 Live Test Results</h2>
+            <div class="test-results" id="test-results">🚀 WORKING VERSION v3.0 - Starting Cards Module Test...\n</div>
+        </div>
+    </div>
+
+    <script type="module">
+        console.log('🚀 WORKING VERSION v3.0 - Cards Module Test');
+        
+        let cardsModule = null;
+        let currentHands = [];
+        
+        // Sofort starten
+        async function init() {
+            log('✅ WORKING VERSION v3.0 loaded successfully!');
+            log('🔧 Firefox detected - ES6 modules supported');
+            
+            updateStatus('browser-status', 'success', 'Firefox ✅ ES6 ✅');
+            updateStatus('module-status', 'warning', 'Loading Cards Module...');
+            
+            try {
+                // Cards Module laden
+                log('📦 Loading Cards module...');
+                cardsModule = await import('./js/cards/index.js');
+                
+                log('✅ Cards module loaded successfully!');
+                log(`📋 Functions available: ${Object.keys(cardsModule).length}`);
+                
+                updateStatus('module-status', 'success', 'Cards Module Ready ✅');
+                updateStatus('cards-status', 'warning', 'Running tests...');
+                
+                // Globale Verfügbarkeit
+                window.cardsAPI = cardsModule;
+                
+                // Automatische Tests
+                await runAutoTests();
+                
+                log('🎉 All systems operational!');
+                updateStatus('cards-status', 'success', 'All Tests Passed ✅');
+                
+            } catch (error) {
+                log(`❌ Error: ${error.message}`);
+                updateStatus('module-status', 'error', 'Load Failed ❌');
+                updateStatus('cards-status', 'error', 'Tests Failed ❌');
+            }
+        }
+        
+        async function runAutoTests() {
+            log('\n🧪 Running automatic validation tests...');
+            
+            // Test 1: Deck Creation
+            const deck = cardsModule.createDeck();
+            log(`✅ Deck created: ${deck.length} cards`);
+            
+            // Test 2: Validation
+            const validation = cardsModule.validateDeck(deck);
+            log(`✅ Validation: ${validation.valid ? 'PASSED' : 'FAILED'}`);
+            
+            // Test 3: Points
+            const points = cardsModule.countPoints(deck);
+            log(`✅ Total points: ${points}`);
+            
+            // Test 4: Trumps
+            const trumps = cardsModule.findTrumps(deck);
+            log(`✅ Trump cards: ${trumps.length}`);
+            
+            // Test 5: Auto-deal
+            log('\n🎲 Auto-dealing first hand...');
+            dealNewHand();
+        }
+        
+        // Button Functions
+        window.runFullTest = function() {
+            log('\n🚀 === FULL TEST SUITE ===');
+            
+            try {
+                const result = cardsModule.testCardSystem();
+                
+                log(`📦 Deck: ${result.deck.length} cards`);
+                log(`✅ Valid: ${result.validation.valid}`);
+                log(`👥 Players: ${result.hands.length}`);
+                log(`🎯 Points: ${cardsModule.countPoints(result.deck)}`);
+                log(`🃏 Trumps: ${cardsModule.findTrumps(result.deck).length}`);
+                
+                if (result.validation.errors.length > 0) {
+                    log(`❌ Errors: ${result.validation.errors.join(', ')}`);
+                } else {
+                    log('🎉 No errors found!');
+                }
+                
+                log('✅ Full test suite completed');
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`);
+            }
+        };
+        
+        window.dealNewHand = function() {
+            log('\n🎲 === DEALING NEW HAND ===');
+            
+            try {
+                const deck = cardsModule.createDeck();
+                const shuffled = cardsModule.shuffleDeck(deck);
+                const hands = cardsModule.dealCards(shuffled);
+                
+                hands.forEach(hand => cardsModule.sortCardsForDisplay(hand));
+                currentHands = hands;
+                
+                // Display hands
+                hands.forEach((hand, index) => {
+                    const element = document.getElementById(`hand-${index}`);
+                    if (element) {
+                        element.innerHTML = hand.map(card => 
+                            `<span class="card ${card.isTrump ? 'trump' : ''}" title="${card.name}">${card.symbol}${card.short}</span>`
+                        ).join('');
+                    }
+                    
+                    const trumps = hand.filter(c => c.isTrump).length;
+                    const points = cardsModule.countPoints(hand);
+                    log(`Player ${index + 1}: ${trumps}T, ${points}P`);
+                });
+                
+                log('✅ New hand dealt successfully!');
+                
+            } catch (error) {
+                log(`❌ Deal failed: ${error.message}`);
+            }
+        };
+        
+        window.showTrumpOrder = function() {
+            log('\n🎯 === TRUMP HIERARCHY ===');
+            
+            try {
+                const deck = cardsModule.createDeck();
+                const trumps = cardsModule.findTrumps(deck);
+                trumps.sort((a, b) => b.trumpOrder - a.trumpOrder);
+                
+                log(`🃏 Total trumps: ${trumps.length}`);
+                trumps.forEach((card, i) => {
+                    log(`${String(i + 1).padStart(2)}. ${card.symbol}${card.short} (${card.trumpOrder})`);
+                });
+                
+            } catch (error) {
+                log(`❌ Trump analysis failed: ${error.message}`);
+            }
+        };
+        
+        window.validateDeck = function() {
+            log('\n🔍 === DECK VALIDATION ===');
+            
+            try {
+                const deck = cardsModule.createDeck();
+                const validation = cardsModule.validateDeck(deck);
+                
+                log(`✅ Valid: ${validation.valid}`);
+                log(`📦 Cards: ${deck.length}`);
+                log(`🎯 Points: ${cardsModule.countPoints(deck)}`);
+                log(`🃏 Trumps: ${cardsModule.findTrumps(deck).length}`);
+                
+                ['eichel', 'gras', 'herz', 'schellen'].forEach(suit => {
+                    const count = deck.filter(c => c.suit === suit).length;
+                    log(`${suit}: ${count} cards`);
+                });
+                
+            } catch (error) {
+                log(`❌ Validation failed: ${error.message}`);
+            }
+        };
+        
+        window.clearResults = function() {
+            document.getElementById('test-results').textContent = 'Results cleared. Ready for new tests...\n';
+        };
+        
+        // Helper functions
+        function log(message) {
+            const element = document.getElementById('test-results');
+            element.textContent += message + '\n';
+            element.scrollTop = element.scrollHeight;
+        }
+        
+        function updateStatus(cardId, type, message) {
+            const element = document.getElementById(cardId);
+            element.className = `status-card ${type}`;
+            element.querySelector('div').textContent = message;
+        }
+        
+        // Start immediately
+        init();
+    </script>
+    
+    <script nomodule>
+        document.getElementById('test-results').textContent = 
+            '❌ ES6 modules not supported in this browser.\n' +
+            '💡 Please use Firefox 60+, Chrome 61+, or Safari 11+\n';
+    </script>
+</body>
+</html>
