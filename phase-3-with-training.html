@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Cache-busting meta tags -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    
+    <title>🎯 Phase 3 + Training - Bayerisches Schafkopf</title>
+    
+    <!-- Use original CSS -->
+    <link rel="stylesheet" href="css/style.css?v=20250111-5">
+    
+    <style>
+        /* Phase 3 + Training success indicator */
+        .phase3-training-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            max-width: 200px;
+        }
+        
+        .phase3-training-badge:hover {
+            transform: scale(1.02);
+        }
+        
+        .phase3-training-badge.collapsed {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .training-details {
+            display: block;
+        }
+        
+        .phase3-training-badge.collapsed .training-details {
+            display: none;
+        }
+        
+        .training-icon {
+            display: none;
+        }
+        
+        .phase3-training-badge.collapsed .training-icon {
+            display: block;
+            font-size: 1.2rem;
+        }
+        
+        .training-controls {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .training-toggle {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-right: 0.25rem;
+        }
+        
+        .training-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .training-toggle.active {
+            background: rgba(255,255,255,0.9);
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Phase 3 + Training Success Badge -->
+    <div class="phase3-training-badge" id="phase3-badge" onclick="toggleTrainingBadge()">
+        <div class="training-details">
+            <strong>🎯 Phase 3 + 🏆 Training!</strong><br>
+            <small>Modular Architecture + AI Bewertung</small>
+            <div class="training-controls">
+                <button class="training-toggle" id="training-btn" onclick="toggleTraining(event)">Training AN</button>
+                <small>Click to collapse</small>
+            </div>
+        </div>
+        <div class="training-icon">🏆</div>
+    </div>
+
+    <!-- Original Layout from index.html -->
+    <div class="header">
+        <h1>🍺 Bayerisches Schafkopf</h1>
+        <div class="game-info">
+            <div>Spiel: <span id="game-type">Rufspiel</span></div>
+            <div>Runde: <span id="round-counter">1</span></div>
+            <div>Stiche: <span id="trick-counter">0/8</span></div>
+            <div>Trumpf: Herz</div>
+            <div>Gerufenes Ass: <span id="called-ace">-</span></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="players">
+            <!-- CPU-Spieler 1 (links) -->
+            <div class="player cpu1" id="player-1">
+                <h3>Anna</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-1"></div>
+            </div>
+
+            <!-- CPU-Spieler 2 (oben) -->
+            <div class="player cpu2" id="player-2">
+                <h3>Hans</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-2"></div>
+            </div>
+
+            <!-- CPU-Spieler 3 (rechts) -->
+            <div class="player cpu3" id="player-3">
+                <h3>Sepp</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-3"></div>
+            </div>
+
+            <!-- Menschlicher Spieler (unten) -->
+            <div class="player human active" id="player-0">
+                <h3>Sie</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-0"></div>
+            </div>
+
+            <!-- Spielfeld-Mitte -->
+            <div class="center-area">
+                <div class="game-status" id="game-status">
+                    🚀 Phase 3 + Training Engine Ready - Start your game!
+                </div>
+                
+                <div class="trick-area" id="trick-area">
+                    <!-- Hier werden die gespielten Karten angezeigt -->
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">Neues Spiel</button>
+            <button class="btn" onclick="showRules()">Regeln</button>
+            <button class="btn" onclick="showStats()">Statistik</button>
+            <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
+            <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
+        </div>
+    </div>
+
+    <!-- Modal für Dialoge -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Titel</h2>
+            <p id="modal-text">Text</p>
+            <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Load Phase 3 scripts with cache-busting -->
+    <script src="js/ui.js?v=20250111-5"></script>
+    <script src="js/game-state.js?v=20250111-5"></script>
+    <script src="js/rules.js?v=20250111-5"></script>
+    <script src="js/cards.js?v=20250111-5"></script>
+    <script src="js/game.js?v=20250111-5"></script>
+    
+    <!-- Load Post-Game Training System -->
+    <script src="js/ai/post-game-training.js?v=20250111-5"></script>
+    
+    <script>
+        // Training badge control functions
+        function toggleTrainingBadge() {
+            const badge = document.getElementById('phase3-badge');
+            badge.classList.toggle('collapsed');
+            
+            // Auto-expand after 7 seconds if collapsed
+            if (badge.classList.contains('collapsed')) {
+                setTimeout(() => {
+                    badge.classList.remove('collapsed');
+                }, 7000);
+            }
+        }
+        
+        function toggleTraining(event) {
+            event.stopPropagation(); // Prevent badge collapse
+            
+            const btn = document.getElementById('training-btn');
+            const isActive = btn.classList.contains('active');
+            
+            if (isActive) {
+                // Disable training
+                window.postGameTraining.disable();
+                btn.textContent = 'Training AN';
+                btn.classList.remove('active');
+                console.log('🚫 Bot-Training deaktiviert');
+            } else {
+                // Enable training
+                window.postGameTraining.enable();
+                btn.textContent = 'Training AUS';
+                btn.classList.add('active');
+                console.log('✅ Bot-Training aktiviert! Sie können Bot-Züge nach jedem Stich bewerten.');
+            }
+        }
+        
+        // Auto-collapse badge after 8 seconds
+        setTimeout(() => {
+            const badge = document.getElementById('phase3-badge');
+            badge.classList.add('collapsed');
+        }, 8000);
+        
+        // Phase 3 + Training logging
+        console.log('🎯 Phase 3 + 🏆 Training System - COMPLETE!');
+        console.log('✨ Modular Architecture + Post-Game Bot Evaluation');
+        console.log('🎮 Click "Training AN" button to start evaluating bot moves');
+        
+        // System ready confirmation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Phase 3 + Training System Check:');
+            
+            // Verify all functions are available
+            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
+            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
+            
+            console.log(`✅ Game functions: ${available.length}/${requiredFunctions.length} loaded`);
+            
+            // Check training system
+            const trainingAvailable = window.postGameTraining && typeof window.enableHumanTraining === 'function';
+            console.log(`🏆 Training system: ${trainingAvailable ? '✅ Available' : '❌ Missing'}`);
+            
+            if (available.length === requiredFunctions.length && trainingAvailable) {
+                updateGameStatus('🎯 Phase 3 + Training Ready! Activate training to evaluate bot moves.');
+                
+                // Auto-enable training after 3 seconds
+                setTimeout(() => {
+                    if (window.postGameTraining && !window.postGameTraining.enabled) {
+                        window.postGameTraining.enable();
+                        const btn = document.getElementById('training-btn');
+                        btn.textContent = 'Training AUS';
+                        btn.classList.add('active');
+                        
+                        updateGameStatus('🏆 Training activated! Bot moves will be evaluated after each trick.');
+                        console.log('✨ Training auto-activated - you can now rate bot moves!');
+                    }
+                }, 3000);
+                
+                // Success confirmation in badge
+                setTimeout(() => {
+                    const badge = document.getElementById('phase3-badge');
+                    if (!badge.classList.contains('collapsed')) {
+                        const details = badge.querySelector('.training-details');
+                        details.innerHTML = `
+                            <strong>✅ Ready to Play!</strong><br>
+                            <small>Training: <span style="color: #90EE90;">ACTIVE</span></small>
+                            <div class="training-controls">
+                                <button class="training-toggle active" id="training-btn" onclick="toggleTraining(event)">Training AUS</button>
+                                <small>Click to collapse</small>
+                            </div>
+                        `;
+                    }
+                }, 4000);
+            } else {
+                updateGameStatus('⚠️ Loading system... Please wait.');
+            }
+        });
+        
+        // Enhanced debugging for training
+        window.testTraining = function() {
+            console.log('🧪 Training System Test:');
+            console.log('postGameTraining available:', !!window.postGameTraining);
+            console.log('enableHumanTraining available:', typeof window.enableHumanTraining);
+            
+            if (window.postGameTraining) {
+                console.log('Training enabled:', window.postGameTraining.enabled);
+                console.log('Is tracking:', window.postGameTraining.isTrackingRound);
+                console.log('Current moves:', window.postGameTraining.currentRoundMoves.length);
+            }
+            
+            return window.postGameTraining;
+        };
+        
+        // Phase 3 + Training info
+        window.phase3TrainingInfo = {
+            version: '3.0-training',
+            layout: 'original-index.html',
+            modules: ['flow.js', 'bidding.js', 'ai.js', 'stats.js', 'controls.js'],
+            features: ['modular-architecture', 'dynamic-imports', 'cache-busting', 'post-game-training'],
+            training: {
+                available: !!window.postGameTraining,
+                autoActivated: true,
+                features: ['move-rating', 'drag-modal', 'feedback-collection']
+            },
+            status: 'complete-with-training'
+        };
+        
+        console.log('📊 Phase 3 + Training Info:', window.phase3TrainingInfo);
+        console.log('🧪 Test training system: testTraining()');
+    </script>
+</body>
+</html>
