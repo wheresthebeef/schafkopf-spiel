@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schafkopf KI-Training Dashboard - Secure</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            border-bottom: 3px solid #2a5298;
+            padding-bottom: 20px;
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .security-badge {
+            display: inline-block;
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .status-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .status-item {
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid #2a5298;
+        }
+
+        .status-item.secure {
+            border-left-color: #28a745;
+        }
+
+        .status-item.warning {
+            border-left-color: #ffc107;
+        }
+
+        .status-item.error {
+            border-left-color: #dc3545;
+        }
+
+        .github-setup {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .github-setup h4 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .github-setup input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-family: monospace;
+        }
+
+        .button {
+            background: #2a5298;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 5px;
+            transition: all 0.3s ease;
+        }
+
+        .button:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        .button.success {
+            background: #28a745;
+        }
+
+        .button.success:hover {
+            background: #1e7e34;
+        }
+
+        .stats-section {
+            background: #fff;
+            border-radius: 15px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .status-bar {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🛡️ Schafkopf KI-Training Dashboard</h1>
+            <p>Sichere Kollektive Intelligenz durch Community-Training</p>
+            <span class="security-badge">🔒 Security Enhanced</span>
+        </div>
+
+        <div class="status-bar">
+            <div id="security-status" class="status-item">
+                🔄 System wird initialisiert...
+            </div>
+            <div id="connection-status" class="status-item">
+                📡 Verbindungsstatus wird geprüft...
+            </div>
+            <div id="sync-status" class="status-item">
+                ⏳ Synchronisation vorbereitet...
+            </div>
+        </div>
+
+        <div id="github-setup" class="github-setup">
+            <h4>🔐 Sichere GitHub Integration</h4>
+            <p>Für sicheres globales KI-Training wird ein GitHub Personal Access Token benötigt:</p>
+            <input type="password" id="github-token" placeholder="GitHub Personal Access Token (mit repo Berechtigung)">
+            <div>
+                <button class="button success" onclick="setupSecureGitHub()">🛡️ Sicher Verbinden</button>
+                <button class="button" onclick="testConnection()">🔍 Verbindung Testen</button>
+            </div>
+            <p style="font-size: 0.9em; margin-top: 10px; color: #666;">
+                <strong>Token erstellen:</strong> GitHub → Settings → Developer settings → Personal access tokens → Generate new token<br>
+                <strong>Erforderliche Berechtigung:</strong> <code>repo</code> (Full control of private repositories)
+            </p>
+        </div>
+
+        <div class="stats-section">
+            <h3>📊 Lokale Statistiken</h3>
+            <div id="local-stats">
+                <div class="loading">Lade Statistiken...</div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h3>🌍 Globale Integration</h3>
+            <div id="global-stats">
+                <div class="loading">GitHub Integration wird vorbereitet...</div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h3>⚙️ Aktionen</h3>
+            <button class="button" onclick="refreshData()">🔄 Daten aktualisieren</button>
+            <button class="button" onclick="exportData()">📥 Daten exportieren</button>
+            <button class="button" onclick="window.location.href='index.html'">🎮 Zurück zum Spiel</button>
+        </div>
+    </div>
+
+    <!-- Load the secure modules -->
+    <script src="github-db-secure.js"></script>
+    <script src="secure-training-integration.js"></script>
+
+    <script>
+        let secureIntegration;
+
+        // Initialize secure dashboard
+        async function initSecureDashboard() {
+            try {
+                console.log('🛡️ Initializing Secure Dashboard...');
+                
+                // Wait for secure integration to be ready
+                secureIntegration = window.secureTrainingIntegration;
+                
+                await loadLocalStats();
+                updateStatusBar();
+                
+            } catch (error) {
+                console.error('❌ Secure Dashboard initialization failed:', error);
+            }
+        }
+
+        async function loadLocalStats() {
+            const stats = secureIntegration.getLocalStats();
+            const container = document.getElementById('local-stats');
+            
+            container.innerHTML = `
+                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                    <span>Bewertungen gesamt:</span>
+                    <span style="font-weight: bold; color: #2a5298;">${stats.totalReviews}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                    <span>Positive Bewertungen:</span>
+                    <span style="font-weight: bold; color: #28a745;">${stats.positiveRate}%</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                    <span>Letzte Bewertung:</span>
+                    <span style="font-weight: bold;">${stats.lastReview ? 
+                        new Date(stats.lastReview).toLocaleDateString('de-DE') : 
+                        'Noch keine'}</span>
+                </div>
+            `;
+        }
+
+        function updateStatusBar() {
+            // Security Status
+            const securityElement = document.getElementById('security-status');
+            if (secureIntegration.isSecureEnabled) {
+                securityElement.textContent = '🟢 Sicherheitssystem aktiv';
+                securityElement.className = 'status-item secure';
+            } else {
+                securityElement.textContent = '🔴 Sicherheitssystem inaktiv';
+                securityElement.className = 'status-item error';
+            }
+            
+            // Connection Status
+            const connectionElement = document.getElementById('connection-status');
+            const status = secureIntegration.getSecureStatus();
+            if (status.status === 'online') {
+                connectionElement.textContent = '🟢 GitHub verbunden';
+                connectionElement.className = 'status-item secure';
+            } else {
+                connectionElement.textContent = '🔴 Nicht verbunden';
+                connectionElement.className = 'status-item error';
+            }
+            
+            // Sync Status
+            const syncElement = document.getElementById('sync-status');
+            syncElement.textContent = '✅ Bereit';
+            syncElement.className = 'status-item secure';
+        }
+
+        async function setupSecureGitHub() {
+            const token = document.getElementById('github-token').value.trim();
+            if (!token) {
+                alert('Bitte GitHub Token eingeben');
+                return;
+            }
+            
+            try {
+                localStorage.setItem('github_token', token);
+                const connected = await secureIntegration.secureDB.init(token);
+                
+                if (connected) {
+                    secureIntegration.isSecureEnabled = true;
+                    document.getElementById('github-setup').style.display = 'none';
+                    alert('🛡️ Sichere GitHub Verbindung hergestellt!');
+                    updateStatusBar();
+                } else {
+                    alert('❌ GitHub Verbindung fehlgeschlagen. Bitte Token überprüfen.');
+                }
+            } catch (error) {
+                alert('❌ Fehler: ' + error.message);
+            }
+        }
+
+        async function testConnection() {
+            const token = document.getElementById('github-token').value.trim();
+            if (!token) {
+                alert('Bitte GitHub Token eingeben');
+                return;
+            }
+            
+            alert('🔍 Verbindungstest wird implementiert...');
+        }
+
+        async function refreshData() {
+            await loadLocalStats();
+            updateStatusBar();
+            alert('✅ Daten aktualisiert!');
+        }
+
+        function exportData() {
+            const stats = secureIntegration.getLocalStats();
+            const data = {
+                exported: new Date().toISOString(),
+                stats: stats,
+                securityEnabled: secureIntegration.isSecureEnabled
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `schafkopf-secure-data-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(initSecureDashboard, 500);
+        });
+    </script>
+</body>
+</html>
