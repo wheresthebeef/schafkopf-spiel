@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏆 KI-Training Fortschritt - Schafkopf</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .training-dashboard {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-header {
+            text-align: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #eee;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .stat-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #dee2e6;
+        }
+        
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2563eb;
+            display: block;
+        }
+        
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+        
+        .training-log {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .log-entry {
+            background: white;
+            margin-bottom: 0.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .log-entry.positive {
+            border-left-color: #22c55e;
+        }
+        
+        .log-entry.negative {
+            border-left-color: #ef4444;
+        }
+        
+        .log-move {
+            font-weight: bold;
+        }
+        
+        .log-rating {
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+        
+        .log-rating.good {
+            background: #22c55e;
+            color: white;
+        }
+        
+        .log-rating.bad {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .control-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-primary {
+            background: #2563eb;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #6b7280;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            padding: 2rem;
+        }
+        
+        .progress-bar {
+            background: #e5e7eb;
+            border-radius: 4px;
+            height: 8px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #2563eb, #22c55e);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <div class="training-dashboard">
+        <div class="dashboard-header">
+            <h1>🏆 KI-Training Fortschritt</h1>
+            <p>Übersicht Ihrer Bot-Bewertungen und Trainingsfortschritt</p>
+        </div>
+        
+        <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+                <span class="stat-number" id="total-reviews">0</span>
+                <div class="stat-label">Bewertungen</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="reviews-progress" style="width: 0%"></div>
+                </div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="positive-rate">0%</span>
+                <div class="stat-label">Positive Rate</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="games-played">0</span>
+                <div class="stat-label">Spiele gespielt</div>
+            </div>
+            
+            <div class="stat-card">
+                <span class="stat-number" id="training-level">Anfänger</span>
+                <div class="stat-label">Training Level</div>
+            </div>
+        </div>
+        
+        <div class="training-log">
+            <h3>📝 Letzte Bewertungen</h3>
+            <div id="log-container">
+                <div class="empty-state">
+                    Noch keine Bewertungen vorhanden.<br>
+                    <small>Spielen Sie eine Runde und bewerten Sie Bot-Züge!</small>
+                </div>
+            </div>
+        </div>
+        
+        <div class="control-buttons">
+            <button class="btn btn-primary" onclick="refreshData()">🔄 Aktualisieren</button>
+            <button class="btn btn-secondary" onclick="exportTrainingData()">📊 Daten exportieren</button>
+            <button class="btn btn-secondary" onclick="window.location.href='index.html'">🎮 Zurück zum Spiel</button>
+            <button class="btn btn-danger" onclick="clearTrainingData()">🗑️ Daten löschen</button>
+        </div>
+    </div>
+    
+    <script>
+        // Training data storage (localStorage for persistence)
+        const TrainingProgress = {
+            // Get all training data
+            getData: function() {
+                const data = localStorage.getItem('schafkopf-training-data');
+                return data ? JSON.parse(data) : {
+                    reviews: [],
+                    stats: {
+                        totalReviews: 0,
+                        positiveReviews: 0,
+                        gamesPlayed: 0,
+                        lastUpdated: new Date().toISOString()
+                    }
+                };
+            },
+            
+            // Save training data
+            saveData: function(data) {
+                localStorage.setItem('schafkopf-training-data', JSON.stringify(data));
+            },
+            
+            // Add new review
+            addReview: function(playerName, cardPlayed, rating, reasoning) {
+                const data = this.getData();
+                
+                const review = {
+                    id: Date.now(),
+                    timestamp: new Date().toISOString(),
+                    player: playerName,
+                    card: cardPlayed,
+                    rating: rating,
+                    reasoning: reasoning || null
+                };
+                
+                data.reviews.unshift(review); // Add to beginning
+                
+                // Update stats
+                data.stats.totalReviews++;
+                if (rating === 'good') {
+                    data.stats.positiveReviews++;
+                }
+                data.stats.lastUpdated = new Date().toISOString();
+                
+                // Keep only last 50 reviews
+                if (data.reviews.length > 50) {
+                    data.reviews = data.reviews.slice(0, 50);
+                }
+                
+                this.saveData(data);
+                console.log('📝 Review saved:', review);
+            },
+            
+            // Calculate training level
+            getTrainingLevel: function(totalReviews) {
+                if (totalReviews >= 100) return 'Experte';
+                if (totalReviews >= 50) return 'Fortgeschritten';
+                if (totalReviews >= 20) return 'Erfahren';
+                if (totalReviews >= 5) return 'Lernend';
+                return 'Anfänger';
+            }
+        };
+        
+        // Update dashboard display
+        function updateDashboard() {
+            const data = TrainingProgress.getData();
+            const stats = data.stats;
+            
+            // Update stats cards
+            document.getElementById('total-reviews').textContent = stats.totalReviews;
+            
+            const positiveRate = stats.totalReviews > 0 ? 
+                Math.round((stats.positiveReviews / stats.totalReviews) * 100) : 0;
+            document.getElementById('positive-rate').textContent = positiveRate + '%';
+            
+            document.getElementById('games-played').textContent = Math.ceil(stats.totalReviews / 8) || 0;
+            document.getElementById('training-level').textContent = TrainingProgress.getTrainingLevel(stats.totalReviews);
+            
+            // Update progress bar
+            const progressPercent = Math.min((stats.totalReviews / 100) * 100, 100);
+            document.getElementById('reviews-progress').style.width = progressPercent + '%';
+            
+            // Update log
+            updateTrainingLog(data.reviews);
+        }
+        
+        // Update training log display
+        function updateTrainingLog(reviews) {
+            const container = document.getElementById('log-container');
+            
+            if (reviews.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        Noch keine Bewertungen vorhanden.<br>
+                        <small>Spielen Sie eine Runde und bewerten Sie Bot-Züge!</small>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = reviews.slice(0, 10).map(review => {
+                const date = new Date(review.timestamp).toLocaleString('de-DE');
+                const entryClass = review.rating === 'good' ? 'positive' : 'negative';
+                
+                return `
+                    <div class="log-entry ${entryClass}">
+                        <div>
+                            <div class="log-move">${review.player} spielt ${review.card}</div>
+                            <small>${date}</small>
+                            ${review.reasoning ? `<div><em>"${review.reasoning}"</em></div>` : ''}
+                        </div>
+                        <div class="log-rating ${review.rating}">
+                            ${review.rating === 'good' ? '👍 Gut' : '👎 Schlecht'}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Refresh data
+        function refreshData() {
+            updateDashboard();
+            console.log('🔄 Dashboard aktualisiert');
+        }
+        
+        // Export training data
+        function exportTrainingData() {
+            const data = TrainingProgress.getData();
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `schafkopf-training-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            
+            URL.revokeObjectURL(url);
+            console.log('📊 Trainingsdaten exportiert');
+        }
+        
+        // Clear all training data
+        function clearTrainingData() {
+            if (confirm('Möchten Sie wirklich alle Trainingsdaten löschen? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+                localStorage.removeItem('schafkopf-training-data');
+                updateDashboard();
+                console.log('🗑️ Trainingsdaten gelöscht');
+                alert('Alle Trainingsdaten wurden gelöscht.');
+            }
+        }
+        
+        // Hook into training system
+        function connectToTrainingSystem() {
+            // Check if post-game training is available
+            if (typeof window !== 'undefined' && window.postGameTraining) {
+                console.log('🔗 Training system detected, connecting...');
+                
+                // Override the processFeedback function to save data
+                const originalProcessFeedback = window.postGameTraining.processFeedback;
+                
+                window.postGameTraining.processFeedback = function(reviews) {
+                    // Save each review to our progress system
+                    reviews.forEach(review => {
+                        // We need to get the actual move data (this would need to be passed from the modal)
+                        TrainingProgress.addReview(
+                            'Bot', // We'd need actual player name
+                            'Card', // We'd need actual card
+                            review.rating,
+                            review.reasoning
+                        );
+                    });
+                    
+                    // Call original function
+                    if (originalProcessFeedback) {
+                        originalProcessFeedback.call(this, reviews);
+                    }
+                    
+                    console.log('📈 Progress updated with new reviews');
+                };
+            }
+        }
+        
+        // Generate some demo data for testing
+        function generateDemoData() {
+            if (TrainingProgress.getData().stats.totalReviews === 0) {
+                console.log('🎭 Generating demo data...');
+                
+                const demoReviews = [
+                    { player: 'Anna', card: '🃑 E-A', rating: 'good', reasoning: 'Gute Trumpf-Führung' },
+                    { player: 'Hans', card: '🃞 H-K', rating: 'bad', reasoning: 'Hätte schmieren sollen' },
+                    { player: 'Sepp', card: '🃗 G-O', rating: 'good', reasoning: 'Intelligentes Stechen' },
+                    { player: 'Anna', card: '🃘 S-10', rating: 'good', reasoning: 'Perfektes Schmieren' },
+                    { player: 'Hans', card: '🃔 E-U', rating: 'bad', reasoning: 'Zu früh abgeworfen' }
+                ];
+                
+                demoReviews.forEach((review, index) => {
+                    setTimeout(() => {
+                        TrainingProgress.addReview(review.player, review.card, review.rating, review.reasoning);
+                        if (index === demoReviews.length - 1) {
+                            updateDashboard();
+                        }
+                    }, index * 100);
+                });
+            }
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🏆 Training Progress Dashboard loaded');
+            updateDashboard();
+            connectToTrainingSystem();
+            
+            // Add demo data button for testing
+            if (TrainingProgress.getData().stats.totalReviews === 0) {
+                const demoBtn = document.createElement('button');
+                demoBtn.className = 'btn btn-secondary';
+                demoBtn.textContent = '🎭 Demo-Daten laden';
+                demoBtn.onclick = () => {
+                    generateDemoData();
+                    demoBtn.remove();
+                };
+                document.querySelector('.control-buttons').appendChild(demoBtn);
+            }
+        });
+        
+        // Make TrainingProgress globally available for integration
+        window.TrainingProgress = TrainingProgress;
+        
+        console.log('📊 Training Progress System ready');
+        console.log('💡 Use TrainingProgress.addReview(player, card, rating, reasoning) to add data');
+    </script>
+</body>
+</html>
