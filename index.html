@@ -12,7 +12,7 @@
     <title>Bayerisches Schafkopf - Secure AI Training</title>
     
     <!-- Use original CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20250111-secure">
+    <link rel="stylesheet" href="css/style.css?v=20250112-debug">
     
     <style>
         /* Secure System Badge */
@@ -65,6 +65,32 @@
             font-size: 1.2rem;
         }
         
+        .training-status {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .training-toggle {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-right: 0.25rem;
+        }
+        
+        .training-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .training-toggle.active {
+            background: rgba(255,255,255,0.9);
+            color: #28a745;
+            font-weight: bold;
+        }
+        
         .dashboard-link {
             background: rgba(255,255,255,0.1);
             border: 1px solid rgba(255,255,255,0.2);
@@ -100,7 +126,9 @@
         <div class="secure-details">
             <strong>🛡️ Secure AI Training</strong><br>
             <small>Community-driven bot improvement</small>
-            <br>
+            <div class="training-status">
+                <button class="training-toggle" id="training-btn" onclick="toggleTraining(event)">Training AN</button>
+            </div>
             <a href="training-progress-secure.html" class="dashboard-link" target="_blank">
                 📊 Security Dashboard
             </a>
@@ -193,16 +221,16 @@
     </div>
 
     <!-- Load Phase 3 scripts -->
-    <script src="js/ui.js?v=20250111-secure"></script>
-    <script src="js/game-state.js?v=20250111-secure"></script>
-    <script src="js/rules.js?v=20250111-secure"></script>
-    <script src="js/cards.js?v=20250111-secure"></script>
-    <script src="js/game.js?v=20250111-secure"></script>
+    <script src="js/ui.js?v=20250112-debug"></script>
+    <script src="js/game-state.js?v=20250112-debug"></script>
+    <script src="js/rules.js?v=20250112-debug"></script>
+    <script src="js/cards.js?v=20250112-debug"></script>
+    <script src="js/game.js?v=20250112-debug"></script>
     
     <!-- Load Secure Training System -->
-    <script src="github-db-secure.js?v=20250111-secure"></script>
-    <script src="secure-training-integration.js?v=20250111-secure"></script>
-    <script src="js/ai/post-game-training.js?v=20250111-secure"></script>
+    <script src="github-db-secure.js?v=20250112-debug"></script>
+    <script src="secure-training-integration.js?v=20250112-debug"></script>
+    <script src="js/ai/post-game-training.js?v=20250112-debug"></script>
     
     <script>
         // Badge control functions
@@ -214,6 +242,26 @@
                 setTimeout(() => {
                     badge.classList.remove('collapsed');
                 }, 7000);
+            }
+        }
+        
+        // Training control function
+        function toggleTraining(event) {
+            event.stopPropagation();
+            
+            const btn = document.getElementById('training-btn');
+            const isActive = btn.classList.contains('active');
+            
+            if (isActive) {
+                window.postGameTraining.disable();
+                btn.textContent = 'Training AN';
+                btn.classList.remove('active');
+                console.log('🛡️ Training deaktiviert');
+            } else {
+                window.postGameTraining.enable();
+                btn.textContent = 'Training AUS';
+                btn.classList.add('active');
+                console.log('🛡️ Training aktiviert');
             }
         }
         
@@ -257,44 +305,82 @@
             badge.classList.add('collapsed');
         }, 10000);
         
-        // System initialization
+        // System initialization with auto-enable training
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🛡️ SECURE AI TRAINING SYSTEM - Initializing...');
             
-            // Check if all required systems are available
-            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
-            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
-            
-            if (available.length === requiredFunctions.length) {
-                updateGameStatus('🛡️ Secure AI Training Ready! Rate bot moves to improve global intelligence.');
+            // Wait for all systems to load
+            setTimeout(() => {
+                // Check if training system is available
+                if (window.postGameTraining) {
+                    console.log('✅ Post-game training system found');
+                    
+                    // Auto-enable training
+                    window.postGameTraining.enable();
+                    
+                    // Update button state
+                    const btn = document.getElementById('training-btn');
+                    btn.textContent = 'Training AUS';
+                    btn.classList.add('active');
+                    
+                    console.log('🛡️ Training system auto-enabled');
+                    updateGameStatus('🛡️ Secure AI Training active! Rate bot moves after each trick.');
+                } else {
+                    console.warn('⚠️ Post-game training system not found');
+                    updateGameStatus('🎮 Game ready! Training system loading...');
+                }
                 
-                // Initialize secure training integration
-                setTimeout(() => {
-                    if (window.secureTrainingIntegration) {
-                        console.log('✅ Secure training integration loaded');
-                        updateGameStatus('🌍 Ready! Your reviews help train the world\'s best Schafkopf AI!');
-                    } else {
-                        console.warn('⚠️ Secure training integration not available');
-                        updateGameStatus('🎮 Game ready! Training system loading...');
-                    }
-                }, 2000);
-            } else {
-                console.error('❌ Required game functions missing:', 
-                    requiredFunctions.filter(func => typeof window[func] !== 'function'));
-            }
+                // Check secure integration
+                if (window.secureTrainingIntegration) {
+                    console.log('✅ Secure training integration loaded');
+                } else {
+                    console.warn('⚠️ Secure training integration not loaded');
+                }
+                
+            }, 2000); // Wait 2 seconds for all scripts to load
         });
+        
+        // Debug function to manually trigger training modal
+        window.debugShowTrainingModal = function() {
+            if (window.postGameTraining) {
+                const mockMoves = [
+                    {
+                        player: 'Anna',
+                        card: '♠️A',
+                        context: { cardPoints: 11 },
+                        trickNumber: 1,
+                        trumpSuit: 'herz',
+                        gameType: 'rufspiel'
+                    },
+                    {
+                        player: 'Hans', 
+                        card: '♥️10',
+                        context: { cardPoints: 10 },
+                        trickNumber: 1,
+                        trumpSuit: 'herz',
+                        gameType: 'rufspiel'
+                    }
+                ];
+                
+                window.postGameTraining.showSecureTrickReview(mockMoves);
+                console.log('🧪 Debug: Training modal should appear');
+            } else {
+                console.error('Training system not available');
+            }
+        };
         
         // System info for debugging
         window.schafkopfSecure = {
             status: 'SECURE_READY',
-            version: '4.0-secure',
+            version: '4.0-secure-debug',
             architecture: 'modular-secure',
             features: {
                 secureDatabase: true,
                 monitoring: true,
                 validation: true,
                 backup: true,
-                community: true
+                community: true,
+                autoTraining: true
             },
             ready: true
         };
@@ -303,6 +389,7 @@
         console.log('🌍 Global AI Training: Every review makes the bots smarter!');
         console.log('🔒 Security: Multi-layer validation, rate limiting, spam protection');
         console.log('📊 Dashboard: Open training-progress-secure.html for insights');
+        console.log('🧪 Debug: Use debugShowTrainingModal() to test modal');
     </script>
 </body>
 </html>
