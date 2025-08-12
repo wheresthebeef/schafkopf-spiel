@@ -138,6 +138,38 @@
             text-align: center;
             padding: 20px;
             color: #666;
+            animation: pulse 2s infinite;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #2a5298;
+        }
+
+        .stat-value.success {
+            color: #28a745;
+        }
+
+        .stat-value.warning {
+            color: #ffc107;
+        }
+
+        .stat-value.error {
+            color: #dc3545;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
 
         @media (max-width: 768px) {
@@ -189,14 +221,14 @@
         <div class="stats-section">
             <h3>📊 Lokale Statistiken</h3>
             <div id="local-stats">
-                <div class="loading">Lade Statistiken...</div>
+                <div class="loading">Lade lokale Daten...</div>
             </div>
         </div>
 
         <div class="stats-section">
             <h3>🌍 Globale Integration</h3>
             <div id="global-stats">
-                <div class="loading">GitHub Integration wird vorbereitet...</div>
+                <div class="loading">Lade echte Daten...</div>
             </div>
         </div>
 
@@ -214,54 +246,189 @@
 
     <script>
         let secureIntegration;
+        let initRetryCount = 0;
+        const maxRetries = 3;
 
         // Initialize secure dashboard
         async function initSecureDashboard() {
             try {
                 console.log('🛡️ Initializing Secure Dashboard...');
                 
-                // Wait for secure integration to be ready
-                secureIntegration = window.secureTrainingIntegration;
+                // Wait for secure integration to be ready with retry
+                await waitForSecureIntegration();
                 
-                await loadLocalStats();
-                updateStatusBar();
+                if (secureIntegration) {
+                    await loadLocalStats();
+                    await loadGlobalStats();
+                    updateStatusBar();
+                } else {
+                    handleInitializationFailure();
+                }
                 
             } catch (error) {
                 console.error('❌ Secure Dashboard initialization failed:', error);
+                handleInitializationFailure();
             }
         }
 
+        async function waitForSecureIntegration() {
+            return new Promise((resolve) => {
+                function checkIntegration() {
+                    if (window.secureTrainingIntegration) {
+                        secureIntegration = window.secureTrainingIntegration;
+                        resolve(true);
+                    } else if (initRetryCount < maxRetries) {
+                        initRetryCount++;
+                        console.log(`⏳ Retry ${initRetryCount}/${maxRetries} - waiting for secure integration...`);
+                        setTimeout(checkIntegration, 1000);
+                    } else {
+                        console.warn('⚠️ Secure integration not available, using fallback mode');
+                        resolve(false);
+                    }
+                }
+                checkIntegration();
+            });
+        }
+
+        function handleInitializationFailure() {
+            // Fallback to basic stats from localStorage
+            loadFallbackStats();
+            updateStatusBarFallback();
+        }
+
         async function loadLocalStats() {
-            const stats = secureIntegration.getLocalStats();
+            try {
+                const stats = secureIntegration ? 
+                    secureIntegration.getLocalStats() : 
+                    getFallbackLocalStats();
+                
+                const container = document.getElementById('local-stats');
+                
+                container.innerHTML = `
+                    <div class="stat-item">
+                        <span>Bewertungen gesamt:</span>
+                        <span class="stat-value">${stats.totalReviews}</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Positive Bewertungen:</span>
+                        <span class="stat-value success">${stats.positiveRate}%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span>Letzte Bewertung:</span>
+                        <span class="stat-value">${stats.lastReview ? 
+                            new Date(stats.lastReview).toLocaleDateString('de-DE') : 
+                            'Noch keine'}</span>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Failed to load local stats:', error);
+                document.getElementById('local-stats').innerHTML = 
+                    '<div class="stat-value error">Fehler beim Laden der lokalen Statistiken</div>';
+            }
+        }
+
+        async function loadGlobalStats() {
+            const globalStatsDiv = document.getElementById('global-stats');
+            
+            try {
+                if (secureIntegration) {
+                    const stats = await secureIntegration.getCombinedSecureStats();
+                    
+                    if (stats.global) {
+                        globalStatsDiv.innerHTML = `
+                            <div class="stat-item">
+                                <span>Gesamt-Bewertungen:</span>
+                                <span class="stat-value">${stats.global.totalReviews}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Aktive Spieler:</span>
+                                <span class="stat-value success">${stats.global.totalPlayers}</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Globale Positive Rate:</span>
+                                <span class="stat-value">${stats.global.averagePositiveRate}%</span>
+                            </div>
+                        `;
+                    } else {
+                        globalStatsDiv.innerHTML = `
+                            <div class="stat-item">
+                                <span>GitHub Status:</span>
+                                <span class="stat-value warning">Nicht verbunden</span>
+                            </div>
+                            <div class="stat-item">
+                                <span>Modus:</span>
+                                <span class="stat-value">Nur lokale Daten</span>
+                            </div>
+                        `;
+                    }
+                } else {
+                    globalStatsDiv.innerHTML = `
+                        <div class="stat-item">
+                            <span>Integration Status:</span>
+                            <span class="stat-value error">Nicht verfügbar</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Modus:</span>
+                            <span class="stat-value">Fallback-Modus</span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Failed to load global stats:', error);
+                globalStatsDiv.innerHTML = `
+                    <div class="stat-item">
+                        <span>Fehler:</span>
+                        <span class="stat-value error">Kann globale Daten nicht laden</span>
+                    </div>
+                `;
+            }
+        }
+
+        function getFallbackLocalStats() {
+            const reviews = JSON.parse(localStorage.getItem('training_reviews') || '[]');
+            const positiveReviews = reviews.filter(r => r.rating === 'good').length;
+            
+            return {
+                totalReviews: reviews.length,
+                positiveRate: reviews.length > 0 ? (positiveReviews / reviews.length * 100).toFixed(1) : 0,
+                lastReview: reviews.length > 0 ? reviews[reviews.length - 1].timestamp : null
+            };
+        }
+
+        function loadFallbackStats() {
+            const stats = getFallbackLocalStats();
             const container = document.getElementById('local-stats');
             
             container.innerHTML = `
-                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <div class="stat-item">
                     <span>Bewertungen gesamt:</span>
-                    <span style="font-weight: bold; color: #2a5298;">${stats.totalReviews}</span>
+                    <span class="stat-value">${stats.totalReviews}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
+                <div class="stat-item">
                     <span>Positive Bewertungen:</span>
-                    <span style="font-weight: bold; color: #28a745;">${stats.positiveRate}%</span>
+                    <span class="stat-value success">${stats.positiveRate}%</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; margin: 10px 0;">
-                    <span>Letzte Bewertung:</span>
-                    <span style="font-weight: bold;">${stats.lastReview ? 
-                        new Date(stats.lastReview).toLocaleDateString('de-DE') : 
-                        'Noch keine'}</span>
+                <div class="stat-item">
+                    <span>Status:</span>
+                    <span class="stat-value warning">Fallback-Modus</span>
                 </div>
             `;
         }
 
         function updateStatusBar() {
+            if (!secureIntegration) {
+                updateStatusBarFallback();
+                return;
+            }
+
             // Security Status
             const securityElement = document.getElementById('security-status');
             if (secureIntegration.isSecureEnabled) {
                 securityElement.textContent = '🟢 Sicherheitssystem aktiv';
                 securityElement.className = 'status-item secure';
             } else {
-                securityElement.textContent = '🔴 Sicherheitssystem inaktiv';
-                securityElement.className = 'status-item error';
+                securityElement.textContent = '🟡 Sicherheitssystem bereit';
+                securityElement.className = 'status-item warning';
             }
             
             // Connection Status
@@ -270,6 +437,9 @@
             if (status.status === 'online') {
                 connectionElement.textContent = '🟢 GitHub verbunden';
                 connectionElement.className = 'status-item secure';
+            } else if (status.status === 'no-token') {
+                connectionElement.textContent = '🟡 Token erforderlich';
+                connectionElement.className = 'status-item warning';
             } else {
                 connectionElement.textContent = '🔴 Nicht verbunden';
                 connectionElement.className = 'status-item error';
@@ -277,8 +447,25 @@
             
             // Sync Status
             const syncElement = document.getElementById('sync-status');
-            syncElement.textContent = '✅ Bereit';
+            syncElement.textContent = '✅ System bereit';
             syncElement.className = 'status-item secure';
+        }
+
+        function updateStatusBarFallback() {
+            // Security Status
+            const securityElement = document.getElementById('security-status');
+            securityElement.textContent = '🔴 Sicherheitssystem nicht verfügbar';
+            securityElement.className = 'status-item error';
+            
+            // Connection Status
+            const connectionElement = document.getElementById('connection-status');
+            connectionElement.textContent = '🔴 Fallback-Modus';
+            connectionElement.className = 'status-item error';
+            
+            // Sync Status
+            const syncElement = document.getElementById('sync-status');
+            syncElement.textContent = '⚠️ Nur lokale Daten';
+            syncElement.className = 'status-item warning';
         }
 
         async function setupSecureGitHub() {
@@ -289,16 +476,21 @@
             }
             
             try {
-                localStorage.setItem('github_token', token);
-                const connected = await secureIntegration.secureDB.init(token);
-                
-                if (connected) {
-                    secureIntegration.isSecureEnabled = true;
-                    document.getElementById('github-setup').style.display = 'none';
-                    alert('🛡️ Sichere GitHub Verbindung hergestellt!');
-                    updateStatusBar();
+                if (secureIntegration) {
+                    localStorage.setItem('github_token', token);
+                    const connected = await secureIntegration.secureDB.init(token);
+                    
+                    if (connected) {
+                        secureIntegration.isSecureEnabled = true;
+                        document.getElementById('github-setup').style.display = 'none';
+                        alert('🛡️ Sichere GitHub Verbindung hergestellt!');
+                        updateStatusBar();
+                        await loadGlobalStats();
+                    } else {
+                        alert('❌ GitHub Verbindung fehlgeschlagen. Bitte Token überprüfen.');
+                    }
                 } else {
-                    alert('❌ GitHub Verbindung fehlgeschlagen. Bitte Token überprüfen.');
+                    alert('❌ Sicherheitssystem nicht verfügbar. Bitte Seite neu laden.');
                 }
             } catch (error) {
                 alert('❌ Fehler: ' + error.message);
@@ -317,16 +509,21 @@
 
         async function refreshData() {
             await loadLocalStats();
+            await loadGlobalStats();
             updateStatusBar();
             alert('✅ Daten aktualisiert!');
         }
 
         function exportData() {
-            const stats = secureIntegration.getLocalStats();
+            const stats = secureIntegration ? 
+                secureIntegration.getLocalStats() : 
+                getFallbackLocalStats();
+                
             const data = {
                 exported: new Date().toISOString(),
                 stats: stats,
-                securityEnabled: secureIntegration.isSecureEnabled
+                securityEnabled: secureIntegration ? secureIntegration.isSecureEnabled : false,
+                mode: secureIntegration ? 'secure' : 'fallback'
             };
             
             const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
@@ -338,9 +535,10 @@
             URL.revokeObjectURL(url);
         }
 
-        // Initialize when page loads
+        // Initialize when page loads with proper timing
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(initSecureDashboard, 500);
+            // Give time for scripts to load
+            setTimeout(initSecureDashboard, 1000);
         });
     </script>
 </body>
