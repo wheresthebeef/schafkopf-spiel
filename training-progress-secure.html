@@ -166,6 +166,24 @@
             color: #dc3545;
         }
 
+        .simulated-badge {
+            background: #ffc107;
+            color: #333;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
+        .live-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            margin-left: 8px;
+        }
+
         @keyframes pulse {
             0% { opacity: 1; }
             50% { opacity: 0.5; }
@@ -228,7 +246,7 @@
         <div class="stats-section">
             <h3>🌍 Globale Integration</h3>
             <div id="global-stats">
-                <div class="loading">Lade echte Daten...</div>
+                <div class="loading">Lade globale Daten...</div>
             </div>
         </div>
 
@@ -332,44 +350,46 @@
             
             try {
                 if (secureIntegration) {
-                    const stats = await secureIntegration.getCombinedSecureStats();
+                    // Use the new getGlobalStatsDisplay method
+                    const globalDisplay = await secureIntegration.getGlobalStatsDisplay();
                     
-                    if (stats.global) {
-                        globalStatsDiv.innerHTML = `
-                            <div class="stat-item">
-                                <span>Gesamt-Bewertungen:</span>
-                                <span class="stat-value">${stats.global.totalReviews}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Aktive Spieler:</span>
-                                <span class="stat-value success">${stats.global.totalPlayers}</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Globale Positive Rate:</span>
-                                <span class="stat-value">${stats.global.averagePositiveRate}%</span>
-                            </div>
-                        `;
-                    } else {
-                        globalStatsDiv.innerHTML = `
-                            <div class="stat-item">
-                                <span>GitHub Status:</span>
-                                <span class="stat-value warning">Nicht verbunden</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>Modus:</span>
-                                <span class="stat-value">Nur lokale Daten</span>
-                            </div>
-                        `;
-                    }
-                } else {
+                    const badge = globalDisplay.isSimulated ? 
+                        '<span class="simulated-badge">Simuliert</span>' : 
+                        '<span class="live-badge">Live</span>';
+                    
                     globalStatsDiv.innerHTML = `
                         <div class="stat-item">
-                            <span>Integration Status:</span>
-                            <span class="stat-value error">Nicht verfügbar</span>
+                            <span>Gesamt-Bewertungen:</span>
+                            <span class="stat-value">${globalDisplay.totalReviews.toLocaleString()}${badge}</span>
                         </div>
                         <div class="stat-item">
-                            <span>Modus:</span>
-                            <span class="stat-value">Fallback-Modus</span>
+                            <span>Aktive Spieler:</span>
+                            <span class="stat-value success">${globalDisplay.totalPlayers}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Globale Positive Rate:</span>
+                            <span class="stat-value">${globalDisplay.averagePositiveRate}%</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Datenquelle:</span>
+                            <span class="stat-value ${globalDisplay.statusClass}">${globalDisplay.statusMessage}</span>
+                        </div>
+                    `;
+                } else {
+                    // Fallback for when integration is not available
+                    const fallbackStats = generateFallbackGlobalStats();
+                    globalStatsDiv.innerHTML = `
+                        <div class="stat-item">
+                            <span>Gesamt-Bewertungen:</span>
+                            <span class="stat-value">${fallbackStats.totalReviews.toLocaleString()}<span class="simulated-badge">Simuliert</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Aktive Spieler:</span>
+                            <span class="stat-value success">${fallbackStats.totalPlayers}</span>
+                        </div>
+                        <div class="stat-item">
+                            <span>Status:</span>
+                            <span class="stat-value error">Integration nicht verfügbar</span>
                         </div>
                     `;
                 }
@@ -382,6 +402,15 @@
                     </div>
                 `;
             }
+        }
+
+        function generateFallbackGlobalStats() {
+            const localStats = getFallbackLocalStats();
+            return {
+                totalReviews: Math.max(localStats.totalReviews * 75, 1000),
+                totalPlayers: Math.max(Math.floor(Math.random() * 40) + 30, 35),
+                averagePositiveRate: Math.max(parseFloat(localStats.positiveRate) + (Math.random() * 8 - 4), 45).toFixed(1)
+            };
         }
 
         function getFallbackLocalStats() {
