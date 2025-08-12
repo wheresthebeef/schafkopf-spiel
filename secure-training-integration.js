@@ -106,6 +106,28 @@ class SecureTrainingIntegration {
             (this.performanceMetrics.reviewsAccepted / total * 100).toFixed(1) : 100;
     }
 
+    // NEW: Generate simulated global stats based on local data and realistic multipliers
+    generateSimulatedGlobalStats() {
+        const localStats = this.getLocalStats();
+        
+        // Simulate realistic global multipliers
+        const playerMultiplier = Math.floor(Math.random() * 50) + 20; // 20-70 other players
+        const reviewsMultiplier = Math.floor(Math.random() * 100) + 50; // 50-150x local reviews
+        
+        const simulatedGlobal = {
+            totalReviews: Math.max(localStats.totalReviews * reviewsMultiplier, localStats.totalReviews + 500),
+            totalPlayers: Math.max(playerMultiplier, 25),
+            averagePositiveRate: Math.max(
+                parseFloat(localStats.positiveRate) + (Math.random() * 10 - 5), // ±5% variance
+                40 // minimum realistic positive rate
+            ).toFixed(1),
+            lastUpdated: new Date().toISOString(),
+            dataSource: 'simulated' // Mark as simulated
+        };
+        
+        return simulatedGlobal;
+    }
+
     async getCombinedSecureStats() {
         const localStats = this.getLocalStats();
         let globalStats = null;
@@ -117,7 +139,13 @@ class SecureTrainingIntegration {
                 securityStats = this.secureDB.getSecurityStats();
             } catch (error) {
                 console.error('Failed to get global stats:', error);
+                // Fallback to simulated stats
+                globalStats = this.generateSimulatedGlobalStats();
             }
+        } else {
+            // Generate simulated global stats when not connected to GitHub
+            globalStats = this.generateSimulatedGlobalStats();
+            console.log('📊 Using simulated global stats (GitHub not connected)');
         }
         
         return {
@@ -137,7 +165,8 @@ class SecureTrainingIntegration {
                 (local.totalReviews / global.totalReviews * 100).toFixed(2) : 0,
             globalPositiveRate: global.averagePositiveRate,
             totalPlayers: global.totalPlayers,
-            acceptanceRate: this.calculateAcceptanceRate()
+            acceptanceRate: this.calculateAcceptanceRate(),
+            dataSource: global.dataSource || 'github'
         };
     }
 
@@ -196,6 +225,37 @@ class SecureTrainingIntegration {
         if (!this.secureDB) return { status: 'disabled', message: 'Secure system not initialized' };
         if (!this.isSecureEnabled) return { status: 'no-token', message: 'GitHub token not configured' };
         return { status: 'online', message: 'Secure GitHub database connected' };
+    }
+
+    // Enhanced getGlobalStatsDisplay method for dashboard
+    async getGlobalStatsDisplay() {
+        const stats = await this.getCombinedSecureStats();
+        
+        if (stats.global) {
+            const isSimulated = stats.global.dataSource === 'simulated';
+            
+            return {
+                totalReviews: stats.global.totalReviews,
+                totalPlayers: stats.global.totalPlayers,
+                averagePositiveRate: stats.global.averagePositiveRate,
+                lastUpdated: stats.global.lastUpdated,
+                isSimulated: isSimulated,
+                statusMessage: isSimulated ? 
+                    'Simulierte Daten (GitHub nicht verbunden)' : 
+                    'Live GitHub Daten',
+                statusClass: isSimulated ? 'warning' : 'success'
+            };
+        }
+        
+        return {
+            totalReviews: 0,
+            totalPlayers: 0,
+            averagePositiveRate: 0,
+            lastUpdated: null,
+            isSimulated: false,
+            statusMessage: 'Keine Daten verfügbar',
+            statusClass: 'error'
+        };
     }
 
     // Public API methods for compatibility
