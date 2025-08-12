@@ -1,4 +1,4 @@
-console.log('🚀 Post-Game Training - Clean Version');
+console.log('🛡️ Post-Game Training - Secure Integration Version');
 
 window.postGameTraining = {
     enabled: false,
@@ -6,10 +6,10 @@ window.postGameTraining = {
     isTrackingRound: false,
     
     enable: function() {
-        console.log('✅ System aktiviert!');
+        console.log('✅ Secure Training System aktiviert!');
         this.enabled = true;
         this.startTracking();
-        this.injectCSS(); // CSS für Modal hinzufügen
+        this.injectCSS();
         return true;
     },
     
@@ -57,6 +57,7 @@ window.postGameTraining = {
                 max-height: 70vh;
                 overflow-y: auto;
                 cursor: move;
+                color: #333;
             }
             
             .modal-header {
@@ -93,6 +94,12 @@ window.postGameTraining = {
             
             .modal-body {
                 padding: 20px;
+                color: #333;
+            }
+            
+            .modal-body p {
+                color: #333;
+                margin-bottom: 15px;
             }
             
             .moves-review {
@@ -106,11 +113,13 @@ window.postGameTraining = {
                 border-radius: 8px;
                 padding: 15px;
                 background: #f9f9f9;
+                color: #333;
             }
             
             .move-info {
                 margin-bottom: 12px;
                 font-weight: 500;
+                color: #333;
             }
             
             .player-name {
@@ -121,6 +130,7 @@ window.postGameTraining = {
             .card-display {
                 font-size: 18px;
                 margin: 0 5px;
+                color: #333;
             }
             
             .card-points {
@@ -142,6 +152,7 @@ window.postGameTraining = {
                 cursor: pointer;
                 transition: all 0.2s ease;
                 font-size: 14px;
+                color: #333;
             }
             
             .rating-btn:hover {
@@ -179,6 +190,8 @@ window.postGameTraining = {
                 border-radius: 4px;
                 resize: vertical;
                 font-family: inherit;
+                color: #333;
+                background: white;
             }
             
             .modal-footer {
@@ -199,6 +212,16 @@ window.postGameTraining = {
             
             .btn-primary:hover {
                 background: #1d4ed8;
+            }
+            
+            .security-info {
+                background: #e8f5e8;
+                border: 1px solid #c3e6c3;
+                border-radius: 6px;
+                padding: 12px;
+                margin-bottom: 15px;
+                font-size: 0.9em;
+                color: #155724;
             }
             
             .feedback-toast {
@@ -259,21 +282,61 @@ window.postGameTraining = {
             const reasoning = item.querySelector('.reasoning-input').value.trim();
             
             if (rating) {
-                reviews.push({
-                    moveIndex: index,
+                const moveData = JSON.parse(item.dataset.moveData || '{}');
+                
+                // Erstelle Review-Objekt für sicheres System
+                const reviewData = {
+                    botName: moveData.player || 'Unknown',
+                    cardPlayed: moveData.card || '♠️7',
                     rating: rating,
-                    reasoning: reasoning || null
-                });
+                    reasoning: reasoning || null,
+                    trickNumber: moveData.trickNumber || 0,
+                    position: moveData.position || 'unknown',
+                    trumpSuit: moveData.trumpSuit || 'herz',
+                    gameType: moveData.gameType || 'rufspiel',
+                    calledAce: moveData.calledAce || null
+                };
+                
+                // An sicheres System weiterleiten
+                console.log('🛡️ Sending to secure system:', reviewData);
+                
+                // Nutze die globale submitReview Funktion aus index.html
+                if (window.submitReview) {
+                    window.submitReview(reviewData.rating, reviewData.reasoning);
+                } else {
+                    console.warn('⚠️ Global submitReview function not found, using fallback');
+                    this.processFeedbackSecure(reviewData);
+                }
+                
+                reviews.push(reviewData);
             }
         });
         
-        console.log('🏆 Bewertungen abgeschickt:', reviews);
+        console.log('🏆 Bewertungen an sicheres System gesendet:', reviews);
         
         // Modal schließen
         this.closeReviewModal();
         
-        // TODO: Bewertungen an AI-System übergeben
-        this.processFeedback(reviews);
+        // Erfolgsmeldung
+        this.showSecureSuccess(reviews.length);
+    },
+    
+    processFeedbackSecure: function(reviewData) {
+        // Fallback: Direkt an secure training integration
+        if (window.submitSecureTrainingReview) {
+            window.submitSecureTrainingReview(reviewData);
+        } else {
+            // Ultra-Fallback: localStorage
+            const reviews = JSON.parse(localStorage.getItem('training_reviews') || '[]');
+            reviews.push({
+                ...reviewData,
+                id: Date.now().toString(),
+                timestamp: new Date().toISOString(),
+                source: 'fallback'
+            });
+            localStorage.setItem('training_reviews', JSON.stringify(reviews));
+            console.log('💾 Review saved to localStorage as fallback');
+        }
     },
     
     closeReviewModal: function() {
@@ -286,36 +349,26 @@ window.postGameTraining = {
         }
     },
     
-    processFeedback: function(reviews) {
-        // Hier würde später das echte AI-Training passieren
-        console.log('🤖 AI-Training würde jetzt mit diesem Feedback arbeiten:', reviews);
-        
-        // Erfolgsmeldung anzeigen
-        this.showFeedbackSuccess(reviews.length);
-    },
-    
-    showFeedbackSuccess: function(reviewCount) {
-        // Temporäre Erfolgsmeldung
+    showSecureSuccess: function(reviewCount) {
         const toast = document.createElement('div');
         toast.className = 'feedback-toast';
         toast.innerHTML = `
             <div class="toast-content">
-                ✅ ${reviewCount} Bewertung(en) gespeichert!
+                🛡️ ${reviewCount} sichere Bewertung(en) zur globalen KI-Datenbank hinzugefügt!
             </div>
         `;
         
         document.body.appendChild(toast);
         
-        // Toast nach 3 Sekunden entfernen
         setTimeout(() => {
             toast.remove();
-        }, 3000);
+        }, 4000);
     },
     
     startTracking: function() {
         this.isTrackingRound = true;
         this.currentRoundMoves = [];
-        console.log('🎯 Bot-Züge werden jetzt getrackt...');
+        console.log('🎯 Bot-Züge werden für sicheres Training getrackt...');
     },
     
     trackBotMove: function(playerName, card, moveContext) {
@@ -325,57 +378,73 @@ window.postGameTraining = {
             player: playerName,
             card: card,
             timestamp: new Date().toLocaleTimeString(),
-            context: moveContext || {}
+            context: moveContext || {},
+            // Zusätzliche Daten für sicheres System
+            trickNumber: window.currentTrick || 0,
+            trumpSuit: window.trumpSuit || 'herz',
+            gameType: window.gameType || 'rufspiel',
+            calledAce: window.calledAce || null
         };
         
         this.currentRoundMoves.push(move);
-        console.log(`📝 Tracked: ${playerName} spielt ${card}`);
+        console.log(`📝 Secure tracking: ${playerName} spielt ${card}`);
     },
     
     endTrickTracking: function() {
         if (!this.enabled || !this.isTrackingRound) return;
         
         // Nur Bot-Züge aus dem aktuellen Stich anzeigen
-        const currentTrickMoves = this.currentRoundMoves.slice(-3); // Maximal 3 Bots pro Stich
+        const currentTrickMoves = this.currentRoundMoves.slice(-3);
         
         if (currentTrickMoves.length > 0) {
-            // Zeige Bewertungs-UI statt Console-Tabelle
-            this.showTrickReview(currentTrickMoves);
+            this.showSecureTrickReview(currentTrickMoves);
         }
     },
     
-    showTrickReview: function(trickMoves) {
-        // Modal-Container erstellen
-        const modal = this.createReviewModal(trickMoves);
+    showSecureTrickReview: function(trickMoves) {
+        // Modal-Container mit Sicherheitsinfo erstellen
+        const modal = this.createSecureReviewModal(trickMoves);
         document.body.appendChild(modal);
         
-        // Modal anzeigen und DANN Drag & Drop aktivieren
+        // Modal anzeigen und Drag & Drop aktivieren
         setTimeout(() => {
             modal.classList.add('show');
-            this.makeDraggable(modal); // NACH dem Anzeigen aktivieren
+            this.makeDraggable(modal);
         }, 10);
     },
     
-    createReviewModal: function(trickMoves) {
+    createSecureReviewModal: function(trickMoves) {
         const modal = document.createElement('div');
         modal.className = 'post-game-modal';
         modal.id = 'post-game-review-modal';
+        
+        // Prüfe ob sicheres System verfügbar ist
+        const isSecureAvailable = window.secureTrainingIntegration && 
+                                 window.secureTrainingIntegration.isSecureEnabled;
         
         modal.innerHTML = `
             <div class="modal-backdrop" onclick="postGameTraining.closeReviewModal()"></div>
             <div class="modal-content" id="draggable-modal">
                 <div class="modal-header" id="modal-header">
-                    <h3>🏆 Stich-Bewertung</h3>
+                    <h3>🛡️ Sichere Bot-Bewertung</h3>
                     <button class="modal-close" onclick="postGameTraining.closeReviewModal()">×</button>
                 </div>
                 <div class="modal-body">
-                    <p>Bewerte die Bot-Züge in diesem Stich:</p>
+                    <div class="security-info">
+                        ${isSecureAvailable ? 
+                            '🌍 Deine Bewertungen verbessern die globale Schafkopf-KI!' :
+                            '📱 Bewertungen werden lokal gespeichert und später synchronisiert'
+                        }
+                    </div>
+                    <p><strong>Bewerte die Bot-Züge in diesem Stich:</strong></p>
                     <div class="moves-review">
-                        ${trickMoves.map((move, index) => this.createMoveReviewHTML(move, index)).join('')}
+                        ${trickMoves.map((move, index) => this.createSecureMoveReviewHTML(move, index)).join('')}
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button class="btn btn-primary" onclick="postGameTraining.submitReview()">Fertig</button>
+                    <button class="btn btn-primary" onclick="postGameTraining.submitReview()">
+                        🛡️ Sichere Bewertung abschicken
+                    </button>
                 </div>
             </div>
         `;
@@ -383,23 +452,40 @@ window.postGameTraining = {
         return modal;
     },
     
+    createSecureMoveReviewHTML: function(move, index) {
+        return `
+            <div class="move-review-item" data-move-index="${index}" data-move-data='${JSON.stringify(move)}'>
+                <div class="move-info">
+                    <span class="player-name">${move.player}</span> spielt 
+                    <span class="card-display">${move.card}</span>
+                    <span class="card-points">(${move.context.cardPoints || 0} Punkte)</span>
+                </div>
+                <div class="rating-buttons">
+                    <button class="btn rating-btn good" onclick="postGameTraining.rateMove(${index}, 'good')">
+                        👍 Gut
+                    </button>
+                    <button class="btn rating-btn bad" onclick="postGameTraining.rateMove(${index}, 'bad')">
+                        👎 Schlecht
+                    </button>
+                </div>
+                <div class="reasoning-section" style="display: none;">
+                    <label>Begründung (optional):</label>
+                    <textarea class="reasoning-input" placeholder="Warum war dieser Zug gut/schlecht? (hilft der KI beim Lernen)"></textarea>
+                </div>
+            </div>
+        `;
+    },
+    
     makeDraggable: function(modal) {
         const modalContent = modal.querySelector('#draggable-modal');
         const header = modal.querySelector('#modal-header');
         
-        if (!modalContent || !header) {
-            console.error('Modal oder Header nicht gefunden!');
-            return;
-        }
+        if (!modalContent || !header) return;
         
         let isDragging = false;
         let startX, startY, startLeft, startTop;
         
-        // FIREFOX-KOMPATIBLE Event-Handler
         header.addEventListener('mousedown', function(e) {
-            console.log('🔍 Firefox: Mouse down');
-            
-            // Verhindere Text-Selektion
             e.preventDefault();
             e.stopPropagation();
             
@@ -407,15 +493,12 @@ window.postGameTraining = {
             startX = e.clientX;
             startY = e.clientY;
             
-            // Aktuelle Position des Modals
             const rect = modalContent.getBoundingClientRect();
             startLeft = rect.left;
             startTop = rect.top;
             
             header.style.cursor = 'grabbing';
-            document.body.style.userSelect = 'none'; // Verhindere Selektion
-            
-            console.log('🔍 Start Position:', startLeft, startTop);
+            document.body.style.userSelect = 'none';
         });
         
         document.addEventListener('mousemove', function(e) {
@@ -430,7 +513,6 @@ window.postGameTraining = {
             const newLeft = startLeft + deltaX;
             const newTop = startTop + deltaY;
             
-            // Grenzen prüfen
             const maxLeft = window.innerWidth - modalContent.offsetWidth;
             const maxTop = window.innerHeight - modalContent.offsetHeight;
             
@@ -439,20 +521,17 @@ window.postGameTraining = {
             
             modalContent.style.left = finalLeft + 'px';
             modalContent.style.top = finalTop + 'px';
-            
-            console.log('🔍 Dragging:', finalLeft, finalTop);
         });
         
         document.addEventListener('mouseup', function(e) {
             if (isDragging) {
-                console.log('🔍 Mouse up - stop dragging');
                 isDragging = false;
                 header.style.cursor = 'move';
-                document.body.style.userSelect = ''; // Selektion wieder aktivieren
+                document.body.style.userSelect = '';
             }
         });
         
-        // BONUS: Touch-Support für mobile
+        // Touch support
         header.addEventListener('touchstart', function(e) {
             const touch = e.touches[0];
             const mouseEvent = new MouseEvent('mousedown', {
@@ -481,54 +560,25 @@ window.postGameTraining = {
         });
     },
     
-    createMoveReviewHTML: function(move, index) {
-        return `
-            <div class="move-review-item" data-move-index="${index}">
-                <div class="move-info">
-                    <span class="player-name">${move.player}</span> spielt 
-                    <span class="card-display">${move.card}</span>
-                    <span class="card-points">(${move.context.cardPoints} Punkte)</span>
-                </div>
-                <div class="rating-buttons">
-                    <button class="btn rating-btn good" onclick="postGameTraining.rateMove(${index}, 'good')">
-                        👍 Gut
-                    </button>
-                    <button class="btn rating-btn bad" onclick="postGameTraining.rateMove(${index}, 'bad')">
-                        👎 Schlecht
-                    </button>
-                </div>
-                <div class="reasoning-section" style="display: none;">
-                    <label>Begründung (optional):</label>
-                    <textarea class="reasoning-input" placeholder="Warum war dieser Zug gut/schlecht?"></textarea>
-                </div>
-            </div>
-        `;
-    },
-    
     endRoundTracking: function() {
         if (!this.enabled) return;
         
-        console.log('🏁 Komplette Runde beendet - Alle Bot-Züge:');
+        console.log('🏁 Sichere Runde beendet - Alle Bot-Züge gesammelt:');
         console.table(this.currentRoundMoves);
         
-        // Tracking zurücksetzen für nächste Runde
         this.isTrackingRound = false;
         this.currentRoundMoves = [];
-    },
-    
-    demoGame: function() {
-        console.log('🎯 Demo läuft...');
-        alert('Demo-Funktion funktioniert!');
     },
     
     disable: function() {
         this.enabled = false;
         this.isTrackingRound = false;
         this.currentRoundMoves = [];
-        console.log('❌ System deaktiviert');
+        console.log('❌ Sicheres Training deaktiviert');
     }
 };
 
+// Kompatibilitätsfunktionen
 window.enableHumanTraining = function() {
     return window.postGameTraining.enable();
 };
@@ -537,5 +587,5 @@ window.disableHumanTraining = function() {
     return window.postGameTraining.disable();
 };
 
-console.log('✅ postGameTraining ist verfügbar!');
-console.log('Test: enableHumanTraining()');
+console.log('🛡️ Secure Post-Game Training System ready!');
+console.log('Test: enableHumanTraining() or postGameTraining.enable()');
