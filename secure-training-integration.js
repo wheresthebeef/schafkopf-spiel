@@ -112,82 +112,114 @@ class SecureTrainingIntegration {
 
     // FIXED: Generate simulated global stats that are NEVER 0
     generateSimulatedGlobalStats() {
-        const localStats = this.getLocalStats();
-        console.log('🔄 Generating simulated stats from local:', localStats);
-        
-        // Always generate realistic baseline numbers
-        const baseReviews = Math.max(localStats.totalReviews, 1); // Minimum 1 for multiplication
-        const playerMultiplier = Math.floor(Math.random() * 50) + 30; // 30-80 players
-        const reviewsMultiplier = Math.floor(Math.random() * 80) + 50; // 50-130x local reviews
-        
-        // Ensure minimum realistic numbers
-        const totalReviews = Math.max(
-            baseReviews * reviewsMultiplier,  // Multiply by base
-            Math.floor(Math.random() * 2000) + 1500  // Minimum 1500-3500 reviews
-        );
-        
-        const totalPlayers = Math.max(playerMultiplier, 35);
-        
-        const basePositiveRate = localStats.positiveRate > 0 ? 
-            parseFloat(localStats.positiveRate) : 65.0; // Default to 65% if no local data
+        try {
+            const localStats = this.getLocalStats();
+            console.log('🔄 Generating simulated stats from local:', localStats);
             
-        const averagePositiveRate = Math.max(
-            basePositiveRate + (Math.random() * 12 - 6), // ±6% variance
-            45 // minimum realistic positive rate
-        ).toFixed(1);
-        
-        const simulatedGlobal = {
-            totalReviews: totalReviews,
-            totalPlayers: totalPlayers,
-            averagePositiveRate: parseFloat(averagePositiveRate),
-            lastUpdated: new Date().toISOString(),
-            dataSource: 'simulated' // Mark as simulated
-        };
-        
-        console.log('✅ Generated simulated global stats:', simulatedGlobal);
-        return simulatedGlobal;
+            // Always generate realistic baseline numbers
+            const baseReviews = Math.max(localStats.totalReviews, 1); // Minimum 1 for multiplication
+            const playerMultiplier = Math.floor(Math.random() * 50) + 30; // 30-80 players
+            const reviewsMultiplier = Math.floor(Math.random() * 80) + 50; // 50-130x local reviews
+            
+            // Ensure minimum realistic numbers
+            const totalReviews = Math.max(
+                baseReviews * reviewsMultiplier,  // Multiply by base
+                Math.floor(Math.random() * 2000) + 1500  // Minimum 1500-3500 reviews
+            );
+            
+            const totalPlayers = Math.max(playerMultiplier, 35);
+            
+            const basePositiveRate = localStats.positiveRate > 0 ? 
+                parseFloat(localStats.positiveRate) : 65.0; // Default to 65% if no local data
+                
+            const averagePositiveRate = Math.max(
+                basePositiveRate + (Math.random() * 12 - 6), // ±6% variance
+                45 // minimum realistic positive rate
+            ).toFixed(1);
+            
+            const simulatedGlobal = {
+                totalReviews: totalReviews,
+                totalPlayers: totalPlayers,
+                averagePositiveRate: parseFloat(averagePositiveRate),
+                lastUpdated: new Date().toISOString(),
+                dataSource: 'simulated' // Mark as simulated
+            };
+            
+            console.log('✅ Generated simulated global stats:', simulatedGlobal);
+            return simulatedGlobal;
+            
+        } catch (error) {
+            console.error('❌ Error generating simulated stats:', error);
+            
+            // Emergency fallback - hardcoded realistic values
+            return {
+                totalReviews: Math.floor(Math.random() * 2000) + 2000, // 2000-4000
+                totalPlayers: Math.floor(Math.random() * 40) + 40,      // 40-80
+                averagePositiveRate: parseFloat((Math.random() * 20 + 55).toFixed(1)), // 55-75%
+                lastUpdated: new Date().toISOString(),
+                dataSource: 'emergency'
+            };
+        }
     }
 
     async getCombinedSecureStats() {
-        const localStats = this.getLocalStats();
-        let globalStats = null;
-        let securityStats = null;
-        
-        if (this.isSecureEnabled && this.secureDB) {
-            try {
-                globalStats = await this.secureDB.getGlobalStats();
-                securityStats = this.secureDB.getSecurityStats();
-            } catch (error) {
-                console.error('Failed to get global stats from GitHub:', error);
-                // Fallback to simulated stats
+        try {
+            const localStats = this.getLocalStats();
+            let globalStats = null;
+            let securityStats = null;
+            
+            if (this.isSecureEnabled && this.secureDB) {
+                try {
+                    globalStats = await this.secureDB.getGlobalStats();
+                    securityStats = this.secureDB.getSecurityStats();
+                } catch (error) {
+                    console.error('Failed to get global stats from GitHub:', error);
+                    // Fallback to simulated stats
+                    globalStats = this.generateSimulatedGlobalStats();
+                }
+            } else {
+                // Generate simulated global stats when not connected to GitHub
                 globalStats = this.generateSimulatedGlobalStats();
+                console.log('📊 Using simulated global stats (GitHub not connected)');
             }
-        } else {
-            // Generate simulated global stats when not connected to GitHub
-            globalStats = this.generateSimulatedGlobalStats();
-            console.log('📊 Using simulated global stats (GitHub not connected)');
+            
+            return {
+                local: localStats,
+                global: globalStats,
+                security: securityStats,
+                performance: this.performanceMetrics,
+                combined: globalStats ? this.combineSecureStats(localStats, globalStats) : null
+            };
+        } catch (error) {
+            console.error('❌ Error in getCombinedSecureStats:', error);
+            
+            // Emergency return
+            return {
+                local: this.getLocalStats(),
+                global: this.generateSimulatedGlobalStats(),
+                security: null,
+                performance: this.performanceMetrics,
+                combined: null
+            };
         }
-        
-        return {
-            local: localStats,
-            global: globalStats,
-            security: securityStats,
-            performance: this.performanceMetrics,
-            combined: globalStats ? this.combineSecureStats(localStats, globalStats) : null
-        };
     }
 
     combineSecureStats(local, global) {
-        return {
-            localContribution: local.totalReviews,
-            globalTotal: global.totalReviews,
-            contributionPercentage: global.totalReviews > 0 ? 
-                (local.totalReviews / global.totalReviews * 100).toFixed(2) : 0,
-            globalPositiveRate: global.averagePositiveRate,
-            totalPlayers: global.totalPlayers,
-            acceptanceRate: this.calculateAcceptanceRate(),
-            dataSource: global.dataSource || 'github'
-        };
+        try {
+            return {
+                localContribution: local.totalReviews,
+                globalTotal: global.totalReviews,
+                contributionPercentage: global.totalReviews > 0 ? 
+                    (local.totalReviews / global.totalReviews * 100).toFixed(2) : 0,
+                globalPositiveRate: global.averagePositiveRate,
+                totalPlayers: global.totalPlayers,
+                acceptanceRate: this.calculateAcceptanceRate(),
+                dataSource: global.dataSource || 'github'
+            };
+        } catch (error) {
+            console.error('❌ Error combining stats:', error);
+            return null;
+        }
     }
 
     async enableSecureIntegration(token) {
@@ -255,7 +287,7 @@ class SecureTrainingIntegration {
             console.log('📊 Combined stats result:', stats);
             
             if (stats && stats.global) {
-                const isSimulated = stats.global.dataSource === 'simulated';
+                const isSimulated = stats.global.dataSource === 'simulated' || stats.global.dataSource === 'emergency';
                 
                 const result = {
                     totalReviews: stats.global.totalReviews || 0,
@@ -290,11 +322,11 @@ class SecureTrainingIntegration {
         } catch (error) {
             console.error('❌ Error in getGlobalStatsDisplay:', error);
             
-            // Emergency fallback
+            // Final emergency fallback - hardcoded values
             return {
                 totalReviews: Math.floor(Math.random() * 3000) + 2000, // 2000-5000
                 totalPlayers: Math.floor(Math.random() * 40) + 40,      // 40-80
-                averagePositiveRate: (Math.random() * 20 + 55).toFixed(1), // 55-75%
+                averagePositiveRate: parseFloat((Math.random() * 20 + 55).toFixed(1)), // 55-75%
                 lastUpdated: new Date().toISOString(),
                 isSimulated: true,
                 statusMessage: 'Notfall-Modus aktiv',
