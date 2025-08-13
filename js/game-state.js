@@ -33,7 +33,10 @@ let gameState = {
     debugMode: true, // Standardmäßig an für Entwicklung
     
     // Spielverlauf-Log - WICHTIG: Hier schon initialisieren!
-    gameLog: []
+    gameLog: [],
+    
+    // NEU: Stich-Position Tracking
+    trickLeadPlayer: 0 // Wer spielt die erste Karte des aktuellen Stichs aus
 };
 
 /**
@@ -121,7 +124,10 @@ function initializeGameState(options = {}) {
         gameLog: [],
         
         // Timing
-        lastActionTime: Date.now()
+        lastActionTime: Date.now(),
+        
+        // NEU: Stich-Position Tracking
+        trickLeadPlayer: 0 // Spieler nach dem Kartengeber spielt erste Karte
     };
     
     // Jetzt können wir sicher loggen, da gameLog existiert
@@ -142,6 +148,10 @@ function startNewRound() {
     // Ruffarbe-Tracking zurücksetzen
     gameState.calledSuitPlayed = false;
     
+    // NEU: Ausspieler für ersten Stich setzen (Spieler nach dem Kartengeber)
+    gameState.trickLeadPlayer = (gameState.roundNumber) % 4; // Kartengeber rotiert
+    gameState.currentPlayer = gameState.trickLeadPlayer;
+    
     // Spieler-Rundendaten zurücksetzen
     gameState.players.forEach(player => {
         player.cards = [];
@@ -156,7 +166,10 @@ function startNewRound() {
     // Rundennummer erhöhen
     gameState.roundNumber++;
     
-    logGameAction('Neue Runde gestartet', { round: gameState.roundNumber });
+    logGameAction('Neue Runde gestartet', { 
+        round: gameState.roundNumber,
+        leadPlayer: gameState.players[gameState.trickLeadPlayer].name
+    });
 }
 
 /**
@@ -183,16 +196,80 @@ function nextPlayer() {
 }
 
 /**
- * Fügt eine Karte zum aktuellen Stich hinzu
+ * NEU: Ermittelt die strategische Position eines Spielers im aktuellen Stich
+ * @param {number} playerIndex - Index des Spielers
+ * @returns {string} Position: 'ausspieler', 'zweiter', 'dritter', 'letzter'
+ */
+function getTrickPosition(playerIndex) {
+    // Finde die Position relativ zum Ausspieler
+    const leadPlayerIndex = gameState.trickLeadPlayer;
+    const playersInGame = gameState.players.length;
+    
+    // Berechne relative Position zum Ausspieler
+    let relativePosition = (playerIndex - leadPlayerIndex + playersInGame) % playersInGame;
+    
+    const positions = ['ausspieler', 'zweiter', 'dritter', 'letzter'];
+    return positions[relativePosition] || 'unknown';
+}
+
+/**
+ * NEU: Ermittelt die strategische Position basierend auf bereits gespielten Karten
+ * @param {number} playerIndex - Index des Spielers
+ * @returns {string} Aktuelle Position im Stich
+ */
+function getCurrentTrickPosition(playerIndex) {
+    const cardsPlayed = gameState.currentTrick.length;
+    
+    // Wenn der Stich leer ist, prüfe ob dieser Spieler der Ausspieler ist
+    if (cardsPlayed === 0) {
+        return playerIndex === gameState.trickLeadPlayer ? 'ausspieler' : 'unknown';
+    }
+    
+    // Finde Position basierend auf Reihenfolge im aktuellen Stich
+    const leadPlayerIndex = gameState.trickLeadPlayer;
+    const playersInGame = gameState.players.length;
+    
+    // Berechne welcher Spieler als nächstes dran ist
+    const nextPlayerIndex = (leadPlayerIndex + cardsPlayed) % playersInGame;
+    
+    if (playerIndex === nextPlayerIndex) {
+        const positions = ['ausspieler', 'zweiter', 'dritter', 'letzter'];
+        return positions[cardsPlayed] || 'unknown';
+    }
+    
+    return 'not_turn';
+}
+
+/**
+ * NEU: Gibt die strategische Beschreibung einer Stich-Position zurück
+ * @param {string} position - Position ('ausspieler', 'zweiter', etc.)
+ * @returns {string} Strategische Beschreibung
+ */
+function getPositionDescription(position) {
+    const descriptions = {
+        'ausspieler': 'Spielt erste Karte (blind), bestimmt Tempo',
+        'zweiter': 'Reagiert auf Ausspieler, kann Farbe/Trump signalisieren', 
+        'dritter': 'Sieht 2 Karten, taktische Position, kann überstechen',
+        'letzter': 'Sieht alle 3 Karten, kann optimal entscheiden'
+    };
+    
+    return descriptions[position] || 'Unbekannte Position';
+}
+
+/**
+ * Fügt eine Karte zum aktuellen Stich hinzu (ERWEITERT: mit Stich-Position)
  * @param {Object} card - Die gespielte Karte
  * @param {number} playerIndex - Spieler der die Karte gespielt hat
  */
 function addCardToTrick(card, playerIndex) {
+    const stichPosition = getCurrentTrickPosition(playerIndex);
     const trickCard = {
         card: card,
         player: playerIndex,
         playerName: gameState.players[playerIndex].name,
-        position: gameState.currentTrick.length
+        position: gameState.currentTrick.length, // Reihenfolge im Stich (0-3)
+        stichPosition: stichPosition, // NEU: Strategische Position
+        trickNumber: gameState.trickNumber + 1 // NEU: Aktueller Stich (1-8)
     };
     
     gameState.currentTrick.push(trickCard);
@@ -200,12 +277,14 @@ function addCardToTrick(card, playerIndex) {
     logGameAction('Karte gespielt', {
         player: gameState.players[playerIndex].name,
         card: `${card.symbol}${card.short}`,
-        trickPosition: trickCard.position
+        trickPosition: trickCard.position,
+        stichPosition: stichPosition, // NEU
+        trickNumber: trickCard.trickNumber // NEU
     });
 }
 
 /**
- * Beendet den aktuellen Stich und ermittelt den Gewinner
+ * Beendet den aktuellen Stich und ermittelt den Gewinner (ERWEITERT: Ausspieler-Update)
  * @returns {Object} Stich-Ergebnis mit Gewinner und Punkten
  */
 function completeTrick() {
@@ -251,10 +330,13 @@ function completeTrick() {
         trickNumber: gameState.trickNumber
     });
     
+    // NEU: Stichgewinner wird neuer Ausspieler für nächsten Stich
+    gameState.trickLeadPlayer = winnerPlayerIndex;
+    
     // Für nächsten Stich vorbereiten
     gameState.currentTrick = [];
     gameState.trickNumber++;
-    gameState.currentPlayer = winnerPlayerIndex;
+    gameState.currentPlayer = winnerPlayerIndex; // Stichgewinner beginnt
     
     return completedTrick;
 }
@@ -424,4 +506,30 @@ function saveCheckpoint(label) {
     }
     
     logGameAction('Checkpoint gespeichert', { label });
+}
+
+/**
+ * NEU: Debug-Funktion für Stich-Positionen
+ */
+function debugTrickPositions() {
+    console.log('🎯 Aktuelle Stich-Positionen:');
+    console.log(`Ausspieler: ${gameState.players[gameState.trickLeadPlayer].name}`);
+    
+    gameState.players.forEach((player, index) => {
+        const position = getTrickPosition(index);
+        const currentPosition = getCurrentTrickPosition(index);
+        const description = getPositionDescription(position);
+        
+        console.log(`${player.name}: ${position} (${description})`);
+        if (currentPosition !== position && currentPosition !== 'not_turn') {
+            console.log(`  → Aktuell: ${currentPosition}`);
+        }
+    });
+    
+    if (gameState.currentTrick.length > 0) {
+        console.log('\nBereits gespielte Karten:');
+        gameState.currentTrick.forEach(tc => {
+            console.log(`  ${tc.playerName}: ${tc.card.symbol}${tc.card.short} (${tc.stichPosition})`);
+        });
+    }
 }
