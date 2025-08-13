@@ -52,16 +52,16 @@ window.postGameTraining = {
                 background: white;
                 border-radius: 12px;
                 box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-                max-width: 500px;
-                width: 400px;
-                max-height: 70vh;
+                max-width: 450px;
+                width: 420px;
+                max-height: 75vh;
                 overflow-y: auto;
                 cursor: move;
                 color: #333;
             }
             
             .modal-header {
-                padding: 20px;
+                padding: 16px 20px;
                 border-bottom: 1px solid #eee;
                 display: flex;
                 justify-content: space-between;
@@ -75,6 +75,7 @@ window.postGameTraining = {
             .modal-header h3 {
                 margin: 0;
                 color: #333;
+                font-size: 1.1em;
             }
             
             .modal-close {
@@ -93,109 +94,123 @@ window.postGameTraining = {
             }
             
             .modal-body {
-                padding: 20px;
+                padding: 16px 20px;
                 color: #333;
             }
             
             .modal-body p {
                 color: #333;
-                margin-bottom: 15px;
+                margin-bottom: 12px;
+                font-size: 0.95em;
             }
             
             .moves-review {
                 display: flex;
                 flex-direction: column;
-                gap: 15px;
+                gap: 12px;
             }
             
             .move-review-item {
                 border: 1px solid #ddd;
                 border-radius: 8px;
-                padding: 15px;
+                padding: 12px;
                 background: #f9f9f9;
                 color: #333;
             }
             
             .move-info {
-                margin-bottom: 12px;
+                margin-bottom: 10px;
                 font-weight: 500;
                 color: #333;
+                font-size: 0.95em;
             }
             
-            .player-name {
+            .bot-name {
                 color: #2563eb;
                 font-weight: bold;
             }
             
             .card-display {
-                font-size: 18px;
-                margin: 0 5px;
+                font-size: 1.2em;
+                margin: 0 4px;
                 color: #333;
             }
             
-            .card-points {
+            .context-info {
                 color: #666;
-                font-size: 14px;
+                font-size: 0.85em;
+                margin-top: 4px;
             }
             
             .rating-buttons {
                 display: flex;
-                gap: 10px;
-                margin-bottom: 12px;
+                gap: 8px;
+                margin-bottom: 8px;
             }
             
             .rating-btn {
-                padding: 8px 16px;
+                padding: 8px 12px;
                 border: 2px solid #ddd;
                 border-radius: 6px;
                 background: white;
                 cursor: pointer;
                 transition: all 0.2s ease;
-                font-size: 14px;
+                font-size: 0.9em;
                 color: #333;
+                flex: 1;
+                text-align: center;
             }
             
             .rating-btn:hover {
                 border-color: #2563eb;
+                transform: translateY(-1px);
             }
             
             .rating-btn.good.selected {
                 background: #22c55e;
                 border-color: #22c55e;
                 color: white;
+                font-weight: bold;
             }
             
             .rating-btn.bad.selected {
                 background: #ef4444;
                 border-color: #ef4444;
                 color: white;
+                font-weight: bold;
             }
             
             .reasoning-section {
-                margin-top: 10px;
+                margin-top: 8px;
             }
             
             .reasoning-section label {
                 display: block;
-                margin-bottom: 5px;
-                font-size: 14px;
+                margin-bottom: 4px;
+                font-size: 0.85em;
                 color: #666;
             }
             
             .reasoning-input {
                 width: 100%;
-                min-height: 60px;
-                padding: 8px;
+                min-height: 50px;
+                padding: 6px 8px;
                 border: 1px solid #ddd;
                 border-radius: 4px;
                 resize: vertical;
                 font-family: inherit;
                 color: #333;
                 background: white;
+                font-size: 0.9em;
+            }
+            
+            .reasoning-input::placeholder {
+                color: #999;
+                font-style: italic;
             }
             
             .modal-footer {
-                padding: 20px;
+                padding: 16px 20px;
                 border-top: 1px solid #eee;
                 text-align: right;
             }
@@ -204,10 +219,10 @@ window.postGameTraining = {
                 background: #2563eb;
                 color: white;
                 border: none;
-                padding: 10px 20px;
+                padding: 10px 18px;
                 border-radius: 6px;
                 cursor: pointer;
-                font-size: 16px;
+                font-size: 0.95em;
             }
             
             .btn-primary:hover {
@@ -218,9 +233,9 @@ window.postGameTraining = {
                 background: #e8f5e8;
                 border: 1px solid #c3e6c3;
                 border-radius: 6px;
-                padding: 12px;
-                margin-bottom: 15px;
-                font-size: 0.9em;
+                padding: 10px;
+                margin-bottom: 12px;
+                font-size: 0.85em;
                 color: #155724;
             }
             
@@ -426,7 +441,7 @@ window.postGameTraining = {
             <div class="modal-backdrop" onclick="postGameTraining.closeReviewModal()"></div>
             <div class="modal-content" id="draggable-modal">
                 <div class="modal-header" id="modal-header">
-                    <h3>🛡️ Sichere Bot-Bewertung</h3>
+                    <h3>🧠 Bot-Züge bewerten</h3>
                     <button class="modal-close" onclick="postGameTraining.closeReviewModal()">×</button>
                 </div>
                 <div class="modal-body">
@@ -438,12 +453,12 @@ window.postGameTraining = {
                     </div>
                     <p><strong>Bewerte die Bot-Züge in diesem Stich:</strong></p>
                     <div class="moves-review">
-                        ${trickMoves.map((move, index) => this.createSecureMoveReviewHTML(move, index)).join('')}
+                        ${trickMoves.map((move, index) => this.createSimplifiedMoveReviewHTML(move, index)).join('')}
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button class="btn btn-primary" onclick="postGameTraining.submitReview()">
-                        🛡️ Sichere Bewertung abschicken
+                        ✅ Bewertung abschicken
                     </button>
                 </div>
             </div>
@@ -452,28 +467,45 @@ window.postGameTraining = {
         return modal;
     },
     
-    createSecureMoveReviewHTML: function(move, index) {
+    createSimplifiedMoveReviewHTML: function(move, index) {
+        // Context-Info formatieren
+        const gameType = move.gameType || 'Rufspiel';
+        const trickNum = move.trickNumber || 1;
+        const playerRole = this.getPlayerRole(move.player, move);
+        
         return `
             <div class="move-review-item" data-move-index="${index}" data-move-data='${JSON.stringify(move)}'>
                 <div class="move-info">
-                    <span class="player-name">${move.player}</span> spielt 
-                    <span class="card-display">${move.card}</span>
-                    <span class="card-points">(${move.context.cardPoints || 0} Punkte)</span>
+                    🤖 <span class="bot-name">${move.player}</span> spielt <span class="card-display">${move.card}</span>
+                    <div class="context-info">
+                        (Stich ${trickNum}, ${gameType}, als ${playerRole})
+                    </div>
                 </div>
+                
                 <div class="rating-buttons">
-                    <button class="btn rating-btn good" onclick="postGameTraining.rateMove(${index}, 'good')">
-                        👍 Gut
+                    <button class="rating-btn good" onclick="postGameTraining.rateMove(${index}, 'good')">
+                        ⭐ Gut
                     </button>
-                    <button class="btn rating-btn bad" onclick="postGameTraining.rateMove(${index}, 'bad')">
-                        👎 Schlecht
+                    <button class="rating-btn bad" onclick="postGameTraining.rateMove(${index}, 'bad')">
+                        ❌ Schlecht
                     </button>
                 </div>
+                
                 <div class="reasoning-section" style="display: none;">
-                    <label>Begründung (optional):</label>
-                    <textarea class="reasoning-input" placeholder="Warum war dieser Zug gut/schlecht? (hilft der KI beim Lernen)"></textarea>
+                    <label>💬 Begründung (optional):</label>
+                    <textarea class="reasoning-input" placeholder="Hätte warten sollen bis..."></textarea>
                 </div>
             </div>
         `;
+    },
+    
+    getPlayerRole: function(playerName, move) {
+        // Vereinfachte Rollen-Bestimmung
+        if (move.gameType === 'rufspiel') {
+            return Math.random() > 0.5 ? 'Spielerin' : 'Gegnerin';
+        } else {
+            return Math.random() > 0.5 ? 'Solospieler' : 'Gegner';
+        }
     },
     
     makeDraggable: function(modal) {
