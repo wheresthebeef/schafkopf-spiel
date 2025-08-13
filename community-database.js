@@ -1,4 +1,4 @@
-// Enhanced Community Database System
+// Enhanced Community Database System - Fixed Real Data Detection
 // Replaces the simulated stats with real GitHub-based community data
 
 class CommunityDatabaseSystem {
@@ -201,7 +201,7 @@ class CommunityDatabaseSystem {
         }, 5 * 60 * 1000);
     }
 
-    // CORE: Get REAL community stats instead of simulated
+    // CORE: Get REAL community stats instead of simulated - FIXED VERSION
     async getRealCommunityStats() {
         try {
             console.log('🌍 Fetching REAL community stats from GitHub...');
@@ -215,18 +215,20 @@ class CommunityDatabaseSystem {
             const globalStats = await this.githubDB.getGlobalStats();
             console.log('📊 Real GitHub stats received:', globalStats);
 
-            if (globalStats && globalStats.totalReviews > 0) {
+            // FIXED: Check if we actually have real data in GitHub
+            if (globalStats && globalStats.totalReviews >= 0) {
+                // Even if totalReviews is 0, it's still real GitHub data
                 return {
                     totalReviews: globalStats.totalReviews,
                     totalPlayers: globalStats.totalPlayers,
                     averagePositiveRate: globalStats.averagePositiveRate,
                     lastUpdated: globalStats.lastUpdated,
                     dataSource: 'real_github',
-                    isReal: true
+                    isReal: true  // ALWAYS true if we get data from GitHub
                 };
             } else {
-                console.log('⚠️ Empty GitHub database - using bootstrap simulation');
-                return this.generateBootstrapStats();
+                console.log('⚠️ Failed to get GitHub stats - using enhanced local simulation');
+                return this.generateEnhancedLocalStats();
             }
             
         } catch (error) {
@@ -254,19 +256,7 @@ class CommunityDatabaseSystem {
             ).toFixed(1),
             lastUpdated: new Date().toISOString(),
             dataSource: 'enhanced_simulation',
-            isReal: false
-        };
-    }
-
-    generateBootstrapStats() {
-        // Bootstrap stats for empty GitHub database
-        return {
-            totalReviews: Math.floor(Math.random() * 100) + 50, // 50-150 to start
-            totalPlayers: Math.floor(Math.random() * 10) + 5,   // 5-15 early adopters
-            averagePositiveRate: (Math.random() * 20 + 60).toFixed(1), // 60-80%
-            lastUpdated: new Date().toISOString(),
-            dataSource: 'bootstrap',
-            isReal: true // It's real GitHub, just starting out
+            isReal: false  // CLEARLY marked as simulation
         };
     }
 
@@ -395,8 +385,18 @@ class CommunityDatabaseSystem {
         }
         
         try {
-            await this.githubDB.testConnection();
-            return { success: true, message: 'Verbindung erfolgreich' };
+            const result = await this.githubDB.testConnection();
+            if (result) {
+                // Test if we can actually read the community data
+                const stats = await this.githubDB.getGlobalStats();
+                console.log('🧪 Test: Community stats from GitHub:', stats);
+                return { 
+                    success: true, 
+                    message: `Verbindung erfolgreich! ${stats.totalReviews} Reviews in Community-DB` 
+                };
+            } else {
+                return { success: false, message: 'Verbindungstest fehlgeschlagen' };
+            }
         } catch (error) {
             return { success: false, message: error.message };
         }
