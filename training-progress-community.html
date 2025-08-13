@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Schafkopf Community Training Dashboard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #333; min-height: 100vh; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); }
+        .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #2a5298; padding-bottom: 20px; }
+        .header h1 { color: #1e3c72; font-size: 2.5em; margin-bottom: 10px; }
+        .community-badge { display: inline-block; background: linear-gradient(45deg, #28a745, #20c997); color: white; padding: 8px 16px; border-radius: 20px; font-size: 0.9em; font-weight: bold; margin: 5px; }
+        .live-badge { background: linear-gradient(45deg, #007bff, #0056b3); }
+        .status-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .status-item { background: #fff; border-radius: 10px; padding: 15px; text-align: center; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); border-left: 4px solid #2a5298; }
+        .status-item.connected { border-left-color: #28a745; }
+        .status-item.syncing { border-left-color: #ffc107; }
+        .status-item.disconnected { border-left-color: #dc3545; }
+        .pulse { animation: pulse 2s infinite; }
+        .github-setup { background: linear-gradient(145deg, #f8f9fa, #e9ecef); border: 2px solid #dee2e6; border-radius: 15px; padding: 25px; margin-bottom: 20px; transition: all 0.3s ease; }
+        .github-setup.connected { background: linear-gradient(145deg, #d1f2eb, #a3e4d7); border-color: #28a745; }
+        .github-setup h4 { color: #495057; margin-bottom: 15px; font-size: 1.2em; }
+        .github-setup.connected h4 { color: #155724; }
+        .token-input { width: 100%; padding: 12px; border: 2px solid #dee2e6; border-radius: 8px; margin: 10px 0; font-family: 'Courier New', monospace; font-size: 0.9em; transition: border-color 0.3s ease; }
+        .token-input:focus { border-color: #2a5298; outline: none; box-shadow: 0 0 0 3px rgba(42, 82, 152, 0.1); }
+        .button { background: #2a5298; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 1em; margin: 5px; transition: all 0.3s ease; }
+        .button:hover { background: #1e3c72; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2); }
+        .button.success { background: #28a745; }
+        .button.success:hover { background: #1e7e34; }
+        .button.warning { background: #ffc107; color: #333; }
+        .button.warning:hover { background: #e0a800; }
+        .button:disabled { background: #6c757d; cursor: not-allowed; transform: none; }
+        .stats-section { background: #fff; border-radius: 15px; padding: 25px; margin: 20px 0; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1); border: 1px solid #e9ecef; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 15px; }
+        .stat-card { background: linear-gradient(145deg, #f8f9fa, #e9ecef); border-radius: 10px; padding: 20px; text-align: center; border: 1px solid #dee2e6; }
+        .stat-value { font-size: 2em; font-weight: bold; color: #2a5298; margin-bottom: 5px; }
+        .stat-value.success { color: #28a745; }
+        .stat-value.warning { color: #ffc107; }
+        .stat-value.error { color: #dc3545; }
+        .stat-label { font-size: 0.9em; color: #6c757d; text-transform: uppercase; letter-spacing: 0.5px; }
+        .data-source-badge { display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 0.75em; font-weight: bold; margin-left: 8px; }
+        .real-data { background: #28a745; color: white; }
+        .simulated-data { background: #ffc107; color: #333; }
+        .loading { text-align: center; padding: 40px; color: #6c757d; }
+        .loading-spinner { display: inline-block; width: 40px; height: 40px; border: 4px solid #f3f3f3; border-top: 4px solid #2a5298; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        .contribution-stats { background: linear-gradient(145deg, #e3f2fd, #bbdefb); border-radius: 10px; padding: 15px; margin-top: 15px; }
+        .contribution-item { display: flex; justify-content: space-between; margin: 8px 0; font-size: 0.9em; }
+        .progress-bar { width: 100%; height: 8px; background: #e9ecef; border-radius: 4px; overflow: hidden; margin: 10px 0; }
+        .progress-fill { height: 100%; background: linear-gradient(90deg, #28a745, #20c997); transition: width 0.3s ease; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @media (max-width: 768px) { .container { padding: 20px; margin: 10px; } .status-bar { grid-template-columns: 1fr; } .stats-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌍 Schafkopf Community Training</h1>
+            <p>Kollektive KI-Intelligenz durch Community-Beiträge</p>
+            <span class="community-badge">🤝 Community-basiert</span>
+            <span class="community-badge live-badge" id="data-badge">📊 Lade Daten...</span>
+        </div>
+
+        <div class="status-bar">
+            <div id="connection-status" class="status-item"><div class="loading-spinner"></div><div>Verbindung wird geprüft...</div></div>
+            <div id="sync-status" class="status-item"><div class="loading-spinner"></div><div>Synchronisation wird geprüft...</div></div>
+            <div id="community-status" class="status-item"><div class="loading-spinner"></div><div>Community-Status wird geladen...</div></div>
+        </div>
+
+        <div id="github-setup" class="github-setup">
+            <h4>🔐 GitHub Community Integration</h4>
+            <p>Verbinde dich mit der globalen Schafkopf KI-Training Community:</p>
+            <input type="password" id="github-token" class="token-input" placeholder="GitHub Personal Access Token (repo Berechtigung erforderlich)">
+            <div>
+                <button class="button success" onclick="connectToGitHub()" id="connect-btn">🌍 Mit Community verbinden</button>
+                <button class="button" onclick="testGitHubConnection()" id="test-btn">🔍 Verbindung testen</button>
+                <button class="button warning" onclick="disconnectFromGitHub()" id="disconnect-btn" style="display:none;">❌ Trennen</button>
+            </div>
+            <div id="connection-message" style="margin-top: 10px; font-size: 0.9em;"></div>
+        </div>
+
+        <div class="stats-section">
+            <h3>📊 Community Statistiken</h3>
+            <div id="community-stats"><div class="loading"><div class="loading-spinner"></div>Lade Community-Daten...</div></div>
+        </div>
+
+        <div class="stats-section">
+            <h3>👤 Deine Lokalen Statistiken</h3>
+            <div id="local-stats"><div class="loading"><div class="loading-spinner"></div>Lade lokale Daten...</div></div>
+        </div>
+
+        <div class="stats-section">
+            <h3>🤝 Dein Community-Beitrag</h3>
+            <div id="contribution-stats"><div class="loading"><div class="loading-spinner"></div>Lade Beitragsdaten...</div></div>
+        </div>
+
+        <div class="stats-section">
+            <h3>⚙️ Aktionen</h3>
+            <button class="button" onclick="refreshAllData()">🔄 Alle Daten aktualisieren</button>
+            <button class="button" onclick="exportCommunityData()">📥 Community-Daten exportieren</button>
+            <button class="button" onclick="syncPendingReviews()">⚡ Warteschlange synchronisieren</button>
+            <button class="button" onclick="window.location.href='index.html'">🎮 Zurück zum Spiel</button>
+        </div>
+    </div>
+
+    <script src="github-db-secure.js?v=20250813-community"></script>
+    <script src="secure-training-integration.js?v=20250813-community"></script>
+    <script src="community-database.js?v=20250813-community"></script>
+
+    <script>
+        let communityDB, dashboardData = null, refreshInterval = null;
+        console.log('🌍 Community Dashboard v2.0 - Real Data Integration');
+
+        async function initCommunityDashboard() {
+            try {
+                console.log('🌍 Initializing Community Dashboard...');
+                await waitForCommunitySystem();
+                await loadDashboardData();
+                setupAutoRefresh();
+                console.log('✅ Community Dashboard initialized successfully');
+            } catch (error) {
+                console.error('❌ Dashboard initialization failed:', error);
+                showErrorFallback();
+            }
+        }
+
+        async function waitForCommunitySystem() {
+            return new Promise((resolve) => {
+                let attempts = 0; const maxAttempts = 30;
+                function checkSystem() {
+                    if (window.communityDB) { communityDB = window.communityDB; console.log('✅ Community system found'); resolve(true); }
+                    else if (attempts < maxAttempts) { attempts++; console.log(`⏳ Waiting for community system... (${attempts}/${maxAttempts})`); setTimeout(checkSystem, 500); }
+                    else { console.warn('⚠️ Community system not available, using fallback'); resolve(false); }
+                }
+                checkSystem();
+            });
+        }
+
+        async function loadDashboardData() {
+            try {
+                console.log('📊 Loading dashboard data...');
+                if (communityDB) { dashboardData = await communityDB.getCommunityDashboardData(); console.log('✅ Dashboard data loaded:', dashboardData); }
+                else { dashboardData = await getFallbackData(); console.log('⚠️ Using fallback data:', dashboardData); }
+                updateAllDisplays();
+            } catch (error) {
+                console.error('❌ Failed to load dashboard data:', error);
+                dashboardData = await getFallbackData(); updateAllDisplays();
+            }
+        }
+
+        function updateAllDisplays() { updateStatusBar(); updateGitHubSetup(); updateCommunityStats(); updateLocalStats(); updateContributionStats(); updateDataBadge(); }
+
+        function updateStatusBar() {
+            const connectionEl = document.getElementById('connection-status');
+            const syncEl = document.getElementById('sync-status');
+            const communityEl = document.getElementById('community-status');
+            if (!dashboardData) { setStatusItem(connectionEl, 'disconnected', '❌ Nicht verfügbar'); setStatusItem(syncEl, 'disconnected', '❌ Nicht verfügbar'); setStatusItem(communityEl, 'disconnected', '❌ Nicht verfügbar'); return; }
+            const { connection } = dashboardData;
+            if (connection.isConnected) { setStatusItem(connectionEl, 'connected', '✅ GitHub verbunden'); } else { setStatusItem(connectionEl, 'disconnected', '🔴 Nicht verbunden'); }
+            if (connection.pendingUploads > 0) { setStatusItem(syncEl, 'syncing', `⏳ ${connection.pendingUploads} Reviews in Warteschlange`); syncEl.classList.add('pulse'); }
+            else if (connection.isConnected) { setStatusItem(syncEl, 'connected', '✅ Vollständig synchronisiert'); syncEl.classList.remove('pulse'); }
+            else { setStatusItem(syncEl, 'disconnected', '📱 Nur lokale Speicherung'); syncEl.classList.remove('pulse'); }
+            const communityCount = dashboardData.community?.totalPlayers || 0;
+            if (communityCount > 0) { setStatusItem(communityEl, 'connected', `🌍 ${communityCount} aktive Spieler`); } else { setStatusItem(communityEl, 'syncing', '🌱 Community wächst'); }
+        }
+
+        function setStatusItem(element, type, text) { element.className = `status-item ${type}`; element.innerHTML = text; }
+
+        function updateGitHubSetup() {
+            const setupEl = document.getElementById('github-setup');
+            const connectBtn = document.getElementById('connect-btn'); const disconnectBtn = document.getElementById('disconnect-btn'); const messageEl = document.getElementById('connection-message');
+            if (!dashboardData) return; const { connection } = dashboardData;
+            if (connection.isConnected) { setupEl.classList.add('connected'); connectBtn.style.display = 'none'; disconnectBtn.style.display = 'inline-block'; messageEl.innerHTML = `<span style="color: #155724;">✅ ${connection.status.message}</span>`; }
+            else { setupEl.classList.remove('connected'); connectBtn.style.display = 'inline-block'; disconnectBtn.style.display = 'none'; messageEl.innerHTML = `<span style="color: #721c24;">ℹ️ ${connection.status.message}</span>`; }
+        }
+
+        function updateCommunityStats() {
+            const statsEl = document.getElementById('community-stats');
+            if (!dashboardData || !dashboardData.community) { statsEl.innerHTML = '<div class="loading">❌ Community-Daten nicht verfügbar</div>'; return; }
+            const { community } = dashboardData; const dataSourceBadge = community.isReal ? '<span class="data-source-badge real-data">📡 Live GitHub</span>' : '<span class="data-source-badge simulated-data">🎯 Simulation</span>';
+            statsEl.innerHTML = `<div class="stats-grid"><div class="stat-card"><div class="stat-value success">${community.totalReviews.toLocaleString()}</div><div class="stat-label">Gesamt-Reviews ${dataSourceBadge}</div></div><div class="stat-card"><div class="stat-value">${community.totalPlayers}</div><div class="stat-label">Aktive Spieler</div></div><div class="stat-card"><div class="stat-value warning">${community.averagePositiveRate}%</div><div class="stat-label">Globale Positive Rate</div></div><div class="stat-card"><div class="stat-value">${community.dataSource.replace('_', ' ')}</div><div class="stat-label">Datenquelle</div></div></div><div style="margin-top: 15px; font-size: 0.9em; color: #6c757d;">📅 Letzte Aktualisierung: ${new Date(community.lastUpdated).toLocaleString('de-DE')}</div>`;
+        }
+
+        function updateLocalStats() {
+            const statsEl = document.getElementById('local-stats');
+            if (!dashboardData || !dashboardData.local) { statsEl.innerHTML = '<div class="loading">❌ Lokale Daten nicht verfügbar</div>'; return; }
+            const { local } = dashboardData;
+            statsEl.innerHTML = `<div class="stats-grid"><div class="stat-card"><div class="stat-value">${local.totalReviews}</div><div class="stat-label">Deine Reviews</div></div><div class="stat-card"><div class="stat-value success">${local.positiveRate}%</div><div class="stat-label">Deine Positive Rate</div></div><div class="stat-card"><div class="stat-value warning">${local.lastReview ? new Date(local.lastReview).toLocaleDateString('de-DE') : 'Noch keine'}</div><div class="stat-label">Letzte Review</div></div></div>`;
+        }
+
+        function updateContributionStats() {
+            const statsEl = document.getElementById('contribution-stats');
+            if (!dashboardData) { statsEl.innerHTML = '<div class="loading">❌ Beitragsdaten nicht verfügbar</div>'; return; }
+            const { contribution, connection, community, local } = dashboardData; const contributionPercentage = community.totalReviews > 0 ? ((local.totalReviews / community.totalReviews) * 100).toFixed(3) : 0;
+            statsEl.innerHTML = `<div class="stats-grid"><div class="stat-card"><div class="stat-value success">${contribution.reviewsContributed || 0}</div><div class="stat-label">Hochgeladene Reviews</div></div><div class="stat-card"><div class="stat-value">${contribution.sessionsUploaded || 0}</div><div class="stat-label">Upload-Sessions</div></div><div class="stat-card"><div class="stat-value warning">${contributionPercentage}%</div><div class="stat-label">Community-Beitrag</div></div><div class="stat-card"><div class="stat-value ${connection.pendingUploads > 0 ? 'error' : 'success'}">${connection.pendingUploads}</div><div class="stat-label">Warteschlange</div></div></div>${connection.pendingUploads > 0 ? `<div class="contribution-stats"><div style="font-weight: bold; margin-bottom: 10px;">⏳ Synchronisation läuft</div><div class="progress-bar"><div class="progress-fill" style="width: ${Math.max(10, 100 - (connection.pendingUploads * 5))}%"></div></div><div style="font-size: 0.9em;">${connection.pendingUploads} Reviews werden zur Community hochgeladen...</div></div>` : ''}<div class="contribution-stats"><div class="contribution-item"><span>Letzter Beitrag:</span><span>${contribution.lastContribution ? new Date(contribution.lastContribution).toLocaleDateString('de-DE') : 'Noch keiner'}</span></div><div class="contribution-item"><span>Status:</span><span>${connection.status.action}</span></div></div>`;
+        }
+
+        function updateDataBadge() {
+            const badge = document.getElementById('data-badge');
+            if (!dashboardData) { badge.textContent = '❌ Fehler'; badge.className = 'community-badge'; return; }
+            const { community } = dashboardData;
+            if (community.isReal) { badge.textContent = '📡 Live GitHub Daten'; badge.className = 'community-badge live-badge'; } else { badge.textContent = '🎯 Simulierte Daten'; badge.className = 'community-badge'; }
+        }
+
+        async function connectToGitHub() {
+            const token = document.getElementById('github-token').value.trim();
+            if (!token) { alert('⚠️ Bitte gib einen GitHub Token ein'); return; }
+            const connectBtn = document.getElementById('connect-btn'); const originalText = connectBtn.textContent;
+            try {
+                connectBtn.disabled = true; connectBtn.textContent = '🔄 Verbinde...';
+                if (communityDB) {
+                    const success = await communityDB.enableCommunityIntegration(token);
+                    if (success) { await loadDashboardData(); alert('✅ Erfolgreich mit der Community verbunden!'); } else { alert('❌ Verbindung fehlgeschlagen. Überprüfe den Token.'); }
+                } else { alert('❌ Community-System nicht verfügbar'); }
+            } catch (error) { console.error('Connection error:', error); alert('❌ Verbindungsfehler: ' + error.message); }
+            finally { connectBtn.disabled = false; connectBtn.textContent = originalText; }
+        }
+
+        async function testGitHubConnection() {
+            const testBtn = document.getElementById('test-btn'); const originalText = testBtn.textContent;
+            try { testBtn.disabled = true; testBtn.textContent = '🔍 Teste...'; if (communityDB) { const result = await communityDB.testConnection(); alert(result.success ? '✅ ' + result.message : '❌ ' + result.message); } else { alert('❌ Community-System nicht verfügbar'); } }
+            catch (error) { console.error('Test error:', error); alert('❌ Test fehlgeschlagen: ' + error.message); }
+            finally { testBtn.disabled = false; testBtn.textContent = originalText; }
+        }
+
+        async function disconnectFromGitHub() { if (confirm('🔌 Möchtest du die Verbindung zur Community trennen?')) { if (communityDB) { communityDB.disableCommunityIntegration(); await loadDashboardData(); alert('❌ Von Community getrennt'); } } }
+
+        async function refreshAllData() { console.log('🔄 Manual refresh triggered'); await loadDashboardData(); alert('✅ Alle Daten aktualisiert!'); }
+
+        async function syncPendingReviews() { if (communityDB && communityDB.isEnabled) { await communityDB.uploadPendingReviews(); await loadDashboardData(); alert('⚡ Warteschlange synchronisiert!'); } else { alert('⚠️ Keine aktive Community-Verbindung'); } }
+
+        function exportCommunityData() {
+            if (!dashboardData) { alert('❌ Keine Daten zum Exportieren verfügbar'); return; }
+            const exportData = { exported: new Date().toISOString(), dashboard: dashboardData, version: '2.0' };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = `schafkopf-community-data-${new Date().toISOString().split('T')[0]}.json`; a.click(); URL.revokeObjectURL(url);
+        }
+
+        async function getFallbackData() {
+            const localReviews = JSON.parse(localStorage.getItem('training_reviews') || '[]'); const positiveReviews = localReviews.filter(r => r.rating === 'good').length;
+            return { community: { totalReviews: Math.floor(Math.random() * 2000) + 1500, totalPlayers: Math.floor(Math.random() * 50) + 30, averagePositiveRate: (Math.random() * 20 + 60).toFixed(1), lastUpdated: new Date().toISOString(), dataSource: 'fallback', isReal: false }, local: { totalReviews: localReviews.length, positiveRate: localReviews.length > 0 ? (positiveReviews / localReviews.length * 100).toFixed(1) : 65.0, lastReview: localReviews.length > 0 ? localReviews[localReviews.length - 1].timestamp : null }, contribution: { sessionsUploaded: 0, reviewsContributed: 0, lastContribution: null }, connection: { isConnected: false, pendingUploads: localReviews.length, status: { status: 'disconnected', message: 'Fallback-Modus aktiv', action: 'System laden' } } };
+        }
+
+        function setupAutoRefresh() { refreshInterval = setInterval(async () => { if (communityDB && communityDB.isEnabled) { console.log('🔄 Auto-refresh dashboard data'); await loadDashboardData(); } }, 30000); }
+
+        function showErrorFallback() { document.querySelector('.container').innerHTML = '<div class="header"><h1>❌ Dashboard Fehler</h1><p>Das Community-Dashboard konnte nicht geladen werden</p></div><div style="text-align: center; padding: 40px;"><button class="button" onclick="window.location.reload()">🔄 Seite neu laden</button><button class="button" onclick="window.location.href=\'index.html\'">🎮 Zurück zum Spiel</button></div>'; }
+
+        document.addEventListener('DOMContentLoaded', () => { setTimeout(initCommunityDashboard, 1000); });
+        window.addEventListener('beforeunload', () => { if (refreshInterval) { clearInterval(refreshInterval); } });
+    </script>
+</body>
+</html>
