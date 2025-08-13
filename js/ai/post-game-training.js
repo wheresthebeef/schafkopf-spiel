@@ -299,21 +299,31 @@ window.postGameTraining = {
             if (rating) {
                 const moveData = JSON.parse(item.dataset.moveData || '{}');
                 
-                // Erstelle Review-Objekt für sicheres System
+                // ERWEITERTE Review-Objekt für Bridge-System
                 const reviewData = {
                     botName: moveData.player || 'Unknown',
                     cardPlayed: moveData.card || '♠️7',
                     rating: rating,
                     reasoning: reasoning || null,
-                    trickNumber: moveData.trickNumber || 0,
-                    position: moveData.position || 'unknown',
-                    trumpSuit: moveData.trumpSuit || 'herz',
-                    gameType: moveData.gameType || 'rufspiel',
-                    calledAce: moveData.calledAce || null
+                    
+                    // NEU: Erweiterte gameContext-Struktur
+                    gameContext: {
+                        stichNumber: moveData.trickNumber || 1,
+                        gameType: moveData.gameType || 'rufspiel',
+                        playerRole: moveData.playerRole || 'Gegner',
+                        stichPosition: moveData.stichPosition || 'unknown', // NEU
+                        trumpSuit: moveData.trumpSuit || 'herz',
+                        calledAce: moveData.calledAce || null
+                    },
+                    
+                    // Zusätzliche Meta-Daten
+                    timestamp: new Date().toISOString(),
+                    playerSession: this.getPlayerSession(),
+                    communityId: this.generateCommunityId()
                 };
                 
                 // An sicheres System weiterleiten
-                console.log('🛡️ Sending to secure system:', reviewData);
+                console.log('🛡️ Sending enhanced review to secure system:', reviewData);
                 
                 // Nutze die globale submitReview Funktion aus index.html
                 if (window.submitReview) {
@@ -327,7 +337,7 @@ window.postGameTraining = {
             }
         });
         
-        console.log('🏆 Bewertungen an sicheres System gesendet:', reviews);
+        console.log('🏆 Erweiterte Bewertungen an sicheres System gesendet:', reviews);
         
         // Modal schließen
         this.closeReviewModal();
@@ -389,20 +399,97 @@ window.postGameTraining = {
     trackBotMove: function(playerName, card, moveContext) {
         if (!this.enabled || !this.isTrackingRound) return;
         
+        // ERWEITERTE Move-Daten mit korrekter Rollen-Bestimmung
         const move = {
             player: playerName,
             card: card,
             timestamp: new Date().toLocaleTimeString(),
             context: moveContext || {},
-            // Zusätzliche Daten für sicheres System
-            trickNumber: window.currentTrick || 0,
-            trumpSuit: window.trumpSuit || 'herz',
-            gameType: window.gameType || 'rufspiel',
-            calledAce: window.calledAce || null
+            
+            // NEU: Korrekte Spielzustand-Daten aus gameState
+            trickNumber: (window.gameState?.trickNumber || 0) + 1,
+            trumpSuit: window.gameState?.trumpSuit || 'herz',
+            gameType: window.gameState?.gameType || 'rufspiel',
+            calledAce: window.gameState?.calledAce || null,
+            
+            // NEU: Strategische Position aus gameState
+            stichPosition: this.getPlayerStichPosition(playerName),
+            
+            // NEU: Korrekte Rollen-Bestimmung
+            playerRole: this.getCorrectPlayerRole(playerName)
         };
         
         this.currentRoundMoves.push(move);
-        console.log(`📝 Secure tracking: ${playerName} spielt ${card}`);
+        console.log(`📝 Enhanced tracking: ${playerName} spielt ${card} als ${move.playerRole} (${move.stichPosition})`);
+    },
+    
+    // NEU: Ermittelt die strategische Stich-Position eines Spielers
+    getPlayerStichPosition: function(playerName) {
+        if (!window.gameState || !window.getTrickPosition) {
+            return 'unknown';
+        }
+        
+        // Finde Spieler-Index
+        const playerIndex = window.gameState.players.findIndex(p => p.name === playerName);
+        if (playerIndex === -1) return 'unknown';
+        
+        // Verwende die neue getTrickPosition Funktion aus game-state.js
+        return window.getCurrentTrickPosition ? 
+               window.getCurrentTrickPosition(playerIndex) : 
+               window.getTrickPosition(playerIndex);
+    },
+    
+    // NEU: Korrekte Rollen-Bestimmung basierend auf gameState
+    getCorrectPlayerRole: function(playerName) {
+        if (!window.gameState) {
+            return 'Gegner'; // Fallback
+        }
+        
+        const playerIndex = window.gameState.players.findIndex(p => p.name === playerName);
+        if (playerIndex === -1) return 'Gegner';
+        
+        const gameType = window.gameState.gameType;
+        
+        if (gameType === 'rufspiel') {
+            // Rufspiel: Spieler (0) ruft, Partner hat gerufenes Ass, Rest sind Gegner
+            if (playerIndex === 0) {
+                return 'Spieler'; // Menschlicher Spieler ruft
+            } else if (playerIndex === window.gameState.calledAcePlayer) {
+                return 'Mitspieler'; // Hat gerufenes Ass
+            } else {
+                return 'Gegner'; // Alle anderen
+            }
+        } else if (gameType === 'solo' || gameType === 'wenz') {
+            // Solo/Wenz: Ein Spieler gegen drei
+            const soloPlayer = this.findSoloPlayer();
+            if (playerIndex === soloPlayer) {
+                return 'Spieler'; // Solo-Spieler
+            } else {
+                return 'Gegner'; // Alle anderen
+            }
+        } else {
+            return 'Gegner'; // Fallback
+        }
+    },
+    
+    // NEU: Findet den Solo-Spieler (für Solo/Wenz)
+    findSoloPlayer: function() {
+        // Vereinfacht: Annahme dass Solo-Spieler in gameState markiert ist
+        // In echter Implementierung: basierend auf Bidding-Phase
+        return window.gameState?.soloPlayer || 0;
+    },
+    
+    // NEU: Generiert eindeutige Player-Session ID
+    getPlayerSession: function() {
+        if (!this.playerSessionId) {
+            this.playerSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+        return this.playerSessionId;
+    },
+    
+    // NEU: Generiert eindeutige Community-Review ID
+    generateCommunityId: function() {
+        return 'review_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
     },
     
     endTrickTracking: function() {
@@ -453,7 +540,7 @@ window.postGameTraining = {
                     </div>
                     <p><strong>Bewerte die Bot-Züge in diesem Stich:</strong></p>
                     <div class="moves-review">
-                        ${trickMoves.map((move, index) => this.createSimplifiedMoveReviewHTML(move, index)).join('')}
+                        ${trickMoves.map((move, index) => this.createEnhancedMoveReviewHTML(move, index)).join('')}
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -467,11 +554,15 @@ window.postGameTraining = {
         return modal;
     },
     
-    createSimplifiedMoveReviewHTML: function(move, index) {
-        // Context-Info formatieren
+    // ERWEITERTE Move Review HTML mit korrekten Rollen und Positionen
+    createEnhancedMoveReviewHTML: function(move, index) {
         const gameType = move.gameType || 'Rufspiel';
         const trickNum = move.trickNumber || 1;
-        const playerRole = this.getPlayerRole(move.player, move);
+        const playerRole = move.playerRole || 'Gegner';
+        const stichPosition = move.stichPosition || 'unknown';
+        
+        // Position-Description für besseres Verständnis
+        const positionDesc = this.getPositionDescription(stichPosition);
         
         return `
             <div class="move-review-item" data-move-index="${index}" data-move-data='${JSON.stringify(move)}'>
@@ -479,6 +570,7 @@ window.postGameTraining = {
                     🤖 <span class="bot-name">${move.player}</span> spielt <span class="card-display">${move.card}</span>
                     <div class="context-info">
                         (Stich ${trickNum}, ${gameType}, als ${playerRole})
+                        <br><strong>Position:</strong> ${stichPosition} - ${positionDesc}
                     </div>
                 </div>
                 
@@ -499,13 +591,17 @@ window.postGameTraining = {
         `;
     },
     
-    getPlayerRole: function(playerName, move) {
-        // Vereinfachte Rollen-Bestimmung
-        if (move.gameType === 'rufspiel') {
-            return Math.random() > 0.5 ? 'Spielerin' : 'Gegnerin';
-        } else {
-            return Math.random() > 0.5 ? 'Solospieler' : 'Gegner';
-        }
+    // NEU: Beschreibung der strategischen Positionen
+    getPositionDescription: function(position) {
+        const descriptions = {
+            'ausspieler': 'Spielt erste Karte blind',
+            'zweiter': 'Reagiert auf Ausspieler',
+            'dritter': 'Sieht 2 Karten, kann taktisch reagieren',
+            'letzter': 'Sieht alle 3 Karten, optimale Entscheidung',
+            'unknown': 'Position unbekannt'
+        };
+        
+        return descriptions[position] || 'Unbekannte Position';
     },
     
     makeDraggable: function(modal) {
