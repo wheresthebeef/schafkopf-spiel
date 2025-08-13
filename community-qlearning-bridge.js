@@ -9,7 +9,18 @@ class CommunityQLearningBridge {
             reviewsProcessed: 0,
             positiveSignals: 0,
             negativeSignals: 0,
-            lastUpdate: null
+            lastUpdate: null,
+            positionAnalysis: {
+                ausspieler: { good: 0, bad: 0 },
+                zweiter: { good: 0, bad: 0 },
+                dritter: { good: 0, bad: 0 },
+                letzter: { good: 0, bad: 0 }
+            },
+            roleAnalysis: {
+                Spieler: { good: 0, bad: 0 },
+                Mitspieler: { good: 0, bad: 0 },
+                Gegner: { good: 0, bad: 0 }
+            }
         };
         
         // Q-Learning Instanzen (werden dynamisch geladen)
@@ -114,7 +125,7 @@ class CommunityQLearningBridge {
                 const reviewId = review.id || review.communityId;
                 
                 if (!this.processedReviews.has(reviewId)) {
-                    await this.processReview(review);
+                    await this.processEnhancedReview(review);
                     this.processedReviews.add(reviewId);
                     newReviewsCount++;
                 }
@@ -149,7 +160,7 @@ class CommunityQLearningBridge {
         }
     }
 
-    async processReview(review) {
+    async processEnhancedReview(review) {
         if (!review.botName || !review.rating) return;
         
         const bot = this.qLearningBots.get(review.botName);
@@ -158,21 +169,30 @@ class CommunityQLearningBridge {
             return;
         }
         
-        // Wandle Review in Q-Learning Signal um
-        const reward = this.calculateRewardFromReview(review);
-        const gameState = this.reconstructGameState(review);
-        const action = this.encodeActionFromReview(review);
+        // ERWEITERTE Review-Verarbeitung mit gameContext
+        const gameContext = review.gameContext || {};
+        const reward = this.calculateEnhancedReward(review, gameContext);
+        const gameState = this.reconstructEnhancedGameState(review, gameContext);
+        const action = this.encodeEnhancedAction(review, gameContext);
         
-        // Erstelle Q-Learning Experience
+        // Erstelle Q-Learning Experience mit erweiterten Daten
         const experience = {
             state: gameState,
             action: action,
             reward: reward,
             nextState: null, // Nicht verfügbar aus Review
             done: false,
-            source: 'community_review',
+            source: 'community_review_enhanced',
             reviewId: review.id || review.communityId,
-            timestamp: new Date(review.timestamp).getTime()
+            timestamp: new Date(review.timestamp).getTime(),
+            
+            // NEU: Strategische Meta-Daten
+            strategicContext: {
+                stichPosition: gameContext.stichPosition || 'unknown',
+                playerRole: gameContext.playerRole || 'Gegner',
+                gameType: gameContext.gameType || 'rufspiel',
+                stichNumber: gameContext.stichNumber || 1
+            }
         };
         
         // Füge Experience zum Bot hinzu
@@ -184,13 +204,13 @@ class CommunityQLearningBridge {
             experience.done
         );
         
-        // Update Statistiken
-        this.updateLearningStats(review.rating, reward);
+        // Update erweiterte Statistiken
+        this.updateEnhancedLearningStats(review, gameContext, reward);
         
-        console.log(`🧠 ${review.botName}: Review "${review.rating}" → Reward ${reward} → Q-Learning Update`);
+        console.log(`🧠 ${review.botName}: Review "${review.rating}" (${gameContext.stichPosition}, ${gameContext.playerRole}) → Reward ${reward} → Q-Learning Update`);
     }
 
-    calculateRewardFromReview(review) {
+    calculateEnhancedReward(review, gameContext) {
         let baseReward = 0;
         
         // Grundbelohnung basierend auf Rating
@@ -207,65 +227,154 @@ class CommunityQLearningBridge {
                 baseReward = 0;
         }
         
+        // NEU: Position-basierte Reward-Modifikation
+        const positionMultiplier = this.getPositionMultiplier(gameContext.stichPosition);
+        baseReward *= positionMultiplier;
+        
+        // NEU: Rollen-basierte Reward-Modifikation
+        const roleMultiplier = this.getRoleMultiplier(gameContext.playerRole);
+        baseReward *= roleMultiplier;
+        
         // Bonus für detailliertes Reasoning
         if (review.reasoning && review.reasoning.length > 20) {
-            baseReward += review.rating === 'good' ? 2 : -2;
+            baseReward += review.rating === 'good' ? 3 : -3;
         }
         
         // Kontext-Bonus: Schwierige Situationen sind wertvoller
-        const contextBonus = this.calculateContextBonus(review);
+        const contextBonus = this.calculateEnhancedContextBonus(review, gameContext);
         
-        return baseReward + contextBonus;
+        return Math.round(baseReward + contextBonus);
     }
 
-    calculateContextBonus(review) {
+    // NEU: Position-basierte Reward-Multiplikatoren
+    getPositionMultiplier(stichPosition) {
+        const multipliers = {
+            'ausspieler': 1.2,  // Ausspielen ist schwieriger (blind)
+            'zweiter': 1.0,     // Standard
+            'dritter': 1.1,     // Taktische Position
+            'letzter': 0.9      // Einfacher (alle Karten sichtbar)
+        };
+        
+        return multipliers[stichPosition] || 1.0;
+    }
+
+    // NEU: Rollen-basierte Reward-Multiplikatoren
+    getRoleMultiplier(playerRole) {
+        const multipliers = {
+            'Spieler': 1.3,     // Spieler-Entscheidungen sind kritischer
+            'Mitspieler': 1.2,  // Partner-Koordination wichtig
+            'Gegner': 1.0       // Standard
+        };
+        
+        return multipliers[playerRole] || 1.0;
+    }
+
+    calculateEnhancedContextBonus(review, gameContext) {
         let bonus = 0;
         
         // Späte Stiche sind wichtiger
-        if (review.gameContext && review.gameContext.trickNumber >= 6) {
-            bonus += 2;
+        const stichNumber = gameContext.stichNumber || 1;
+        if (stichNumber >= 6) {
+            bonus += 3; // Endspiel-Bonus
+        } else if (stichNumber >= 4) {
+            bonus += 1; // Mittelspiel-Bonus
         }
         
         // Komplexe Spielsituationen
-        if (review.gameContext && review.gameContext.gameType !== 'rufspiel') {
-            bonus += 1; // Solo, Wenz, etc.
+        if (gameContext.gameType && gameContext.gameType !== 'rufspiel') {
+            bonus += 2; // Solo, Wenz, etc.
         }
         
         // Trumpf-Entscheidungen sind kritisch
-        if (review.cardPlayed && (
-            review.cardPlayed.includes('O') || // Ober
-            review.cardPlayed.includes('U') || // Unter
-            review.cardPlayed.includes('♥️')   // Herz (oft Trump)
-        )) {
-            bonus += 1;
+        if (review.cardPlayed && this.isTrumpCard(review.cardPlayed)) {
+            bonus += 2;
+        }
+        
+        // Spezielle Rollen-Kontext-Boni
+        if (gameContext.playerRole === 'Spieler' && stichNumber <= 2) {
+            bonus += 1; // Frühe Spieler-Entscheidungen wichtig
+        }
+        
+        if (gameContext.playerRole === 'Mitspieler' && this.isCalledSuit(review.cardPlayed, gameContext)) {
+            bonus += 2; // Mitspieler spielt gerufene Farbe
         }
         
         return bonus;
     }
 
-    reconstructGameState(review) {
-        // Rekonstruiere Game State aus Review-Daten
+    // NEU: Prüft ob Karte ein Trumpf ist
+    isTrumpCard(cardString) {
+        // Vereinfachte Trump-Erkennung
+        return cardString.includes('♥️') || 
+               cardString.includes('O') || 
+               cardString.includes('U');
+    }
+
+    // NEU: Prüft ob Karte zur gerufenen Farbe gehört
+    isCalledSuit(cardString, gameContext) {
+        if (!gameContext.calledAce) return false;
+        
+        const suitMap = {
+            'eichel': ['♣️', 'E'],
+            'gras': ['♠️', 'G'], 
+            'schellen': ['♦️', 'S']
+        };
+        
+        const calledSuitSymbols = suitMap[gameContext.calledAce] || [];
+        return calledSuitSymbols.some(symbol => cardString.includes(symbol));
+    }
+
+    reconstructEnhancedGameState(review, gameContext) {
+        // Erweiterte Game State Rekonstruktion
         const state = {
-            trickNumber: review.gameContext?.trickNumber || 0,
-            gameType: review.gameContext?.gameType || 'rufspiel',
-            trumpSuit: review.gameContext?.trumpSuit || 'herz',
-            position: review.gameContext?.position || 'unknown',
+            // Basis-Daten
+            stichNumber: gameContext.stichNumber || 1,
+            gameType: gameContext.gameType || 'rufspiel',
+            trumpSuit: gameContext.trumpSuit || 'herz',
+            calledAce: gameContext.calledAce || null,
+            
+            // NEU: Strategische Position
+            stichPosition: gameContext.stichPosition || 'unknown',
+            playerRole: gameContext.playerRole || 'Gegner',
+            
+            // Karten-Information
             cardPlayed: review.cardPlayed || '',
-            playerSession: review.playerSession || 'unknown'
+            playerSession: review.playerSession || 'unknown',
+            
+            // NEU: Kontext-Hash für bessere State-Differenzierung
+            contextHash: this.generateContextHash(gameContext)
         };
         
         return JSON.stringify(state);
     }
 
-    encodeActionFromReview(review) {
-        // Kodiere gespielte Karte als Action
+    // NEU: Generiert Hash für bessere State-Unterscheidung
+    generateContextHash(gameContext) {
+        const contextString = `${gameContext.stichPosition}_${gameContext.playerRole}_${gameContext.stichNumber}_${gameContext.gameType}`;
+        return this.simpleHash(contextString);
+    }
+
+    simpleHash(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32bit integer
+        }
+        return Math.abs(hash).toString(16);
+    }
+
+    encodeEnhancedAction(review, gameContext) {
+        // Erweiterte Action-Kodierung mit strategischen Informationen
         if (!review.cardPlayed) return 'unknown_action';
         
-        // Extrahiere Farbe und ungefähre Stärke
         const card = this.parseCard(review.cardPlayed);
         const strength = this.getCardStrength(card);
+        const position = gameContext.stichPosition || 'unknown';
+        const role = gameContext.playerRole || 'unknown';
         
-        return `${card.suit}_${strength}`;
+        // Erweiterte Action-Kodierung: position_role_suit_strength
+        return `${position}_${role}_${card.suit}_${strength}`;
     }
 
     parseCard(cardString) {
@@ -311,9 +420,21 @@ class CommunityQLearningBridge {
         return 'weak';
     }
 
-    updateLearningStats(rating, reward) {
+    updateEnhancedLearningStats(review, gameContext, reward) {
         this.learningStats.reviewsProcessed++;
         this.learningStats.lastUpdate = new Date().toISOString();
+        
+        // NEU: Position-basierte Statistiken
+        const position = gameContext.stichPosition;
+        if (position && this.learningStats.positionAnalysis[position]) {
+            this.learningStats.positionAnalysis[position][review.rating]++;
+        }
+        
+        // NEU: Rollen-basierte Statistiken
+        const role = gameContext.playerRole;
+        if (role && this.learningStats.roleAnalysis[role]) {
+            this.learningStats.roleAnalysis[role][review.rating]++;
+        }
         
         // Speichere Stats periodisch
         if (this.learningStats.reviewsProcessed % 10 === 0) {
@@ -322,7 +443,7 @@ class CommunityQLearningBridge {
     }
 
     saveLearningProgress() {
-        // Speichere Lernfortschritt
+        // Speichere erweiterten Lernfortschritt
         localStorage.setItem('qlearning_bridge_stats', JSON.stringify(this.learningStats));
         
         // Speichere alle Q-Learning Bots
@@ -331,13 +452,34 @@ class CommunityQLearningBridge {
         }
         
         console.log(`💾 Q-Learning Fortschritt gespeichert: ${this.learningStats.reviewsProcessed} Reviews verarbeitet`);
+        
+        // NEU: Erweiterte Statistik-Ausgabe
+        if (this.learningStats.reviewsProcessed % 50 === 0) {
+            this.logEnhancedStats();
+        }
+    }
+
+    // NEU: Detaillierte Statistik-Ausgabe
+    logEnhancedStats() {
+        console.log('📊 Erweiterte Q-Learning Statistiken:');
+        console.log('Position-Analyse:', this.learningStats.positionAnalysis);
+        console.log('Rollen-Analyse:', this.learningStats.roleAnalysis);
+        
+        // Berechne Position-Performance
+        Object.entries(this.learningStats.positionAnalysis).forEach(([position, stats]) => {
+            const total = stats.good + stats.bad;
+            if (total > 0) {
+                const successRate = (stats.good / total * 100).toFixed(1);
+                console.log(`${position}: ${successRate}% positive (${total} Reviews)`);
+            }
+        });
     }
 
     loadLearningProgress() {
         const saved = localStorage.getItem('qlearning_bridge_stats');
         if (saved) {
             try {
-                this.learningStats = JSON.parse(saved);
+                this.learningStats = { ...this.learningStats, ...JSON.parse(saved) };
                 console.log(`📂 Lernfortschritt geladen: ${this.learningStats.reviewsProcessed} Reviews`);
             } catch (error) {
                 console.warn('⚠️ Konnte Lernfortschritt nicht laden:', error);
@@ -345,7 +487,7 @@ class CommunityQLearningBridge {
         }
     }
 
-    // Public API für Dashboard Integration
+    // Public API für Dashboard Integration (ERWEITERT)
     getLearningStats() {
         const botStats = {};
         
@@ -357,24 +499,87 @@ class CommunityQLearningBridge {
             bridge: this.learningStats,
             bots: botStats,
             isActive: this.isActive,
-            processedReviews: this.processedReviews.size
+            processedReviews: this.processedReviews.size,
+            
+            // NEU: Erweiterte Statistiken
+            strategicAnalysis: {
+                positionPerformance: this.calculatePositionPerformance(),
+                rolePerformance: this.calculateRolePerformance(),
+                learningTrends: this.calculateLearningTrends()
+            }
         };
     }
 
-    // Manueller Review-Import für Testing
-    async importReviewsManually() {
-        console.log('🔄 Manueller Review-Import gestartet...');
-        await this.processNewReviews();
+    // NEU: Berechnet Position-Performance
+    calculatePositionPerformance() {
+        const performance = {};
+        
+        Object.entries(this.learningStats.positionAnalysis).forEach(([position, stats]) => {
+            const total = stats.good + stats.bad;
+            performance[position] = {
+                successRate: total > 0 ? (stats.good / total * 100).toFixed(1) : 0,
+                totalReviews: total,
+                confidence: total >= 10 ? 'high' : total >= 5 ? 'medium' : 'low'
+            };
+        });
+        
+        return performance;
     }
 
-    // Reset für Debugging
+    // NEU: Berechnet Rollen-Performance
+    calculateRolePerformance() {
+        const performance = {};
+        
+        Object.entries(this.learningStats.roleAnalysis).forEach(([role, stats]) => {
+            const total = stats.good + stats.bad;
+            performance[role] = {
+                successRate: total > 0 ? (stats.good / total * 100).toFixed(1) : 0,
+                totalReviews: total,
+                confidence: total >= 10 ? 'high' : total >= 5 ? 'medium' : 'low'
+            };
+        });
+        
+        return performance;
+    }
+
+    // NEU: Berechnet Lern-Trends
+    calculateLearningTrends() {
+        const recentPositiveRate = this.learningStats.positiveSignals / 
+                                  Math.max(1, this.learningStats.reviewsProcessed) * 100;
+        
+        return {
+            overallPositiveRate: recentPositiveRate.toFixed(1),
+            totalSignals: this.learningStats.positiveSignals + this.learningStats.negativeSignals,
+            learningVelocity: this.learningStats.reviewsProcessed > 0 ? 'active' : 'inactive'
+        };
+    }
+
+    // Manueller Review-Import für Testing (ERWEITERT)
+    async importReviewsManually() {
+        console.log('🔄 Erweiteter manueller Review-Import gestartet...');
+        await this.processNewReviews();
+        this.logEnhancedStats();
+    }
+
+    // Reset für Debugging (ERWEITERT)
     resetLearning() {
         this.processedReviews.clear();
         this.learningStats = {
             reviewsProcessed: 0,
             positiveSignals: 0,
             negativeSignals: 0,
-            lastUpdate: null
+            lastUpdate: null,
+            positionAnalysis: {
+                ausspieler: { good: 0, bad: 0 },
+                zweiter: { good: 0, bad: 0 },
+                dritter: { good: 0, bad: 0 },
+                letzter: { good: 0, bad: 0 }
+            },
+            roleAnalysis: {
+                Spieler: { good: 0, bad: 0 },
+                Mitspieler: { good: 0, bad: 0 },
+                Gegner: { good: 0, bad: 0 }
+            }
         };
         
         for (const [name, bot] of this.qLearningBots.entries()) {
@@ -382,10 +587,10 @@ class CommunityQLearningBridge {
         }
         
         localStorage.removeItem('qlearning_bridge_stats');
-        console.log('🔄 Q-Learning System zurückgesetzt');
+        console.log('🔄 Erweitertes Q-Learning System zurückgesetzt');
     }
 
-    // Integration mit Spiel-Loop
+    // Integration mit Spiel-Loop (ERWEITERT)
     onTrickPlayed(trickResult) {
         // Wird vom Spiel aufgerufen wenn ein Stich gespielt wurde
         for (const [name, bot] of this.qLearningBots.entries()) {
@@ -423,7 +628,7 @@ if (window.submitSecureTrainingReview) {
     };
 }
 
-// Global verfügbare Funktionen
+// Global verfügbare Funktionen (ERWEITERT)
 window.getQLearningStats = function() {
     return window.qLearningBridge ? window.qLearningBridge.getLearningStats() : null;
 };
@@ -440,7 +645,15 @@ window.resetQLearning = function() {
     }
 };
 
-console.log('🌉 Community-Q-Learning Bridge geladen - Reviews werden zu KI-Lernsignalen!');
+// NEU: Erweiterte Debug-Funktionen
+window.debugQLearningPositions = function() {
+    if (window.qLearningBridge) {
+        console.log('🎯 Position-Performance:', window.qLearningBridge.calculatePositionPerformance());
+        console.log('🎭 Rollen-Performance:', window.qLearningBridge.calculateRolePerformance());
+    }
+};
+
+console.log('🌉 Enhanced Community-Q-Learning Bridge geladen - Reviews werden zu strategischen KI-Lernsignalen!');
 
 // Export für Module
 if (typeof module !== 'undefined' && module.exports) {
