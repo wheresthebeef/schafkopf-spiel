@@ -1,7 +1,372 @@
-    <!-- Load Secure Training System -->
-    <script src="github-db-secure.js?v=20250112-debug"></script>
-    <script src="secure-training-integration.js?v=20250112-debug"></script>
-    <script src="community-database.js?v=20250813-qlearning"></script>
-    <script src="community-qlearning-bridge.js?v=20250813-qlearning"></script>
-    <script src="strategic-training-system.js?v=20250813-strategic"></script>
-    <script src="js/ai/post-game-training.js?v=20250112-debug"></script>
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Cache-busting meta tags -->
+    <meta http-equiv="cache-control" content="no-cache">
+    <meta http-equiv="expires" content="0">
+    <meta http-equiv="pragma" content="no-cache">
+    
+    <title>🎯 Bayerisches Schafkopf - Community Training</title>
+    
+    <!-- Use original CSS -->
+    <link rel="stylesheet" href="css/style.css?v=20250814-community">
+    
+    <style>
+        /* Community Training System Badge */
+        .community-training-badge {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            max-width: 200px;
+        }
+        
+        .community-training-badge:hover {
+            transform: scale(1.02);
+        }
+        
+        .community-training-badge.collapsed {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .training-details {
+            display: block;
+        }
+        
+        .community-training-badge.collapsed .training-details {
+            display: none;
+        }
+        
+        .training-icon {
+            display: none;
+        }
+        
+        .community-training-badge.collapsed .training-icon {
+            display: block;
+            font-size: 1.2rem;
+        }
+        
+        .training-controls {
+            margin-top: 0.5rem;
+            font-size: 0.75rem;
+        }
+        
+        .training-toggle {
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.7rem;
+            margin-right: 0.25rem;
+        }
+        
+        .training-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .training-toggle.active {
+            background: rgba(255,255,255,0.9);
+            color: #28a745;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Community Training System Badge -->
+    <div class="community-training-badge" id="community-badge" onclick="toggleTrainingBadge()">
+        <div class="training-details">
+            <strong>🌍 Community Training!</strong><br>
+            <small>KI lernt aus menschlichem Feedback</small>
+            <div class="training-controls">
+                <button class="training-toggle" id="training-btn" onclick="toggleTraining(event)">Training AN</button>
+                <small>Click to collapse</small>
+            </div>
+        </div>
+        <div class="training-icon">🧠</div>
+    </div>
+
+    <!-- Original Layout -->
+    <div class="header">
+        <h1>🍺 Bayerisches Schafkopf</h1>
+        <div class="game-info">
+            <div>Spiel: <span id="game-type">Rufspiel</span></div>
+            <div>Runde: <span id="round-counter">1</span></div>
+            <div>Stiche: <span id="trick-counter">0/8</span></div>
+            <div>Trumpf: Herz</div>
+            <div>Gerufenes Ass: <span id="called-ace">-</span></div>
+        </div>
+    </div>
+
+    <div class="game-area">
+        <div class="players">
+            <!-- CPU-Spieler 1 (links) -->
+            <div class="player cpu1" id="player-1">
+                <h3>Anna</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-1"></div>
+            </div>
+
+            <!-- CPU-Spieler 2 (oben) -->
+            <div class="player cpu2" id="player-2">
+                <h3>Hans</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-2"></div>
+            </div>
+
+            <!-- CPU-Spieler 3 (rechts) -->
+            <div class="player cpu3" id="player-3">
+                <h3>Sepp</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-3"></div>
+            </div>
+
+            <!-- Menschlicher Spieler (unten) -->
+            <div class="player human active" id="player-0">
+                <h3>Sie</h3>
+                <div class="player-info">
+                    <div>Punkte: <span class="points">0</span></div>
+                    <div>Stiche: <span class="tricks">0</span></div>
+                </div>
+                <div class="cards" id="cards-0"></div>
+            </div>
+
+            <!-- Spielfeld-Mitte -->
+            <div class="center-area">
+                <div class="game-status" id="game-status">
+                    🌍 Community Training System Ready - Start your game!
+                </div>
+                
+                <div class="trick-area" id="trick-area">
+                    <!-- Hier werden die gespielten Karten angezeigt -->
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="newGame()">Neues Spiel</button>
+            <button class="btn" onclick="showRules()">Regeln</button>
+            <button class="btn" onclick="showStats()">Statistik</button>
+            <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
+            <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
+            <button class="btn" onclick="window.location.href='training-progress-community.html'">📊 Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Modal für Dialoge -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <h2 id="modal-title">Titel</h2>
+            <p id="modal-text">Text</p>
+            <button class="btn" onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <!-- Load Game Engine scripts with cache-busting -->
+    <script src="js/ui.js?v=20250814-community"></script>
+    <script src="js/game-state.js?v=20250814-community"></script>
+    <script src="js/rules.js?v=20250814-community"></script>
+    <script src="js/cards.js?v=20250814-community"></script>
+    <script src="js/game.js?v=20250814-community"></script>
+    
+    <!-- Load Community Training System -->
+    <script src="github-db-secure.js?v=20250814-community"></script>
+    <script src="secure-training-integration.js?v=20250814-community"></script>
+    <script src="community-database.js?v=20250814-community"></script>
+    <script src="community-qlearning-bridge.js?v=20250814-community"></script>
+    <script src="strategic-training-system.js?v=20250814-community"></script>
+    <script src="js/ai/post-game-training.js?v=20250814-community"></script>
+    
+    <script>
+        // Community Training badge control functions
+        function toggleTrainingBadge() {
+            const badge = document.getElementById('community-badge');
+            badge.classList.toggle('collapsed');
+            
+            // Auto-expand after 7 seconds if collapsed
+            if (badge.classList.contains('collapsed')) {
+                setTimeout(() => {
+                    badge.classList.remove('collapsed');
+                }, 7000);
+            }
+        }
+        
+        function toggleTraining(event) {
+            event.stopPropagation(); // Prevent badge collapse
+            
+            const btn = document.getElementById('training-btn');
+            const isActive = btn.classList.contains('active');
+            
+            if (isActive) {
+                // Disable training
+                if (window.postGameTraining) {
+                    window.postGameTraining.disable();
+                }
+                btn.textContent = 'Training AN';
+                btn.classList.remove('active');
+                console.log('🚫 Community-Training deaktiviert');
+            } else {
+                // Enable training
+                if (window.postGameTraining) {
+                    window.postGameTraining.enable();
+                }
+                btn.textContent = 'Training AUS';
+                btn.classList.add('active');
+                console.log('✅ Community-Training aktiviert! Bot-Züge werden bewertet.');
+            }
+        }
+        
+        // Auto-collapse badge after 8 seconds
+        setTimeout(() => {
+            const badge = document.getElementById('community-badge');
+            badge.classList.add('collapsed');
+        }, 8000);
+        
+        // Community Training System logging
+        console.log('🌍 Community Training System - READY!');
+        console.log('🎯 Vereinfachtes ⭐/❌ Feedback-Interface');
+        console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
+        console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
+        
+        // System ready confirmation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Community Training System Check:');
+            
+            // Verify all functions are available
+            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
+            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
+            
+            console.log(`✅ Game functions: ${available.length}/${requiredFunctions.length} loaded`);
+            
+            // Check training system
+            setTimeout(() => {
+                const trainingAvailable = window.postGameTraining && typeof window.enableHumanTraining === 'function';
+                console.log(`🏆 Training system: ${trainingAvailable ? '✅ Available' : '❌ Missing'}`);
+                
+                const bridgeAvailable = window.qLearningBridge;
+                console.log(`🌉 Q-Learning Bridge: ${bridgeAvailable ? '✅ Available' : '❌ Missing'}`);
+                
+                const communityDB = window.communityDB;
+                console.log(`🌍 Community DB: ${communityDB ? '✅ Available' : '❌ Missing'}`);
+                
+                if (available.length === requiredFunctions.length) {
+                    updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
+                    
+                    // Auto-enable training after 3 seconds
+                    setTimeout(() => {
+                        if (window.postGameTraining && !window.postGameTraining.enabled) {
+                            window.postGameTraining.enable();
+                            const btn = document.getElementById('training-btn');
+                            btn.textContent = 'Training AUS';
+                            btn.classList.add('active');
+                            
+                            updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
+                            console.log('✨ Community-Training auto-aktiviert!');
+                        }
+                    }, 3000);
+                    
+                    // Success confirmation in badge
+                    setTimeout(() => {
+                        const badge = document.getElementById('community-badge');
+                        if (!badge.classList.contains('collapsed')) {
+                            const details = badge.querySelector('.training-details');
+                            details.innerHTML = `
+                                <strong>✅ Ready to Play!</strong><br>
+                                <small>Training: <span style="color: #90EE90;">ACTIVE</span></small>
+                                <div class="training-controls">
+                                    <button class="training-toggle active" id="training-btn" onclick="toggleTraining(event)">Training AUS</button>
+                                    <small>Click to collapse</small>
+                                </div>
+                            `;
+                        }
+                    }, 4000);
+                } else {
+                    updateGameStatus('⚠️ Loading system... Please wait.');
+                }
+            }, 1000); // Warte auf System-Initialisierung
+        });
+        
+        // Enhanced debugging for community training
+        window.testCommunityTraining = function() {
+            console.log('🧪 Community Training System Test:');
+            console.log('postGameTraining available:', !!window.postGameTraining);
+            console.log('qLearningBridge available:', !!window.qLearningBridge);
+            console.log('communityDB available:', !!window.communityDB);
+            
+            if (window.postGameTraining) {
+                console.log('Training enabled:', window.postGameTraining.enabled);
+                console.log('Is tracking:', window.postGameTraining.isTrackingRound);
+                console.log('Current moves:', window.postGameTraining.currentRoundMoves.length);
+            }
+            
+            if (window.qLearningBridge) {
+                console.log('Q-Learning Bridge active:', window.qLearningBridge.isActive);
+                console.log('Q-Learning Stats:', window.getQLearningStats());
+            }
+            
+            return {
+                training: window.postGameTraining,
+                bridge: window.qLearningBridge,
+                community: window.communityDB
+            };
+        };
+        
+        // Community Training info
+        window.communityTrainingInfo = {
+            version: '4.0-community-complete',
+            layout: 'original-index.html',
+            modules: ['game-state', 'post-game-training', 'community-qlearning-bridge'],
+            features: [
+                'simplified-ui', 
+                'strategic-positions', 
+                'correct-roles', 
+                'enhanced-gamecontext',
+                'community-database'
+            ],
+            improvements: [
+                'star-x-rating-buttons',
+                'ausspieler-zweiter-dritter-letzter',
+                'spieler-mitspieler-gegner',
+                'position-based-rewards',
+                'role-based-multipliers'
+            ],
+            training: {
+                available: !!window.postGameTraining,
+                autoActivated: true,
+                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
+            },
+            status: 'complete-community-training-system'
+        };
+        
+        console.log('📊 Community Training System Info:', window.communityTrainingInfo);
+        console.log('✨ Alle 4 Komponenten implementiert und einsatzbereit!');
+    </script>
+</body>
+</html>
