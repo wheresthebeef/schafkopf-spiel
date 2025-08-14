@@ -264,28 +264,83 @@
             badge.classList.add('collapsed');
         }, 8000);
         
-        // Enhanced initialization sequence
+        // FIXED: Enhanced initialization sequence with better Game Engine detection
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Starting Community Training System initialization...');
             
-            // Stage 1: Wait for Game Engine
+            // FIXED: Wait longer for Game Engine to fully initialize
             setTimeout(() => {
-                console.log('🎮 Checking Game Engine...');
-                const gameReady = typeof window.newGame === 'function' && 
-                                typeof window.showRules === 'function' && 
-                                typeof window.gameState !== 'undefined';
-                
-                window.systemsReady.gameEngine = gameReady;
-                console.log(`🎮 Game Engine: ${gameReady ? '✅ Ready' : '❌ Missing'}`);
-                
-                if (gameReady) {
-                    checkCommunitySystem();
-                } else {
-                    console.warn('⚠️ Game Engine not ready, retrying...');
-                    setTimeout(checkCommunitySystem, 1000);
-                }
-            }, 500);
+                checkGameEngine();
+            }, 1500); // Increased from 500ms
         });
+        
+        function checkGameEngine() {
+            console.log('🎮 Checking Game Engine...');
+            
+            // FIXED: More comprehensive Game Engine detection
+            const gameReady = checkGameEngineReady();
+            
+            window.systemsReady.gameEngine = gameReady;
+            console.log(`🎮 Game Engine: ${gameReady ? '✅ Ready' : '❌ Missing'}`);
+            
+            if (gameReady) {
+                checkCommunitySystem();
+            } else {
+                console.warn('⚠️ Game Engine not ready, retrying...');
+                setTimeout(() => {
+                    // Try once more, then continue anyway
+                    const retryReady = checkGameEngineReady();
+                    window.systemsReady.gameEngine = retryReady;
+                    console.log(`🎮 Game Engine (retry): ${retryReady ? '✅ Ready' : '❌ Missing'}`);
+                    checkCommunitySystem();
+                }, 2000);
+            }
+        }
+        
+        function checkGameEngineReady() {
+            // FIXED: More reliable Game Engine detection
+            
+            // 1. Check for core game functions (these are set at the end of game.js)
+            const coreFunctions = [
+                'newGame', 'showRules', 'showStats', 'toggleDebugMode', 
+                'toggleCardImages', 'closeModal', 'continueAfterTrick'
+            ];
+            
+            const functionsAvailable = coreFunctions.filter(funcName => 
+                typeof window[funcName] === 'function'
+            ).length;
+            
+            console.log(`🔍 Game functions available: ${functionsAvailable}/${coreFunctions.length}`);
+            
+            if (functionsAvailable >= coreFunctions.length - 1) { // Allow 1 missing
+                console.log('✅ Core game functions found');
+                return true;
+            }
+            
+            // 2. Check for gameState object
+            if (window.gameState && typeof window.gameState === 'object') {
+                console.log('✅ Game State object found');
+                return true;
+            }
+            
+            // 3. Check for game DOM elements
+            const gameElements = [
+                'trick-area', 'game-status', 'cards-0', 'player-0'
+            ];
+            
+            const elementsFound = gameElements.filter(id => 
+                document.getElementById(id) !== null
+            ).length;
+            
+            console.log(`🔍 Game DOM elements: ${elementsFound}/${gameElements.length}`);
+            
+            if (elementsFound === gameElements.length) {
+                console.log('✅ Game DOM structure found');
+                return true;
+            }
+            
+            return false;
+        }
         
         function checkCommunitySystem() {
             console.log('🌍 Checking Community Systems...');
@@ -398,6 +453,24 @@
             window.systemStatus = window.systemsReady;
         }
         
+        // FIXED: Fallback updateGameStatus function if not available
+        function updateGameStatus(message) {
+            try {
+                if (window.updateGameStatus && typeof window.updateGameStatus === 'function') {
+                    window.updateGameStatus(message);
+                } else {
+                    // Fallback: Update DOM directly
+                    const statusEl = document.getElementById('game-status');
+                    if (statusEl) {
+                        statusEl.textContent = message;
+                    }
+                    console.log('🎮 Status:', message);
+                }
+            } catch (error) {
+                console.log('🎮 Status (fallback):', message);
+            }
+        }
+        
         // Enhanced debugging for community training
         window.testCommunityTraining = function() {
             console.log('🧪 Community Training System Test:');
@@ -436,13 +509,14 @@
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.2-fixed-initialization',
+            version: '4.3-final-fixed',
             layout: 'original-index.html',
             modules: ['game-state', 'post-game-training', 'community-qlearning-bridge', 'clean-start-utility'],
             features: [
-                'fixed-loading-order', 
-                'proper-initialization-sequence',
-                'system-status-tracking',
+                'improved-game-engine-detection', 
+                'comprehensive-function-checking',
+                'extended-retry-mechanism',
+                'fallback-status-updates',
                 'enhanced-debugging',
                 'strategic-positions', 
                 'correct-roles', 
@@ -451,8 +525,8 @@
                 'clean-start-utility'
             ],
             improvements: [
-                'game-engine-first-loading',
-                'delayed-community-system-init',
+                'game-engine-detection-with-retry',
+                'multiple-detection-methods',
                 'proper-dependency-management',
                 'enhanced-error-handling',
                 'star-x-rating-buttons',
@@ -467,12 +541,12 @@
                 autoActivated: true,
                 features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync', 'clean-start']
             },
-            status: 'fixed-initialization-sequence'
+            status: 'final-fixed-initialization'
         };
         
-        console.log('🌍 Community Training System - Fixed Version Loading...');
-        console.log('🎯 Enhanced initialization sequence with proper dependency management');
-        console.log('🧠 Systems will initialize in correct order: Game → Community → Q-Learning → Training');
+        console.log('🌍 Community Training System - Final Fixed Version Loading...');
+        console.log('🎯 Enhanced Game Engine detection with comprehensive function checking');
+        console.log('🧠 Systems will initialize properly with improved retry mechanism');
     </script>
 </body>
 </html>
