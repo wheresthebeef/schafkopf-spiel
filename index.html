@@ -190,25 +190,36 @@
         </div>
     </div>
 
-    <!-- Load Game Engine scripts with cache-busting -->
-    <script src="js/ui.js?v=20250814-community"></script>
-    <script src="js/game-state.js?v=20250814-community"></script>
-    <script src="js/rules.js?v=20250814-community"></script>
-    <script src="js/cards.js?v=20250814-community"></script>
-    <script src="js/game.js?v=20250814-community"></script>
+    <!-- STEP 1: Load Game Engine scripts FIRST (proper order) -->
+    <script src="js/ui.js?v=20250814-fixed"></script>
+    <script src="js/game-state.js?v=20250814-fixed"></script>
+    <script src="js/rules.js?v=20250814-fixed"></script>
+    <script src="js/cards.js?v=20250814-fixed"></script>
+    <script src="js/game.js?v=20250814-fixed"></script>
     
-    <!-- Load Community Training System -->
-    <script src="github-db-secure.js?v=20250814-community"></script>
-    <script src="secure-training-integration.js?v=20250814-community"></script>
-    <script src="community-database.js?v=20250814-community"></script>
-    <script src="community-qlearning-bridge.js?v=20250814-community"></script>
-    <script src="strategic-training-system.js?v=20250814-community"></script>
-    <script src="js/ai/post-game-training.js?v=20250814-community"></script>
+    <!-- STEP 2: Load Community Training System AFTER Game Engine -->
+    <script src="github-db-secure.js?v=20250814-fixed"></script>
+    <script src="secure-training-integration.js?v=20250814-fixed"></script>
+    <script src="community-database.js?v=20250814-fixed"></script>
     
-    <!-- Load Clean Start Utility -->
-    <script src="clean-start-utility.js?v=20250814-clean"></script>
+    <!-- STEP 3: Load Clean Start Utility -->
+    <script src="clean-start-utility.js?v=20250814-fixed"></script>
+    
+    <!-- STEP 4: Load Q-Learning and Strategic Systems LAST -->
+    <script src="community-qlearning-bridge.js?v=20250814-fixed"></script>
+    <script src="strategic-training-system.js?v=20250814-fixed"></script>
+    <script src="js/ai/post-game-training.js?v=20250814-fixed"></script>
     
     <script>
+        // Global flag to track loading status
+        window.systemsReady = {
+            gameEngine: false,
+            communityDB: false,
+            qLearning: false,
+            strategic: false,
+            postGame: false
+        };
+
         // Community Training badge control functions
         function toggleTrainingBadge() {
             const badge = document.getElementById('community-badge');
@@ -253,77 +264,144 @@
             badge.classList.add('collapsed');
         }, 8000);
         
-        // Community Training System logging
-        console.log('🌍 Community Training System - READY!');
-        console.log('🎯 Vereinfachtes ⭐/❌ Feedback-Interface');
-        console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
-        console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
-        console.log('🧹 Clean Start verfügbar: cleanStartCommunityTraining()');
-        
-        // System ready confirmation
+        // Enhanced initialization sequence
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Community Training System Check:');
+            console.log('🚀 Starting Community Training System initialization...');
             
-            // Verify all functions are available
-            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
-            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
-            
-            console.log(`✅ Game functions: ${available.length}/${requiredFunctions.length} loaded`);
-            
-            // Check training system
+            // Stage 1: Wait for Game Engine
             setTimeout(() => {
-                const trainingAvailable = window.postGameTraining && typeof window.enableHumanTraining === 'function';
-                console.log(`🏆 Training system: ${trainingAvailable ? '✅ Available' : '❌ Missing'}`);
+                console.log('🎮 Checking Game Engine...');
+                const gameReady = typeof window.newGame === 'function' && 
+                                typeof window.showRules === 'function' && 
+                                typeof window.gameState !== 'undefined';
                 
-                const bridgeAvailable = window.qLearningBridge;
-                console.log(`🌉 Q-Learning Bridge: ${bridgeAvailable ? '✅ Available' : '❌ Missing'}`);
+                window.systemsReady.gameEngine = gameReady;
+                console.log(`🎮 Game Engine: ${gameReady ? '✅ Ready' : '❌ Missing'}`);
                 
-                const communityDB = window.communityDB;
-                console.log(`🌍 Community DB: ${communityDB ? '✅ Available' : '❌ Missing'}`);
-                
-                const cleanUtility = window.cleanStartCommunityTraining;
-                console.log(`🧹 Clean Utility: ${cleanUtility ? '✅ Available' : '❌ Missing'}`);
-                
-                if (available.length === requiredFunctions.length) {
-                    updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
-                    
-                    // Auto-enable training after 3 seconds
-                    setTimeout(() => {
-                        if (window.postGameTraining && !window.postGameTraining.enabled) {
-                            window.postGameTraining.enable();
-                            const btn = document.getElementById('training-btn');
-                            btn.textContent = 'Training AUS';
-                            btn.classList.add('active');
-                            
-                            updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
-                            console.log('✨ Community-Training auto-aktiviert!');
-                        }
-                    }, 3000);
-                    
-                    // Success confirmation in badge
-                    setTimeout(() => {
-                        const badge = document.getElementById('community-badge');
-                        if (!badge.classList.contains('collapsed')) {
-                            const details = badge.querySelector('.training-details');
-                            details.innerHTML = `
-                                <strong>✅ Ready to Play!</strong><br>
-                                <small>Training: <span style="color: #90EE90;">ACTIVE</span></small>
-                                <div class="training-controls">
-                                    <button class="training-toggle active" id="training-btn" onclick="toggleTraining(event)">Training AUS</button>
-                                    <small>Click to collapse</small>
-                                </div>
-                            `;
-                        }
-                    }, 4000);
+                if (gameReady) {
+                    checkCommunitySystem();
                 } else {
-                    updateGameStatus('⚠️ Loading system... Please wait.');
+                    console.warn('⚠️ Game Engine not ready, retrying...');
+                    setTimeout(checkCommunitySystem, 1000);
                 }
-            }, 1000); // Warte auf System-Initialisierung
+            }, 500);
         });
+        
+        function checkCommunitySystem() {
+            console.log('🌍 Checking Community Systems...');
+            
+            // Stage 2: Check Community Database
+            setTimeout(() => {
+                const communityReady = typeof window.communityDB !== 'undefined';
+                window.systemsReady.communityDB = communityReady;
+                console.log(`🌍 Community DB: ${communityReady ? '✅ Ready' : '❌ Missing'}`);
+                
+                checkQLearningSystem();
+            }, 500);
+        }
+        
+        function checkQLearningSystem() {
+            console.log('🧠 Checking Q-Learning Systems...');
+            
+            // Stage 3: Check Q-Learning and Strategic Systems
+            setTimeout(() => {
+                const qLearningReady = typeof window.qLearningBridge !== 'undefined';
+                const strategicReady = typeof window.strategicTraining !== 'undefined';
+                
+                window.systemsReady.qLearning = qLearningReady;
+                window.systemsReady.strategic = strategicReady;
+                
+                console.log(`🧠 Q-Learning Bridge: ${qLearningReady ? '✅ Ready' : '❌ Missing'}`);
+                console.log(`🎯 Strategic Training: ${strategicReady ? '✅ Ready' : '❌ Missing'}`);
+                
+                checkPostGameSystem();
+            }, 500);
+        }
+        
+        function checkPostGameSystem() {
+            console.log('🏆 Checking Post-Game Training...');
+            
+            // Stage 4: Check Post-Game Training
+            setTimeout(() => {
+                const postGameReady = typeof window.postGameTraining !== 'undefined';
+                window.systemsReady.postGame = postGameReady;
+                
+                console.log(`🏆 Post-Game Training: ${postGameReady ? '✅ Ready' : '❌ Missing'}`);
+                
+                finalizeCommunitySystem();
+            }, 500);
+        }
+        
+        function finalizeCommunitySystem() {
+            console.log('🔧 Finalizing Community Training System...');
+            
+            const readySystems = Object.values(window.systemsReady).filter(Boolean).length;
+            const totalSystems = Object.keys(window.systemsReady).length;
+            
+            console.log(`📊 Systems Ready: ${readySystems}/${totalSystems}`);
+            
+            if (readySystems >= 3) { // Minimum required systems
+                console.log('✅ Community Training System READY!');
+                updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
+                
+                // Auto-enable training after 2 seconds
+                setTimeout(() => {
+                    if (window.postGameTraining && !window.postGameTraining.enabled) {
+                        window.postGameTraining.enable();
+                        const btn = document.getElementById('training-btn');
+                        btn.textContent = 'Training AUS';
+                        btn.classList.add('active');
+                        
+                        updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
+                        console.log('✨ Community-Training auto-aktiviert!');
+                    }
+                }, 2000);
+                
+                // Success confirmation in badge
+                setTimeout(() => {
+                    const badge = document.getElementById('community-badge');
+                    if (!badge.classList.contains('collapsed')) {
+                        const details = badge.querySelector('.training-details');
+                        details.innerHTML = `
+                            <strong>✅ Ready to Play!</strong><br>
+                            <small>Training: <span style="color: #90EE90;">ACTIVE</span></small>
+                            <div class="training-controls">
+                                <button class="training-toggle active" id="training-btn" onclick="toggleTraining(event)">Training AUS</button>
+                                <small>Click to collapse</small>
+                            </div>
+                        `;
+                    }
+                }, 3000);
+                
+            } else {
+                console.warn('⚠️ Some systems missing, but continuing with available components');
+                updateGameStatus('⚠️ Partial system load - some features may be limited.');
+            }
+            
+            // Display system status
+            displaySystemStatus();
+        }
+        
+        function displaySystemStatus() {
+            console.log('📊 Community Training System Status:');
+            console.log('┌─────────────────────────────────┐');
+            console.log('│ Component            │ Status   │');
+            console.log('├─────────────────────────────────┤');
+            console.log(`│ Game Engine          │ ${window.systemsReady.gameEngine ? '✅ Ready' : '❌ Missing'} │`);
+            console.log(`│ Community Database   │ ${window.systemsReady.communityDB ? '✅ Ready' : '❌ Missing'} │`);
+            console.log(`│ Q-Learning Bridge    │ ${window.systemsReady.qLearning ? '✅ Ready' : '❌ Missing'} │`);
+            console.log(`│ Strategic Training   │ ${window.systemsReady.strategic ? '✅ Ready' : '❌ Missing'} │`);
+            console.log(`│ Post-Game Training   │ ${window.systemsReady.postGame ? '✅ Ready' : '❌ Missing'} │`);
+            console.log('└─────────────────────────────────┘');
+            
+            // Store status for debugging
+            window.systemStatus = window.systemsReady;
+        }
         
         // Enhanced debugging for community training
         window.testCommunityTraining = function() {
             console.log('🧪 Community Training System Test:');
+            console.log('System Status:', window.systemsReady);
             console.log('postGameTraining available:', !!window.postGameTraining);
             console.log('qLearningBridge available:', !!window.qLearningBridge);
             console.log('communityDB available:', !!window.communityDB);
@@ -332,12 +410,14 @@
             if (window.postGameTraining) {
                 console.log('Training enabled:', window.postGameTraining.enabled);
                 console.log('Is tracking:', window.postGameTraining.isTrackingRound);
-                console.log('Current moves:', window.postGameTraining.currentRoundMoves.length);
+                console.log('Current moves:', window.postGameTraining.currentRoundMoves?.length || 0);
             }
             
             if (window.qLearningBridge) {
                 console.log('Q-Learning Bridge active:', window.qLearningBridge.isActive);
-                console.log('Q-Learning Stats:', window.getQLearningStats());
+                if (typeof window.getQLearningStats === 'function') {
+                    console.log('Q-Learning Stats:', window.getQLearningStats());
+                }
             }
             
             // Show local data
@@ -349,17 +429,21 @@
                 training: window.postGameTraining,
                 bridge: window.qLearningBridge,
                 community: window.communityDB,
-                cleanUtility: window.cleanStartCommunityTraining
+                cleanUtility: window.cleanStartCommunityTraining,
+                systemStatus: window.systemsReady
             };
         };
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.1-community-with-clean-start',
+            version: '4.2-fixed-initialization',
             layout: 'original-index.html',
             modules: ['game-state', 'post-game-training', 'community-qlearning-bridge', 'clean-start-utility'],
             features: [
-                'simplified-ui', 
+                'fixed-loading-order', 
+                'proper-initialization-sequence',
+                'system-status-tracking',
+                'enhanced-debugging',
                 'strategic-positions', 
                 'correct-roles', 
                 'enhanced-gamecontext',
@@ -367,6 +451,10 @@
                 'clean-start-utility'
             ],
             improvements: [
+                'game-engine-first-loading',
+                'delayed-community-system-init',
+                'proper-dependency-management',
+                'enhanced-error-handling',
                 'star-x-rating-buttons',
                 'ausspieler-zweiter-dritter-letzter',
                 'spieler-mitspieler-gegner',
@@ -379,11 +467,12 @@
                 autoActivated: true,
                 features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync', 'clean-start']
             },
-            status: 'complete-community-training-system-with-clean-start'
+            status: 'fixed-initialization-sequence'
         };
         
-        console.log('📊 Community Training System Info:', window.communityTrainingInfo);
-        console.log('✨ Alle 4 Komponenten + Clean Start implementiert und einsatzbereit!');
+        console.log('🌍 Community Training System - Fixed Version Loading...');
+        console.log('🎯 Enhanced initialization sequence with proper dependency management');
+        console.log('🧠 Systems will initialize in correct order: Game → Community → Q-Learning → Training');
     </script>
 </body>
 </html>
