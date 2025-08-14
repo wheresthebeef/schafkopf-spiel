@@ -1,4 +1,4 @@
-// Enhanced Strategic Training System - Detailed Context + Human Reasoning
+// Enhanced Strategic Training System - Fixed Initialization
 // Replaces simple good/bad with strategic context and optional reasoning
 
 class StrategicTrainingSystem {
@@ -8,37 +8,99 @@ class StrategicTrainingSystem {
         this.pendingReviews = [];
         
         console.log('🎯 Strategic Training System initialisiert');
-        this.initializeSystem();
+        
+        // FIXED: Delayed initialization with better error handling
+        setTimeout(() => {
+            this.initializeSystem();
+        }, 1500);
     }
 
     async initializeSystem() {
+        console.log('🔄 Strategic Training: Warte auf Game Engine...');
+        
         // Warte auf Spiel-Engine
-        await this.waitForGameEngine();
+        const gameEngineFound = await this.waitForGameEngine();
         
-        // Setup Event Listeners
-        this.setupGameEventListeners();
-        
-        console.log('✅ Strategic Training System bereit');
+        if (gameEngineFound) {
+            // Setup Event Listeners
+            this.setupGameEventListeners();
+            console.log('✅ Strategic Training System bereit - mit Game Engine Integration');
+        } else {
+            console.log('📝 Strategic Training System bereit - im Fallback-Modus');
+            this.setupFallbackMode();
+        }
     }
 
     async waitForGameEngine() {
         return new Promise((resolve) => {
             let attempts = 0;
-            const maxAttempts = 30;
+            const maxAttempts = 20; // Reduziert von 30
             
             const checkEngine = () => {
-                if (window.gameState || window.game) {
+                // FIXED: Verbesserte Game Engine Erkennung
+                const gameEngineAvailable = this.findGameEngine();
+                
+                if (gameEngineAvailable) {
                     console.log('🎮 Game Engine gefunden');
                     resolve(true);
                 } else if (attempts < maxAttempts) {
                     attempts++;
+                    console.log(`⏳ Game Engine suchen... (${attempts}/${maxAttempts})`);
                     setTimeout(checkEngine, 500);
                 } else {
-                    console.warn('⚠️ Game Engine nicht gefunden - Fallback Modus');
+                    console.log('⚠️ Game Engine nicht gefunden - Fallback Modus');
                     resolve(false);
                 }
             };
             checkEngine();
+        });
+    }
+
+    findGameEngine() {
+        // FIXED: Verbesserte Erkennung verschiedener Game Engine Varianten
+        
+        // 1. Hauptspiel-State
+        if (window.gameState && typeof window.gameState === 'object') {
+            console.log('🎯 Haupt Game State gefunden');
+            return true;
+        }
+        
+        // 2. Alternatives Game-Objekt
+        if (window.game && typeof window.game === 'object') {
+            console.log('🎯 Game-Objekt gefunden');
+            return true;
+        }
+        
+        // 3. Grundlegende Spiel-Funktionen
+        if (typeof window.newGame === 'function' && 
+            typeof window.showStats === 'function') {
+            console.log('🎯 Grundlegende Spiel-Funktionen gefunden');
+            return true;
+        }
+        
+        // 4. DOM-basierte Erkennung
+        if (document.getElementById('trick-area') && 
+            document.getElementById('game-status')) {
+            console.log('🎯 Game-Interface gefunden');
+            return true;
+        }
+        
+        return false;
+    }
+
+    setupFallbackMode() {
+        // FIXED: Fallback-Modus für bessere Kompatibilität
+        this.isEnabled = true; // System auch ohne Game Engine nutzbar
+        console.log('📝 Fallback-Modus: Strategic Training ohne Game Engine Integration');
+        
+        // Erstelle Demo-Event Listener für Tests
+        this.setupDemoEventListeners();
+    }
+
+    setupDemoEventListeners() {
+        // Demo-Funktionen für Tests
+        window.addEventListener('demoReview', (event) => {
+            this.onBotCardPlayed(event.detail);
         });
     }
 
@@ -51,6 +113,18 @@ class StrategicTrainingSystem {
         // Lausche auf Stich-Ende
         window.addEventListener('trickCompleted', (event) => {
             this.onTrickCompleted(event.detail);
+        });
+        
+        // FIXED: Alternative Event-Listener für verschiedene Game Engine Varianten
+        window.addEventListener('cardPlayed', (event) => {
+            if (event.detail && event.detail.isBot) {
+                this.onBotCardPlayed(event.detail);
+            }
+        });
+        
+        // Lausche auf Game State Changes
+        window.addEventListener('gameStateChanged', (event) => {
+            this.onGameStateChange(event.detail);
         });
     }
 
@@ -68,14 +142,26 @@ class StrategicTrainingSystem {
         }, 1500);
     }
 
+    onTrickCompleted(trickData) {
+        if (!this.isEnabled) return;
+        console.log('🎯 Stich beendet:', trickData);
+        // Hier könnte man zusätzliche Logik für Stich-Ende hinzufügen
+    }
+
+    onGameStateChange(gameData) {
+        if (!this.isEnabled) return;
+        console.log('🎯 Game State geändert:', gameData);
+        // Hier könnte man auf Spielzustand-Änderungen reagieren
+    }
+
     gatherStrategicContext(botMoveData) {
         const gameState = this.getCurrentGameState();
         const stichInfo = this.getCurrentStichInfo();
         
         return {
             // Bot Info
-            botName: botMoveData.playerName || 'Unbekannt',
-            cardPlayed: botMoveData.card || 'Unbekannt',
+            botName: botMoveData.playerName || botMoveData.botName || 'Unbekannt',
+            cardPlayed: botMoveData.card || botMoveData.cardPlayed || 'Unbekannt',
             
             // Spiel Kontext
             gameType: gameState.gameType || 'rufspiel',
@@ -97,68 +183,132 @@ class StrategicTrainingSystem {
     }
 
     getCurrentGameState() {
-        // Versuche verschiedene Game State Quellen
-        if (window.gameState) {
+        // FIXED: Robustere Game State Sammlung
+        try {
+            // Versuche verschiedene Game State Quellen
+            if (window.gameState && typeof window.gameState === 'object') {
+                return {
+                    gameType: window.gameState.gameType || 'rufspiel',
+                    trumpSuit: window.gameState.trumpSuit || 'herz',
+                    calledAce: window.gameState.calledAce,
+                    gameId: window.gameState.gameId || Date.now().toString(),
+                    caller: window.gameState.caller,
+                    partner: window.gameState.partner
+                };
+            }
+            
+            // Fallback auf globale Variablen
             return {
-                gameType: window.gameState.gameType || 'rufspiel',
-                trumpSuit: window.gameState.trumpSuit || 'herz',
-                calledAce: window.gameState.calledAce,
-                gameId: window.gameState.gameId
+                gameType: window.currentGameType || 'rufspiel',
+                trumpSuit: window.trumpSuit || 'herz',
+                calledAce: window.calledAce || null,
+                gameId: Date.now().toString(),
+                caller: null,
+                partner: null
+            };
+        } catch (error) {
+            console.warn('⚠️ Fehler beim Game State sammeln:', error);
+            return {
+                gameType: 'rufspiel',
+                trumpSuit: 'herz',
+                calledAce: null,
+                gameId: Date.now().toString(),
+                caller: null,
+                partner: null
             };
         }
-        
-        // Fallback auf globale Variablen
-        return {
-            gameType: window.currentGameType || 'rufspiel',
-            trumpSuit: window.trumpSuit || 'herz',
-            calledAce: window.calledAce || null,
-            gameId: Date.now().toString()
-        };
     }
 
     getCurrentStichInfo() {
-        // Aktuelle Stich-Information sammeln
-        if (window.gameState && window.gameState.currentTrick) {
+        // FIXED: Robustere Stich-Information
+        try {
+            // Aktuelle Stich-Information sammeln
+            if (window.gameState && window.gameState.currentTrick) {
+                return {
+                    stichNumber: window.gameState.currentTrick.number || 1,
+                    cardsPlayed: window.gameState.currentTrick.cards || [],
+                    leadPlayer: window.gameState.currentTrick.leadPlayer
+                };
+            }
+            
+            // Alternative Quellen
+            if (window.currentTrick) {
+                return {
+                    stichNumber: window.currentTrick || 1,
+                    cardsPlayed: window.currentTrickCards || [],
+                    leadPlayer: window.currentLeadPlayer || null
+                };
+            }
+            
+            // DOM-basierte Fallback-Schätzung
+            const trickCounter = document.getElementById('trick-counter');
+            if (trickCounter) {
+                const trickText = trickCounter.textContent || '0/8';
+                const currentTrick = parseInt(trickText.split('/')[0]) || 0;
+                return {
+                    stichNumber: currentTrick + 1,
+                    cardsPlayed: [],
+                    leadPlayer: null
+                };
+            }
+            
+            // Standard Fallback
             return {
-                stichNumber: window.gameState.currentTrick.number || 1,
-                cardsPlayed: window.gameState.currentTrick.cards || [],
-                leadPlayer: window.gameState.currentTrick.leadPlayer
+                stichNumber: 1,
+                cardsPlayed: [],
+                leadPlayer: null
+            };
+        } catch (error) {
+            console.warn('⚠️ Fehler beim Stich-Info sammeln:', error);
+            return {
+                stichNumber: 1,
+                cardsPlayed: [],
+                leadPlayer: null
             };
         }
-        
-        // Fallback Schätzung
-        return {
-            stichNumber: window.currentTrick || 1,
-            cardsPlayed: [],
-            leadPlayer: null
-        };
     }
 
     determinePlayerRole(playerId, gameState) {
-        // Bestimme Rolle: spieler, mitspieler, gegner
-        if (gameState.gameType === 'rufspiel') {
-            if (playerId === gameState.caller) return 'spieler';
-            if (playerId === gameState.partner) return 'mitspieler';
-            return 'gegner';
-        } else {
-            // Solo, Wenz, etc.
-            if (playerId === gameState.caller) return 'spieler';
-            return 'gegner';
+        // FIXED: Robustere Rollen-Bestimmung
+        try {
+            // Bestimme Rolle: spieler, mitspieler, gegner
+            if (gameState.gameType === 'rufspiel') {
+                if (playerId === gameState.caller) return 'Spieler';
+                if (playerId === gameState.partner) return 'Mitspieler';
+                return 'Gegner';
+            } else {
+                // Solo, Wenz, etc.
+                if (playerId === gameState.caller) return 'Spieler';
+                return 'Gegner';
+            }
+        } catch (error) {
+            console.warn('⚠️ Fehler bei Rollen-Bestimmung:', error);
+            return 'Gegner'; // Sicherer Fallback
         }
     }
 
     determineStichPosition(playerId, stichInfo) {
-        // Bestimme Position im aktuellen Stich
-        const cardsPlayed = stichInfo.cardsPlayed || [];
-        const position = cardsPlayed.length; // 0=ausspieler, 1=zweiter, etc.
-        
-        const positions = ['ausspieler', 'zweiter', 'dritter', 'letzter'];
-        return positions[position] || 'ausspieler';
+        // FIXED: Robustere Position-Bestimmung
+        try {
+            // Bestimme Position im aktuellen Stich
+            const cardsPlayed = stichInfo.cardsPlayed || [];
+            const position = cardsPlayed.length; // 0=ausspieler, 1=zweiter, etc.
+            
+            const positions = ['ausspieler', 'zweiter', 'dritter', 'letzter'];
+            return positions[position] || 'ausspieler';
+        } catch (error) {
+            console.warn('⚠️ Fehler bei Position-Bestimmung:', error);
+            return 'ausspieler'; // Sicherer Fallback
+        }
     }
 
     estimateCardsInHand(stichNumber) {
         // Schätze verbleibende Karten
-        return Math.max(8 - stichNumber, 0);
+        try {
+            return Math.max(8 - (stichNumber || 1), 0);
+        } catch (error) {
+            return 7; // Sicherer Fallback
+        }
     }
 
     showStrategicReviewModal(context) {
@@ -519,7 +669,7 @@ class StrategicTrainingSystem {
             // Meta
             timestamp: context.timestamp,
             gameId: context.gameId,
-            version: '2.0-strategic'
+            version: '2.1-strategic-fixed'
         };
         
         console.log('🎯 Strategic Review erstellt:', strategicReview);
@@ -533,16 +683,29 @@ class StrategicTrainingSystem {
 
     submitToCommunitySystems(review) {
         // Sende an bestehende Systeme
-        if (window.submitSecureTrainingReview) {
-            window.submitSecureTrainingReview(review);
+        try {
+            if (window.submitSecureTrainingReview) {
+                window.submitSecureTrainingReview(review);
+                console.log('📤 Review an Secure Training System gesendet');
+            }
+            
+            // Trigger Q-Learning Update
+            if (window.qLearningBridge) {
+                setTimeout(() => {
+                    window.qLearningBridge.processNewReviews();
+                }, 1000);
+                console.log('🧠 Q-Learning Bridge Update ausgelöst');
+            }
+            
+            // Trigger Community DB Update
+            if (window.communityDB) {
+                console.log('🌍 Community DB über neues Review informiert');
+            }
+            
+            console.log('📤 Strategic Review an alle verfügbaren Community-Systeme gesendet');
+        } catch (error) {
+            console.error('❌ Fehler beim Senden an Community-Systeme:', error);
         }
-        
-        // Trigger Q-Learning Update
-        if (window.qLearningBridge) {
-            window.qLearningBridge.processNewReviews();
-        }
-        
-        console.log('📤 Strategic Review an Community-Systeme gesendet');
     }
 
     closeModalWithFeedback(modal, rating) {
@@ -554,10 +717,7 @@ class StrategicTrainingSystem {
                 ${rating === 'good' ? '✅' : '❌'} Bewertung gespeichert!
                 <div>Danke für dein Feedback</div>
             </div>
-        `;
-        
-        // Feedback Styles
-        feedback.innerHTML += `
+            
             <style>
                 .submission-feedback {
                     position: fixed;
@@ -609,7 +769,7 @@ class StrategicTrainingSystem {
             cardPlayed: '♥️O',
             gameType: 'rufspiel',
             stichNumber: 3,
-            playerRole: 'gegner',
+            playerRole: 'Gegner',
             stichPosition: 'dritter',
             trumpSuit: 'herz',
             calledAce: '♠️A',
@@ -619,33 +779,75 @@ class StrategicTrainingSystem {
         
         this.showStrategicReviewModal(testContext);
     }
+
+    // FIXED: Demo-Trigger für Tests
+    triggerDemoReview() {
+        const demoData = {
+            playerName: 'Hans',
+            card: '♦️K',
+            playerId: 2,
+            isBot: true
+        };
+        
+        console.log('🎭 Demo Review ausgelöst');
+        this.onBotCardPlayed(demoData);
+    }
 }
 
-// Globale Instanz
-window.strategicTraining = new StrategicTrainingSystem();
+// FIXED: Wait for DOM before initializing
+document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+        // Globale Instanz
+        if (!window.strategicTraining) {
+            window.strategicTraining = new StrategicTrainingSystem();
+        }
+    }, 500);
+});
 
 // Integration mit bestehendem System
-if (window.postGameTraining) {
-    const originalEnable = window.postGameTraining.enable;
-    const originalDisable = window.postGameTraining.disable;
-    
-    window.postGameTraining.enable = function() {
-        originalEnable.call(this);
-        window.strategicTraining.enable();
-    };
-    
-    window.postGameTraining.disable = function() {
-        originalDisable.call(this);
-        window.strategicTraining.disable();
-    };
-}
+setTimeout(() => {
+    if (window.postGameTraining) {
+        const originalEnable = window.postGameTraining.enable;
+        const originalDisable = window.postGameTraining.disable;
+        
+        if (originalEnable) {
+            window.postGameTraining.enable = function() {
+                originalEnable.call(this);
+                if (window.strategicTraining) {
+                    window.strategicTraining.enable();
+                }
+            };
+        }
+        
+        if (originalDisable) {
+            window.postGameTraining.disable = function() {
+                originalDisable.call(this);
+                if (window.strategicTraining) {
+                    window.strategicTraining.disable();
+                }
+            };
+        }
+    }
+}, 3000);
 
 // Debug-Funktionen
 window.showStrategicTestModal = function() {
-    window.strategicTraining.showTestModal();
+    if (window.strategicTraining) {
+        window.strategicTraining.showTestModal();
+    } else {
+        console.warn('⚠️ Strategic Training System nicht verfügbar');
+    }
 };
 
-console.log('🎯 Strategic Training System geladen - Detailliertes KI-Feedback mit strategischem Kontext!');
+window.triggerDemoStrategicReview = function() {
+    if (window.strategicTraining) {
+        window.strategicTraining.triggerDemoReview();
+    } else {
+        console.warn('⚠️ Strategic Training System nicht verfügbar');
+    }
+};
+
+console.log('🎯 Strategic Training System geladen - Fixed Version mit robuster Initialisierung');
 
 // Export
 if (typeof module !== 'undefined' && module.exports) {
