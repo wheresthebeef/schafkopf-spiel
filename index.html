@@ -177,6 +177,7 @@
             <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
             <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
             <button class="btn" onclick="window.location.href='training-progress-community.html'">📊 Dashboard</button>
+            <button class="btn" onclick="cleanStartCommunityTraining()" style="background: #dc3545;">🧹 Clean Start</button>
         </div>
     </div>
 
@@ -203,6 +204,9 @@
     <script src="community-qlearning-bridge.js?v=20250814-community"></script>
     <script src="strategic-training-system.js?v=20250814-community"></script>
     <script src="js/ai/post-game-training.js?v=20250814-community"></script>
+    
+    <!-- Load Clean Start Utility -->
+    <script src="clean-start-utility.js?v=20250814-clean"></script>
     
     <script>
         // Community Training badge control functions
@@ -254,6 +258,7 @@
         console.log('🎯 Vereinfachtes ⭐/❌ Feedback-Interface');
         console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
         console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
+        console.log('🧹 Clean Start verfügbar: cleanStartCommunityTraining()');
         
         // System ready confirmation
         document.addEventListener('DOMContentLoaded', () => {
@@ -275,6 +280,9 @@
                 
                 const communityDB = window.communityDB;
                 console.log(`🌍 Community DB: ${communityDB ? '✅ Available' : '❌ Missing'}`);
+                
+                const cleanUtility = window.cleanStartCommunityTraining;
+                console.log(`🧹 Clean Utility: ${cleanUtility ? '✅ Available' : '❌ Missing'}`);
                 
                 if (available.length === requiredFunctions.length) {
                     updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
@@ -319,6 +327,7 @@
             console.log('postGameTraining available:', !!window.postGameTraining);
             console.log('qLearningBridge available:', !!window.qLearningBridge);
             console.log('communityDB available:', !!window.communityDB);
+            console.log('cleanStartCommunityTraining available:', !!window.cleanStartCommunityTraining);
             
             if (window.postGameTraining) {
                 console.log('Training enabled:', window.postGameTraining.enabled);
@@ -331,42 +340,50 @@
                 console.log('Q-Learning Stats:', window.getQLearningStats());
             }
             
+            // Show local data
+            if (window.showLocalTrainingData) {
+                console.log('📊 Local Training Data:', window.showLocalTrainingData());
+            }
+            
             return {
                 training: window.postGameTraining,
                 bridge: window.qLearningBridge,
-                community: window.communityDB
+                community: window.communityDB,
+                cleanUtility: window.cleanStartCommunityTraining
             };
         };
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.0-community-complete',
+            version: '4.1-community-with-clean-start',
             layout: 'original-index.html',
-            modules: ['game-state', 'post-game-training', 'community-qlearning-bridge'],
+            modules: ['game-state', 'post-game-training', 'community-qlearning-bridge', 'clean-start-utility'],
             features: [
                 'simplified-ui', 
                 'strategic-positions', 
                 'correct-roles', 
                 'enhanced-gamecontext',
-                'community-database'
+                'community-database',
+                'clean-start-utility'
             ],
             improvements: [
                 'star-x-rating-buttons',
                 'ausspieler-zweiter-dritter-letzter',
                 'spieler-mitspieler-gegner',
                 'position-based-rewards',
-                'role-based-multipliers'
+                'role-based-multipliers',
+                'complete-local-data-reset'
             ],
             training: {
                 available: !!window.postGameTraining,
                 autoActivated: true,
-                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
+                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync', 'clean-start']
             },
-            status: 'complete-community-training-system'
+            status: 'complete-community-training-system-with-clean-start'
         };
         
         console.log('📊 Community Training System Info:', window.communityTrainingInfo);
-        console.log('✨ Alle 4 Komponenten implementiert und einsatzbereit!');
+        console.log('✨ Alle 4 Komponenten + Clean Start implementiert und einsatzbereit!');
     </script>
 </body>
 </html>
