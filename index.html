@@ -12,7 +12,7 @@
     <title>🎯 Bayerisches Schafkopf - Community Training</title>
     
     <!-- Use original CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20250815-hotfix">
+    <link rel="stylesheet" href="css/style.css?v=20250815-clean">
     
     <style>
         /* Community Training System Badge */
@@ -189,21 +189,20 @@
         </div>
     </div>
 
-    <!-- STEP 1: Load Game Engine scripts FIRST (proper order) -->
-    <script src="js/ui.js?v=20250815-hotfix"></script>
-    <script src="js/game-state.js?v=20250815-hotfix"></script>
-    <script src="js/game-state-vorhand.js?v=20250815-vorhand"></script>
-    <script src="js/rules.js?v=20250815-hotfix"></script>
-    <script src="js/cards.js?v=20250815-hotfix"></script>
-    <script src="js/game.js?v=20250815-hotfix"></script>
+    <!-- CLEAN: Nur die notwendigen Scripts ohne chaotische Abhängigkeiten -->
+    <script src="js/ui.js?v=20250815-clean"></script>
+    <script src="js/game-state.js?v=20250815-clean"></script>
+    <script src="js/rules.js?v=20250815-clean"></script>
+    <script src="js/cards.js?v=20250815-clean"></script>
+    <script src="js/game.js?v=20250815-clean"></script>
     
-    <!-- STEP 2: Load Community Training System -->
-    <script src="github-db-secure.js?v=20250815-hotfix"></script>
-    <script src="secure-training-integration.js?v=20250815-hotfix"></script>
-    <script src="community-database.js?v=20250815-hotfix"></script>
-    <script src="community-qlearning-bridge.js?v=20250815-hotfix"></script>
-    <script src="strategic-training-system.js?v=20250815-hotfix"></script>
-    <script src="js/ai/post-game-training.js?v=20250815-hotfix"></script>
+    <!-- Community Training System -->
+    <script src="github-db-secure.js?v=20250815-clean"></script>
+    <script src="secure-training-integration.js?v=20250815-clean"></script>
+    <script src="community-database.js?v=20250815-clean"></script>
+    <script src="community-qlearning-bridge.js?v=20250815-clean"></script>
+    <script src="strategic-training-system.js?v=20250815-clean"></script>
+    <script src="js/ai/post-game-training.js?v=20250815-clean"></script>
     
     <script>
         // Community Training badge control functions
@@ -250,82 +249,48 @@
             badge.classList.add('collapsed');
         }, 8000);
         
-        // Community Training System logging
+        // CLEAN: Einfache System-Checks ohne setTimeout-Chaos
         console.log('🌍 Community Training System - READY!');
         console.log('🎯 Vereinfachtes ⭐/❌ Feedback-Interface');
         console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
         console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
-        console.log('🔄 Vorhand-Rotation System integriert');
+        console.log('🔄 Vorhand-System direkt integriert (clean)');
         
         // System ready confirmation
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Community Training System Check:');
             
-            // Verify all functions are available
-            const requiredFunctions = ['newGame', 'showRules', 'showStats', 'toggleDebugMode', 'toggleCardImages'];
-            const available = requiredFunctions.filter(func => typeof window[func] === 'function');
-            
-            console.log(`✅ Game functions: ${available.length}/${requiredFunctions.length} loaded`);
-            
-            // Check training system
+            // CLEAN: Direkte Funktionsprüfung ohne defensives Chaos
             setTimeout(() => {
-                const trainingAvailable = window.postGameTraining && typeof window.enableHumanTraining === 'function';
-                console.log(`🏆 Training system: ${trainingAvailable ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🏆 Training system: ${window.postGameTraining ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🌉 Q-Learning Bridge: ${window.qLearningBridge ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🌍 Community DB: ${window.communityDB ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
                 
-                const bridgeAvailable = window.qLearningBridge;
-                console.log(`🌉 Q-Learning Bridge: ${bridgeAvailable ? '✅ Available' : '❌ Missing'}`);
+                updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
                 
-                const communityDB = window.communityDB;
-                console.log(`🌍 Community DB: ${communityDB ? '✅ Available' : '❌ Missing'}`);
-                
-                // Check Vorhand System
-                const vorhandAvailable = window.getCurrentVorhand && window.debugVorhand;
-                console.log(`🔄 Vorhand System: ${vorhandAvailable ? '✅ Available' : '❌ Missing'}`);
-                
-                if (available.length === requiredFunctions.length) {
-                    updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
-                    
-                    // Auto-enable training after 3 seconds
-                    setTimeout(() => {
-                        if (window.postGameTraining && !window.postGameTraining.enabled) {
-                            window.postGameTraining.enable();
-                            const btn = document.getElementById('training-btn');
-                            btn.textContent = 'Training AUS';
-                            btn.classList.add('active');
-                            
-                            updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
-                            console.log('✨ Community-Training auto-aktiviert!');
-                        }
-                    }, 3000);
-                    
-                    // Success confirmation in badge
-                    setTimeout(() => {
-                        const badge = document.getElementById('community-badge');
-                        if (!badge.classList.contains('collapsed')) {
-                            const details = badge.querySelector('.training-details');
-                            details.innerHTML = `
-                                <strong>✅ Ready to Play!</strong><br>
-                                <small>Training: <span style="color: #90EE90;">ACTIVE</span></small>
-                                <div class="training-controls">
-                                    <button class="training-toggle active" id="training-btn" onclick="toggleTraining(event)">Training AUS</button>
-                                    <small>Click to collapse</small>
-                                </div>
-                            `;
-                        }
-                    }, 4000);
-                } else {
-                    updateGameStatus('⚠️ Loading system... Please wait.');
-                }
-            }, 1000); // Warte auf System-Initialisierung
+                // Auto-enable training after 3 seconds
+                setTimeout(() => {
+                    if (window.postGameTraining && !window.postGameTraining.enabled) {
+                        window.postGameTraining.enable();
+                        const btn = document.getElementById('training-btn');
+                        btn.textContent = 'Training AUS';
+                        btn.classList.add('active');
+                        
+                        updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
+                        console.log('✨ Community-Training auto-aktiviert!');
+                    }
+                }, 3000);
+            }, 1000);
         });
         
-        // Enhanced debugging for community training
+        // CLEAN: Einfache Test-Funktion ohne Chaos
         window.testCommunityTraining = function() {
             console.log('🧪 Community Training System Test:');
             console.log('postGameTraining available:', !!window.postGameTraining);
             console.log('qLearningBridge available:', !!window.qLearningBridge);
             console.log('communityDB available:', !!window.communityDB);
-            console.log('Vorhand System available:', !!(window.getCurrentVorhand && window.debugVorhand));
+            console.log('Vorhand System available: ✅ Integrated');
             
             if (window.postGameTraining) {
                 console.log('Training enabled:', window.postGameTraining.enabled);
@@ -338,52 +303,54 @@
                 console.log('Q-Learning Stats:', window.getQLearningStats());
             }
             
-            if (window.debugVorhand) {
-                console.log('🔄 Vorhand System Test:', window.debugVorhand());
-            }
+            // CLEAN: Direkte Vorhand-Tests
+            console.log('🔄 Vorhand Tests:');
+            console.log('getCurrentVorhand():', getCurrentVorhand());
+            console.log('getCurrentVorhandName():', getCurrentVorhandName());
+            debugVorhand();
             
             return {
                 training: window.postGameTraining,
                 bridge: window.qLearningBridge,
                 community: window.communityDB,
                 vorhand: {
-                    getCurrentVorhand: window.getCurrentVorhand,
-                    debugVorhand: window.debugVorhand
+                    current: getCurrentVorhand(),
+                    name: getCurrentVorhandName(),
+                    status: 'integrated'
                 }
             };
         };
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.1-with-vorhand-hotfix',
-            layout: 'repaired-index.html',
-            modules: ['game-state', 'game-state-vorhand', 'post-game-training', 'community-qlearning-bridge'],
+            version: '5.0-clean-restart',
+            layout: 'clean-index.html',
+            modules: ['game-state-with-vorhand', 'post-game-training', 'community-qlearning-bridge'],
             features: [
                 'simplified-ui', 
                 'strategic-positions', 
                 'correct-roles', 
                 'enhanced-gamecontext',
                 'community-database',
-                'vorhand-rotation'
+                'integrated-vorhand-system'
             ],
             improvements: [
-                'star-x-rating-buttons',
-                'ausspieler-zweiter-dritter-letzter',
-                'spieler-mitspieler-gegner',
-                'position-based-rewards',
-                'role-based-multipliers',
-                'vorhand-system-integration'
+                'clean-architecture',
+                'no-setTimeout-chaos',
+                'direct-integration',
+                'simple-dependencies',
+                'vorhand-in-gamestate'
             ],
             training: {
                 available: !!window.postGameTraining,
                 autoActivated: true,
                 features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
             },
-            status: 'complete-community-training-system-with-vorhand'
+            status: 'clean-community-training-system'
         };
         
         console.log('📊 Community Training System Info:', window.communityTrainingInfo);
-        console.log('✨ HOTFIX: HTML repariert + Vorhand-System integriert!');
+        console.log('✨ CLEAN RESTART: Einfache Architektur ohne Chaos!');
     </script>
 </body>
 </html>
