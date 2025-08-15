@@ -172,11 +172,8 @@
 
         <div class="controls">
             <button class="btn" onclick="newGame()">Neues Spiel</button>
-            <button class="btn" onclick="showRules()">Regeln</button>
-            <button class="btn" onclick="showStats()">Statistik</button>
             <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
-            <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
-            <button class="btn" onclick="window.location.href='training-progress-community.html'">📊 Dashboard</button>
+            <button class="btn" onclick="window.open('training-progress-community.html', '_blank')">📊 Dashboard</button>
             <button class="btn" onclick="cleanStartCommunityTraining()" style="background: #dc3545;">🧹 Clean Start</button>
         </div>
     </div>
@@ -509,10 +506,12 @@
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.3-final-fixed',
+            version: '4.4-streamlined-buttons',
             layout: 'original-index.html',
             modules: ['game-state', 'post-game-training', 'community-qlearning-bridge', 'clean-start-utility'],
             features: [
+                'streamlined-button-layout',
+                'dashboard-new-tab',
                 'improved-game-engine-detection', 
                 'comprehensive-function-checking',
                 'extended-retry-mechanism',
@@ -525,28 +524,24 @@
                 'clean-start-utility'
             ],
             improvements: [
+                'removed-unnecessary-buttons',
+                'dashboard-opens-in-new-tab',
+                'cleaner-interface',
                 'game-engine-detection-with-retry',
                 'multiple-detection-methods',
                 'proper-dependency-management',
-                'enhanced-error-handling',
-                'star-x-rating-buttons',
-                'ausspieler-zweiter-dritter-letzter',
-                'spieler-mitspieler-gegner',
-                'position-based-rewards',
-                'role-based-multipliers',
-                'complete-local-data-reset'
+                'enhanced-error-handling'
             ],
             training: {
                 available: !!window.postGameTraining,
                 autoActivated: true,
                 features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync', 'clean-start']
             },
-            status: 'final-fixed-initialization'
+            status: 'streamlined-interface'
         };
         
-        console.log('🌍 Community Training System - Final Fixed Version Loading...');
-        console.log('🎯 Enhanced Game Engine detection with comprehensive function checking');
-        console.log('🧠 Systems will initialize properly with improved retry mechanism');
+        console.log('🌍 Community Training System - Streamlined Version Loading...');
+        console.log('🎯 Cleaner interface with essential buttons only');
     </script>
 </body>
 </html>
