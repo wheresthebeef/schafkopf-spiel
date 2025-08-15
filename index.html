@@ -174,7 +174,6 @@
             <button class="btn" onclick="newGame()">Neues Spiel</button>
             <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
             <button class="btn" onclick="window.open('training-progress-community.html', '_blank')">📊 Dashboard</button>
-            <button class="btn" onclick="cleanStartCommunityTraining()" style="background: #dc3545;">🧹 Clean Start</button>
         </div>
     </div>
 
@@ -506,11 +505,12 @@
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '4.4-streamlined-buttons',
+            version: '4.5-minimal-interface',
             layout: 'original-index.html',
-            modules: ['game-state', 'post-game-training', 'community-qlearning-bridge', 'clean-start-utility'],
+            modules: ['game-state', 'post-game-training', 'community-qlearning-bridge'],
             features: [
-                'streamlined-button-layout',
+                'minimal-clean-interface',
+                'essential-buttons-only',
                 'dashboard-new-tab',
                 'improved-game-engine-detection', 
                 'comprehensive-function-checking',
@@ -520,13 +520,12 @@
                 'strategic-positions', 
                 'correct-roles', 
                 'enhanced-gamecontext',
-                'community-database',
-                'clean-start-utility'
+                'community-database'
             ],
             improvements: [
-                'removed-unnecessary-buttons',
-                'dashboard-opens-in-new-tab',
-                'cleaner-interface',
+                'removed-clean-start-button',
+                'minimal-essential-interface',
+                'cleaner-user-experience',
                 'game-engine-detection-with-retry',
                 'multiple-detection-methods',
                 'proper-dependency-management',
@@ -535,13 +534,13 @@
             training: {
                 available: !!window.postGameTraining,
                 autoActivated: true,
-                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync', 'clean-start']
+                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
             },
-            status: 'streamlined-interface'
+            status: 'minimal-production-ready'
         };
         
-        console.log('🌍 Community Training System - Streamlined Version Loading...');
-        console.log('🎯 Cleaner interface with essential buttons only');
+        console.log('🌍 Community Training System - Minimal Production Version Loading...');
+        console.log('🎯 Clean, focused interface with essential functionality only');
     </script>
 </body>
 </html>
