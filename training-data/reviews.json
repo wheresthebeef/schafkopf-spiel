@@ -1,9 +1,9 @@
 {
   "globalStats": {
-    "totalReviews": 2,
+    "totalReviews": 3,
     "totalPlayers": 1,
-    "averagePositiveRate": 0,
-    "lastUpdated": "2025-08-15T10:17:47.809Z"
+    "averagePositiveRate": 33.3,
+    "lastUpdated": "2025-08-15T10:24:59.064Z"
   },
   "reviews": [
     {
@@ -11,7 +11,7 @@
       "timestamp": "2025-08-15T10:17:47.101Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "â ï¸A",
+      "cardPlayed": "Ã¢ÂÂ Ã¯Â¸ÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -19,7 +19,7 @@
         "gameType": "rufspiel"
       },
       "rating": "bad",
-      "reasoning": "Der Stich gehÃ¶rt dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ mÃ¶glichst kleinen Trumpf",
+      "reasoning": "Der Stich gehÃÂ¶rt dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ mÃÂ¶glichst kleinen Trumpf",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
@@ -31,7 +31,7 @@
       "timestamp": "2025-08-15T10:17:47.552Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "♠️A",
+      "cardPlayed": "â ï¸A",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -39,12 +39,32 @@
         "gameType": "rufspiel"
       },
       "rating": "bad",
-      "reasoning": "Mitspieler Anna hat mit dem höchsten verbleibenden Trumpf gestochen, der Stich ist sicher. Also bevorzugt hohes Herz schmieren, in dem Fall Herz Ass",
+      "reasoning": "Mitspieler Anna hat mit dem hÃ¶chsten verbleibenden Trumpf gestochen, der Stich ist sicher. Also bevorzugt hohes Herz schmieren, in dem Fall Herz Ass",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
       },
       "securityHash": "cl43vz"
+    },
+    {
+      "id": "mecom3sn_5l0485_903c2l",
+      "timestamp": "2025-08-15T10:24:59.063Z",
+      "playerSession": "player_me8gl5da_nppxha_fpovk",
+      "botName": "Anna",
+      "cardPlayed": "♠️A",
+      "gameContext": {
+        "trickNumber": 0,
+        "position": "unknown",
+        "trumpSuit": null,
+        "gameType": "rufspiel"
+      },
+      "rating": "good",
+      "reasoning": "Als Gegner wenn möglich die Farbe der gerufenen Ass spielen, falls die Ass noch nicht gerufen wurde",
+      "gameMetadata": {
+        "calledAce": null,
+        "gameType": "rufspiel"
+      },
+      "securityHash": "c9o7sq"
     }
   ]
 }
