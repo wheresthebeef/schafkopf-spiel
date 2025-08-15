@@ -1,9 +1,30 @@
 {
   "globalStats": {
-    "totalReviews": 0,
-    "totalPlayers": 0,
+    "totalReviews": 1,
+    "totalPlayers": 1,
     "averagePositiveRate": 0,
-    "lastUpdated": "2025-08-14T12:25:00.000Z"
+    "lastUpdated": "2025-08-15T10:17:47.102Z"
   },
-  "reviews": []
+  "reviews": [
+    {
+      "id": "mecocuhp_vibgj7_dnbo3n",
+      "timestamp": "2025-08-15T10:17:47.101Z",
+      "playerSession": "player_me8gl5da_nppxha_fpovk",
+      "botName": "Anna",
+      "cardPlayed": "♠️A",
+      "gameContext": {
+        "trickNumber": 0,
+        "position": "unknown",
+        "trumpSuit": null,
+        "gameType": "rufspiel"
+      },
+      "rating": "bad",
+      "reasoning": "Der Stich gehört dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ möglichst kleinen Trumpf",
+      "gameMetadata": {
+        "calledAce": null,
+        "gameType": "rufspiel"
+      },
+      "securityHash": "cl43vz"
+    }
+  ]
 }
