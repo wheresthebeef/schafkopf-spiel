@@ -212,6 +212,85 @@ class SecureGitHubDatabase {
         return { isValid: true };
     }
 
+    // NEW: Rate Limit Status Check
+    getRateLimitStatus(playerSession = null) {
+        const sessionId = playerSession || this.getPlayerSessionId();
+        const now = Date.now();
+        const oneHour = 60 * 60 * 1000;
+        const oneDay = 24 * oneHour;
+        
+        if (!this.rateLimits.has(sessionId)) {
+            return {
+                session: sessionId,
+                hourlyUsed: 0,
+                hourlyLimit: 20,
+                hourlyRemaining: 20,
+                dailyUsed: 0,
+                dailyLimit: 200,
+                dailyRemaining: 200,
+                nextReset: new Date(now + oneHour).toLocaleString(),
+                status: 'available'
+            };
+        }
+        
+        const timestamps = this.rateLimits.get(sessionId);
+        const validTimestamps = timestamps.filter(ts => now - ts < oneDay);
+        const hourlyCount = validTimestamps.filter(ts => now - ts < oneHour).length;
+        
+        const hourlyRemaining = Math.max(0, 20 - hourlyCount);
+        const dailyRemaining = Math.max(0, 200 - validTimestamps.length);
+        
+        let status = 'available';
+        if (hourlyCount >= 20) {
+            status = 'hourly_limit_exceeded';
+        } else if (validTimestamps.length >= 200) {
+            status = 'daily_limit_exceeded';
+        } else if (hourlyCount >= 15) {
+            status = 'warning';
+        }
+        
+        return {
+            session: sessionId,
+            hourlyUsed: hourlyCount,
+            hourlyLimit: 20,
+            hourlyRemaining: hourlyRemaining,
+            dailyUsed: validTimestamps.length,
+            dailyLimit: 200,
+            dailyRemaining: dailyRemaining,
+            nextReset: new Date(now + oneHour).toLocaleString(),
+            status: status
+        };
+    }
+
+    // NEW: Get All Sessions Rate Limit Status
+    getAllRateLimitStatus() {
+        const allSessions = {};
+        
+        for (const [sessionId] of this.rateLimits.entries()) {
+            allSessions[sessionId] = this.getRateLimitStatus(sessionId);
+        }
+        
+        return {
+            currentSession: this.getRateLimitStatus(),
+            allSessions: allSessions,
+            totalSessions: this.rateLimits.size
+        };
+    }
+
+    // NEW: Reset Rate Limit for Session
+    resetRateLimit(playerSession = null) {
+        const sessionId = playerSession || this.getPlayerSessionId();
+        
+        if (this.rateLimits.has(sessionId)) {
+            this.rateLimits.delete(sessionId);
+            console.log(`🔄 Rate limit reset for session: ${sessionId}`);
+            this.saveSecurityState();
+            return true;
+        }
+        
+        return false;
+    }
+
     validateContent(review) {
         if (!this.validBots.includes(review.botName)) {
             return {
@@ -662,3 +741,48 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Global instance for browser usage
 window.SecureGitHubDB = SecureGitHubDatabase;
+
+// NEW: Global Rate Limit Debug Functions
+window.checkRateLimit = function() {
+    if (window.communityDB && window.communityDB.githubDB) {
+        const status = window.communityDB.githubDB.getRateLimitStatus();
+        console.log('📊 Current Rate Limit Status:', status);
+        console.table(status);
+        return status;
+    } else {
+        console.log('❌ Community DB not available');
+        return null;
+    }
+};
+
+window.checkAllRateLimits = function() {
+    if (window.communityDB && window.communityDB.githubDB) {
+        const allStatus = window.communityDB.githubDB.getAllRateLimitStatus();
+        console.log('📊 All Rate Limit Status:', allStatus);
+        console.table(allStatus.currentSession);
+        if (Object.keys(allStatus.allSessions).length > 1) {
+            console.log('📊 All Sessions:');
+            console.table(allStatus.allSessions);
+        }
+        return allStatus;
+    } else {
+        console.log('❌ Community DB not available');
+        return null;
+    }
+};
+
+window.resetMyRateLimit = function() {
+    if (window.communityDB && window.communityDB.githubDB) {
+        const result = window.communityDB.githubDB.resetRateLimit();
+        if (result) {
+            console.log('✅ Rate limit reset successfully');
+            window.checkRateLimit(); // Show new status
+        } else {
+            console.log('ℹ️ No rate limit data to reset');
+        }
+        return result;
+    } else {
+        console.log('❌ Community DB not available');
+        return false;
+    }
+};
