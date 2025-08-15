@@ -1,14 +1,34 @@
 {
   "globalStats": {
-    "totalReviews": 1,
+    "totalReviews": 2,
     "totalPlayers": 1,
     "averagePositiveRate": 0,
-    "lastUpdated": "2025-08-15T10:17:47.102Z"
+    "lastUpdated": "2025-08-15T10:17:47.809Z"
   },
   "reviews": [
     {
       "id": "mecocuhp_vibgj7_dnbo3n",
       "timestamp": "2025-08-15T10:17:47.101Z",
+      "playerSession": "player_me8gl5da_nppxha_fpovk",
+      "botName": "Anna",
+      "cardPlayed": "â ï¸A",
+      "gameContext": {
+        "trickNumber": 0,
+        "position": "unknown",
+        "trumpSuit": null,
+        "gameType": "rufspiel"
+      },
+      "rating": "bad",
+      "reasoning": "Der Stich gehÃ¶rt dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ mÃ¶glichst kleinen Trumpf",
+      "gameMetadata": {
+        "calledAce": null,
+        "gameType": "rufspiel"
+      },
+      "securityHash": "cl43vz"
+    },
+    {
+      "id": "mecocuu8_6op9yv_xen9o8",
+      "timestamp": "2025-08-15T10:17:47.552Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
       "cardPlayed": "♠️A",
@@ -19,7 +39,7 @@
         "gameType": "rufspiel"
       },
       "rating": "bad",
-      "reasoning": "Der Stich gehört dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ möglichst kleinen Trumpf",
+      "reasoning": "Mitspieler Anna hat mit dem höchsten verbleibenden Trumpf gestochen, der Stich ist sicher. Also bevorzugt hohes Herz schmieren, in dem Fall Herz Ass",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
