@@ -1,0 +1,18 @@
+{
+  "globalStats": {
+    "totalReviews": 0,
+    "totalPlayers": 0,
+    "averagePositiveRate": 0,
+    "lastUpdated": "2025-08-14T12:25:00.000Z"
+  },
+  "reviews": [],
+  "backupMetadata": {
+    "timestamp": "2025-08-15T00:38:30.543Z",
+    "totalReviews": 0,
+    "securityStats": {
+      "suspiciousActivities": 1,
+      "blockedSessions": 0,
+      "auditLogEntries": 1000
+    }
+  }
+}
