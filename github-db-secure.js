@@ -636,11 +636,29 @@ class SecureGitHubDatabase {
         }
     }
 
+    // FIXED: Unicode-safe Base64 encoding
+    unicodeSafeBase64(str) {
+        try {
+            // Convert Unicode string to Base64 safely
+            return btoa(unescape(encodeURIComponent(str)));
+        } catch (error) {
+            console.error('Base64 encoding error:', error);
+            // Fallback: Remove problematic characters
+            const cleanStr = str.replace(/[^\x00-\x7F]/g, '?');
+            return btoa(cleanStr);
+        }
+    }
+
     async updateFile(path, content, sha, message) {
         try {
+            console.log('📤 Updating file with Unicode-safe encoding:', path);
+            
+            const jsonContent = JSON.stringify(content, null, 2);
+            console.log('📋 JSON content length:', jsonContent.length);
+            
             const body = {
                 message,
-                content: btoa(JSON.stringify(content, null, 2)),
+                content: this.unicodeSafeBase64(jsonContent), // FIXED: Use Unicode-safe encoding
                 branch: 'main'
             };
             
@@ -654,10 +672,16 @@ class SecureGitHubDatabase {
             });
 
             this.cache.delete(`file:${path}`);
+            console.log('✅ File updated successfully with Unicode content');
             return { success: true, sha: response.content.sha };
             
         } catch (error) {
-            console.error('Failed to update file:', error);
+            console.error('❌ Failed to update file:', error);
+            console.error('❌ Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
             return { success: false, reason: error.message };
         }
     }
