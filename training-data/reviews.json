@@ -1,9 +1,9 @@
 {
   "globalStats": {
-    "totalReviews": 6,
+    "totalReviews": 7,
     "totalPlayers": 1,
-    "averagePositiveRate": 16.7,
-    "lastUpdated": "2025-08-15T11:29:08.835Z"
+    "averagePositiveRate": 14.3,
+    "lastUpdated": "2025-08-15T13:27:43.188Z"
   },
   "reviews": [
     {
@@ -11,7 +11,7 @@
       "timestamp": "2025-08-15T10:17:47.101Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂA",
+      "cardPlayed": "ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -19,7 +19,7 @@
         "gameType": "rufspiel"
       },
       "rating": "bad",
-      "reasoning": "Der Stich gehÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶rt dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ mÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶glichst kleinen Trumpf",
+      "reasoning": "Der Stich gehÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶rt dem Mitspieler. Also bevorzugt hohes Herz als Schmiere spielen, alternativ mÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶glichst kleinen Trumpf",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
@@ -31,7 +31,7 @@
       "timestamp": "2025-08-15T10:17:47.552Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂA",
+      "cardPlayed": "ÃÂÃÂÃÂÃÂ¢ÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ ÃÂÃÂÃÂÃÂ¯ÃÂÃÂÃÂÃÂ¸ÃÂÃÂÃÂÃÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -39,7 +39,7 @@
         "gameType": "rufspiel"
       },
       "rating": "bad",
-      "reasoning": "Mitspieler Anna hat mit dem hÃÂÃÂÃÂÃÂ¶chsten verbleibenden Trumpf gestochen, der Stich ist sicher. Also bevorzugt hohes Herz schmieren, in dem Fall Herz Ass",
+      "reasoning": "Mitspieler Anna hat mit dem hÃÂÃÂÃÂÃÂÃÂÃÂÃÂÃÂ¶chsten verbleibenden Trumpf gestochen, der Stich ist sicher. Also bevorzugt hohes Herz schmieren, in dem Fall Herz Ass",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
@@ -51,7 +51,7 @@
       "timestamp": "2025-08-15T10:24:59.063Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "ÃÂ¢ÃÂÃÂ ÃÂ¯ÃÂ¸ÃÂA",
+      "cardPlayed": "ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ ÃÂÃÂ¯ÃÂÃÂ¸ÃÂÃÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -59,7 +59,7 @@
         "gameType": "rufspiel"
       },
       "rating": "good",
-      "reasoning": "Als Gegner wenn mÃÂÃÂ¶glich die Farbe der gerufenen Ass spielen, falls die Ass noch nicht gerufen wurde",
+      "reasoning": "Als Gegner wenn mÃÂÃÂÃÂÃÂ¶glich die Farbe der gerufenen Ass spielen, falls die Ass noch nicht gerufen wurde",
       "gameMetadata": {
         "calledAce": null,
         "gameType": "rufspiel"
@@ -71,7 +71,7 @@
       "timestamp": "2025-08-15T10:25:00.191Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "Ã¢ÂÂ Ã¯Â¸ÂA",
+      "cardPlayed": "ÃÂ¢ÃÂÃÂ ÃÂ¯ÃÂ¸ÃÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -91,7 +91,7 @@
       "timestamp": "2025-08-15T11:29:06.915Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "â ï¸A",
+      "cardPlayed": "Ã¢ÂÂ Ã¯Â¸ÂA",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -111,7 +111,7 @@
       "timestamp": "2025-08-15T11:29:08.579Z",
       "playerSession": "player_me8gl5da_nppxha_fpovk",
       "botName": "Anna",
-      "cardPlayed": "♠️A",
+      "cardPlayed": "â ï¸A",
       "gameContext": {
         "trickNumber": 0,
         "position": "unknown",
@@ -125,6 +125,26 @@
         "gameType": "rufspiel"
       },
       "securityHash": "cnd5rh"
+    },
+    {
+      "id": "mecv4xnb_zx7eut_jozetu",
+      "timestamp": "2025-08-15T13:27:35.255Z",
+      "playerSession": "player_me8gl5da_nppxha_fpovk",
+      "botName": "Anna",
+      "cardPlayed": "♠️A",
+      "gameContext": {
+        "trickNumber": 0,
+        "position": "unknown",
+        "trumpSuit": null,
+        "gameType": "rufspiel"
+      },
+      "rating": "bad",
+      "reasoning": "Sepp kann davon ausgehen, dass \"SIE\" als Spieler genug Trümpfe haben, um die Herz Ass zu stechen. Also schmieren",
+      "gameMetadata": {
+        "calledAce": null,
+        "gameType": "rufspiel"
+      },
+      "securityHash": "d2s218"
     }
   ]
 }
