@@ -1,4 +1,4 @@
-// Enhanced Community Database System - Enhanced Error Logging
+// Enhanced Community Database System - SHA-Conflict Resolver
 // Replaces the simulated stats with real GitHub-based community data
 
 class CommunityDatabaseSystem {
@@ -184,6 +184,7 @@ class CommunityDatabaseSystem {
         console.log(`📥 Added to pending uploads queue. Total pending: ${this.pendingUploads.length}`);
     }
 
+    // FIXED: SHA-Conflict Resolver - Upload reviews with fresh SHA
     async uploadPendingReviews() {
         console.log('🔄 uploadPendingReviews() called');
         
@@ -202,17 +203,24 @@ class CommunityDatabaseSystem {
         let uploadedCount = 0;
         const failedUploads = [];
 
+        // FIXED: Process reviews sequentially with SHA refresh
         for (let i = 0; i < this.pendingUploads.length; i++) {
             const review = this.pendingUploads[i];
             console.log(`📤 Processing review ${i + 1}/${this.pendingUploads.length}:`, review.botName, review.rating);
             
             try {
-                const result = await this.uploadReviewToCommunity(review);
+                // FIXED: For each review, let GitHub handle SHA internally
+                const result = await this.uploadReviewToCommunityWithRetry(review);
                 console.log(`📊 Upload result for review ${i + 1}:`, result);
                 
                 if (result.success) {
                     uploadedCount++;
                     console.log(`✅ Review ${i + 1} uploaded successfully`);
+                    
+                    // Small delay to prevent GitHub rate limiting stress
+                    if (i < this.pendingUploads.length - 1) {
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    }
                 } else {
                     console.error(`❌ Review ${i + 1} upload failed:`, result.reason);
                     failedUploads.push(review);
@@ -238,6 +246,42 @@ class CommunityDatabaseSystem {
         } else {
             console.warn('⚠️ No reviews were successfully uploaded');
         }
+    }
+
+    // FIXED: Retry mechanism for SHA conflicts
+    async uploadReviewToCommunityWithRetry(reviewData, maxRetries = 3) {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            console.log(`📤 Upload attempt ${attempt}/${maxRetries} for review:`, reviewData.botName);
+            
+            const result = await this.uploadReviewToCommunity(reviewData);
+            
+            if (result.success) {
+                return result;
+            }
+            
+            // Check if it's a SHA conflict (409 error)
+            if (result.reason && result.reason.includes('409') && attempt < maxRetries) {
+                console.log(`🔄 SHA conflict detected, retrying in 1 second (attempt ${attempt}/${maxRetries})`);
+                
+                // Wait a bit for GitHub to settle
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Clear cache to force fresh SHA fetch
+                if (this.githubDB && this.githubDB.cache) {
+                    this.githubDB.cache.delete('file:training-data/reviews.json');
+                }
+                
+                continue;
+            }
+            
+            // If not a SHA conflict or max retries reached, return the error
+            return result;
+        }
+        
+        return { 
+            success: false, 
+            reason: `Failed after ${maxRetries} attempts with SHA conflicts` 
+        };
     }
 
     setupAutoSync() {
