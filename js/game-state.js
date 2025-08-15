@@ -1,6 +1,7 @@
 /**
  * Bayerisches Schafkopf - Spielzustand-Verwaltung
  * Verwaltet den globalen Spielzustand und bietet Funktionen für Zustandsänderungen
+ * MIT INTEGRIERTEM VORHAND-SYSTEM
  */
 
 // Globaler Spielzustand
@@ -32,11 +33,14 @@ let gameState = {
     // Debug-Modus
     debugMode: true, // Standardmäßig an für Entwicklung
     
-    // Spielverlauf-Log - WICHTIG: Hier schon initialisieren!
+    // Spielverlauf-Log
     gameLog: [],
     
-    // NEU: Stich-Position Tracking
-    trickLeadPlayer: 0 // Wer spielt die erste Karte des aktuellen Stichs aus
+    // Stich-Position Tracking
+    trickLeadPlayer: 0, // Wer spielt die erste Karte des aktuellen Stichs aus
+    
+    // VORHAND-SYSTEM: Einfach und direkt integriert
+    vorhand: 0 // Wer beginnt die aktuelle Runde (rotiert zwischen Runden)
 };
 
 /**
@@ -107,11 +111,11 @@ function initializeGameState(options = {}) {
         trumpSuit: 'herz',
         calledAce: null,
         calledAcePlayer: -1,
-        calledSuitPlayed: false, // NEU: Tracking ob Ruffarbe bereits gespielt wurde
+        calledSuitPlayed: false,
         
         // Partnerschaften
         playerPartnership: [0, 1, 2, 3],
-        teamPoints: [0, 0], // Team 0 vs Team 1
+        teamPoints: [0, 0],
         
         // Spielstatistiken
         roundNumber: 1,
@@ -120,37 +124,92 @@ function initializeGameState(options = {}) {
         // Debug und Einstellungen
         debugMode: config.debugMode,
         
-        // Spielverlauf-Log - WICHTIG: Hier initialisieren!
+        // Spielverlauf-Log
         gameLog: [],
         
         // Timing
         lastActionTime: Date.now(),
         
-        // NEU: Stich-Position Tracking
-        trickLeadPlayer: 0 // Spieler nach dem Kartengeber spielt erste Karte
+        // Stich-Position Tracking
+        trickLeadPlayer: 0,
+        
+        // VORHAND-SYSTEM: Einfach integriert
+        vorhand: 0 // Startet immer bei Spieler 0 (menschlicher Spieler)
     };
     
-    // Jetzt können wir sicher loggen, da gameLog existiert
     logGameAction('Spiel initialisiert', config);
+    console.log(`🎯 Vorhand initialisiert: ${gameState.players[gameState.vorhand].name} beginnt`);
 }
 
 /**
- * Startet eine neue Spielrunde
+ * VORHAND-SYSTEM: Gibt den aktuellen Vorhand-Spieler zurück
+ * @returns {number} Index des Vorhand-Spielers
+ */
+function getCurrentVorhand() {
+    return gameState.vorhand;
+}
+
+/**
+ * VORHAND-SYSTEM: Gibt den Namen des aktuellen Vorhand-Spielers zurück
+ * @returns {string} Name des Vorhand-Spielers
+ */
+function getCurrentVorhandName() {
+    return gameState.players[gameState.vorhand].name;
+}
+
+/**
+ * VORHAND-SYSTEM: Rotiert die Vorhand zum nächsten Spieler (Uhrzeigersinn)
+ */
+function rotateVorhand() {
+    const previousVorhand = gameState.vorhand;
+    gameState.vorhand = (gameState.vorhand + 1) % gameState.players.length;
+    
+    console.log(`🔄 Vorhand rotiert: ${gameState.players[previousVorhand].name} → ${gameState.players[gameState.vorhand].name}`);
+    
+    logGameAction('Vorhand rotiert', {
+        previousVorhand: gameState.players[previousVorhand].name,
+        newVorhand: gameState.players[gameState.vorhand].name,
+        round: gameState.roundNumber
+    });
+}
+
+/**
+ * VORHAND-SYSTEM: Debug-Funktion für Vorhand-Status
+ */
+function debugVorhand() {
+    console.log('🎯 Vorhand-Status:');
+    console.log(`Aktuelle Vorhand: ${gameState.players[gameState.vorhand].name} (Index: ${gameState.vorhand})`);
+    console.log(`Runde: ${gameState.roundNumber}`);
+    console.log(`Aktueller Ausspieler: ${gameState.players[gameState.trickLeadPlayer].name} (Index: ${gameState.trickLeadPlayer})`);
+    
+    if (gameState.vorhand !== gameState.trickLeadPlayer) {
+        console.log('⚠️ Vorhand ≠ Trickführung (normal nach erstem Stich)');
+    }
+    
+    return {
+        vorhand: gameState.vorhand,
+        vorhandName: gameState.players[gameState.vorhand].name,
+        trickLeadPlayer: gameState.trickLeadPlayer,
+        trickLeadPlayerName: gameState.players[gameState.trickLeadPlayer].name,
+        round: gameState.roundNumber,
+        status: 'OK'
+    };
+}
+
+/**
+ * Startet eine neue Spielrunde (ERWEITERT: mit Vorhand-System)
  */
 function startNewRound() {
-    // Nur Rundendaten zurücksetzen, Spieler behalten
-    gameState.currentPlayer = 0;
+    // Rundendaten zurücksetzen
     gameState.currentTrick = [];
     gameState.trickNumber = 0;
     gameState.completedTricks = [];
     gameState.gamePhase = 'playing';
-    
-    // Ruffarbe-Tracking zurücksetzen
     gameState.calledSuitPlayed = false;
     
-    // NEU: Ausspieler für ersten Stich setzen (Spieler nach dem Kartengeber)
-    gameState.trickLeadPlayer = (gameState.roundNumber) % 4; // Kartengeber rotiert
-    gameState.currentPlayer = gameState.trickLeadPlayer;
+    // VORHAND-SYSTEM: Ausspieler für ersten Stich ist immer die aktuelle Vorhand
+    gameState.trickLeadPlayer = gameState.vorhand;
+    gameState.currentPlayer = gameState.vorhand;
     
     // Spieler-Rundendaten zurücksetzen
     gameState.players.forEach(player => {
@@ -160,7 +219,6 @@ function startNewRound() {
         player.tricksWon = [];
     });
     
-    // Team-Punkte zurücksetzen
     gameState.teamPoints = [0, 0];
     
     // Rundennummer erhöhen
@@ -168,8 +226,22 @@ function startNewRound() {
     
     logGameAction('Neue Runde gestartet', { 
         round: gameState.roundNumber,
+        vorhand: gameState.players[gameState.vorhand].name,
         leadPlayer: gameState.players[gameState.trickLeadPlayer].name
     });
+    
+    console.log(`🆕 Runde ${gameState.roundNumber}: ${gameState.players[gameState.vorhand].name} hat Vorhand`);
+}
+
+/**
+ * VORHAND-SYSTEM: Bereitet die nächste Runde vor (mit Vorhand-Rotation)
+ */
+function prepareNextRound() {
+    // Vorhand für nächste Runde rotieren
+    rotateVorhand();
+    
+    // Neue Runde mit rotierter Vorhand starten
+    startNewRound();
 }
 
 /**
@@ -196,16 +268,14 @@ function nextPlayer() {
 }
 
 /**
- * NEU: Ermittelt die strategische Position eines Spielers im aktuellen Stich
+ * Ermittelt die strategische Position eines Spielers im aktuellen Stich
  * @param {number} playerIndex - Index des Spielers
  * @returns {string} Position: 'ausspieler', 'zweiter', 'dritter', 'letzter'
  */
 function getTrickPosition(playerIndex) {
-    // Finde die Position relativ zum Ausspieler
     const leadPlayerIndex = gameState.trickLeadPlayer;
     const playersInGame = gameState.players.length;
     
-    // Berechne relative Position zum Ausspieler
     let relativePosition = (playerIndex - leadPlayerIndex + playersInGame) % playersInGame;
     
     const positions = ['ausspieler', 'zweiter', 'dritter', 'letzter'];
@@ -213,23 +283,19 @@ function getTrickPosition(playerIndex) {
 }
 
 /**
- * NEU: Ermittelt die strategische Position basierend auf bereits gespielten Karten
+ * Ermittelt die strategische Position basierend auf bereits gespielten Karten
  * @param {number} playerIndex - Index des Spielers
  * @returns {string} Aktuelle Position im Stich
  */
 function getCurrentTrickPosition(playerIndex) {
     const cardsPlayed = gameState.currentTrick.length;
     
-    // Wenn der Stich leer ist, prüfe ob dieser Spieler der Ausspieler ist
     if (cardsPlayed === 0) {
         return playerIndex === gameState.trickLeadPlayer ? 'ausspieler' : 'unknown';
     }
     
-    // Finde Position basierend auf Reihenfolge im aktuellen Stich
     const leadPlayerIndex = gameState.trickLeadPlayer;
     const playersInGame = gameState.players.length;
-    
-    // Berechne welcher Spieler als nächstes dran ist
     const nextPlayerIndex = (leadPlayerIndex + cardsPlayed) % playersInGame;
     
     if (playerIndex === nextPlayerIndex) {
@@ -241,7 +307,7 @@ function getCurrentTrickPosition(playerIndex) {
 }
 
 /**
- * NEU: Gibt die strategische Beschreibung einer Stich-Position zurück
+ * Gibt die strategische Beschreibung einer Stich-Position zurück
  * @param {string} position - Position ('ausspieler', 'zweiter', etc.)
  * @returns {string} Strategische Beschreibung
  */
@@ -257,7 +323,7 @@ function getPositionDescription(position) {
 }
 
 /**
- * Fügt eine Karte zum aktuellen Stich hinzu (ERWEITERT: mit Stich-Position)
+ * Fügt eine Karte zum aktuellen Stich hinzu
  * @param {Object} card - Die gespielte Karte
  * @param {number} playerIndex - Spieler der die Karte gespielt hat
  */
@@ -267,9 +333,9 @@ function addCardToTrick(card, playerIndex) {
         card: card,
         player: playerIndex,
         playerName: gameState.players[playerIndex].name,
-        position: gameState.currentTrick.length, // Reihenfolge im Stich (0-3)
-        stichPosition: stichPosition, // NEU: Strategische Position
-        trickNumber: gameState.trickNumber + 1 // NEU: Aktueller Stich (1-8)
+        position: gameState.currentTrick.length,
+        stichPosition: stichPosition,
+        trickNumber: gameState.trickNumber + 1
     };
     
     gameState.currentTrick.push(trickCard);
@@ -278,13 +344,13 @@ function addCardToTrick(card, playerIndex) {
         player: gameState.players[playerIndex].name,
         card: `${card.symbol}${card.short}`,
         trickPosition: trickCard.position,
-        stichPosition: stichPosition, // NEU
-        trickNumber: trickCard.trickNumber // NEU
+        stichPosition: stichPosition,
+        trickNumber: trickCard.trickNumber
     });
 }
 
 /**
- * Beendet den aktuellen Stich und ermittelt den Gewinner (ERWEITERT: Ausspieler-Update)
+ * Beendet den aktuellen Stich und ermittelt den Gewinner
  * @returns {Object} Stich-Ergebnis mit Gewinner und Punkten
  */
 function completeTrick() {
@@ -330,13 +396,13 @@ function completeTrick() {
         trickNumber: gameState.trickNumber
     });
     
-    // NEU: Stichgewinner wird neuer Ausspieler für nächsten Stich
+    // Stichgewinner wird neuer Ausspieler für nächsten Stich
     gameState.trickLeadPlayer = winnerPlayerIndex;
     
     // Für nächsten Stich vorbereiten
     gameState.currentTrick = [];
     gameState.trickNumber++;
-    gameState.currentPlayer = winnerPlayerIndex; // Stichgewinner beginnt
+    gameState.currentPlayer = winnerPlayerIndex;
     
     return completedTrick;
 }
@@ -350,7 +416,7 @@ function isGameFinished() {
 }
 
 /**
- * Beendet das aktuelle Spiel und ermittelt Gewinner (KORRIGIERT: Berücksichtigt Rufspiel-Teams)
+ * Beendet das aktuelle Spiel und ermittelt Gewinner
  * @returns {Object} Spielergebnis
  */
 function finishGame() {
@@ -359,9 +425,8 @@ function finishGame() {
     
     let result;
     
-    // Korrekte Team-basierte Auswertung für Rufspiel
+    // Team-basierte Auswertung für Rufspiel
     if (gameState.gameType === 'rufspiel' && gameState.calledAcePlayer >= 0) {
-        // Team-Punkte berechnen
         const team0Points = gameState.players
             .filter((p, i) => gameState.playerPartnership[i] === 0)
             .reduce((sum, p) => sum + p.points, 0);
@@ -372,9 +437,9 @@ function finishGame() {
         const teamWins = team0Points >= 61;
         
         result = {
-            humanPoints: gameState.players[0].points, // Individuelle Punkte für Kompatibilität
+            humanPoints: gameState.players[0].points,
             cpuPoints: gameState.players.slice(1).reduce((sum, p) => sum + p.points, 0),
-            humanWins: teamWins, // Basiert jetzt auf Team-Ergebnis!
+            humanWins: teamWins,
             teamPoints: [team0Points, team1Points],
             gameType: gameState.gameType,
             roundNumber: gameState.roundNumber,
@@ -382,7 +447,6 @@ function finishGame() {
             isTeamGame: true
         };
     } else {
-        // Vereinfachte Gewinner-Ermittlung für andere Spieltypen
         const humanPlayer = gameState.players[0];
         const cpuPoints = gameState.players.slice(1).reduce((sum, p) => sum + p.points, 0);
         
@@ -410,7 +474,6 @@ function setDebugMode(enabled) {
     gameState.debugMode = enabled;
     logGameAction('Debug-Modus geändert', { enabled });
     
-    // CSS-Klasse für Debug-Modus setzen/entfernen
     if (typeof document !== 'undefined') {
         document.body.classList.toggle('debug-mode', enabled);
     }
@@ -486,7 +549,7 @@ function exportGameLog() {
 }
 
 /**
- * Setzt einen Checkpoint des Spielzustands (für Undo-Funktionalität)
+ * Setzt einen Checkpoint des Spielzustands
  * @param {string} label - Label für den Checkpoint
  */
 function saveCheckpoint(label) {
@@ -500,7 +563,6 @@ function saveCheckpoint(label) {
         state: JSON.parse(JSON.stringify(gameState))
     });
     
-    // Nur die letzten 5 Checkpoints behalten
     if (gameState.checkpoints.length > 5) {
         gameState.checkpoints.shift();
     }
@@ -509,7 +571,7 @@ function saveCheckpoint(label) {
 }
 
 /**
- * NEU: Debug-Funktion für Stich-Positionen
+ * Debug-Funktion für Stich-Positionen
  */
 function debugTrickPositions() {
     console.log('🎯 Aktuelle Stich-Positionen:');
