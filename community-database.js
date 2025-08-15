@@ -1,4 +1,4 @@
-// Enhanced Community Database System - Fixed Real Data Detection
+// Enhanced Community Database System - Enhanced Error Logging
 // Replaces the simulated stats with real GitHub-based community data
 
 class CommunityDatabaseSystem {
@@ -116,20 +116,46 @@ class CommunityDatabaseSystem {
     }
 
     async uploadReviewToCommunity(reviewData) {
+        console.log('📤 Starting upload for review:', reviewData.botName, reviewData.rating);
+        
         if (!this.githubDB) {
+            console.error('❌ Upload failed: No GitHub connection');
             return { success: false, reason: 'No GitHub connection' };
         }
 
-        // Enhance review data with community metadata
-        const communityReview = {
-            ...reviewData,
-            communityId: this.generateCommunityId(),
-            uploadedAt: new Date().toISOString(),
-            playerSession: this.getPlayerSessionId(),
-            version: '1.0'
-        };
+        try {
+            // Enhance review data with community metadata
+            const communityReview = {
+                ...reviewData,
+                communityId: this.generateCommunityId(),
+                uploadedAt: new Date().toISOString(),
+                playerSession: this.getPlayerSessionId(),
+                version: '1.0'
+            };
 
-        return await this.githubDB.addTrainingReview(communityReview);
+            console.log('📋 Prepared community review data:', communityReview);
+            
+            const result = await this.githubDB.addTrainingReview(communityReview);
+            
+            console.log('📊 GitHub upload result:', result);
+            
+            if (result.success) {
+                console.log('✅ Review successfully uploaded to GitHub');
+            } else {
+                console.error('❌ GitHub upload failed:', result.reason);
+            }
+            
+            return result;
+            
+        } catch (error) {
+            console.error('❌ Exception during upload:', error);
+            console.error('❌ Error details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
+            });
+            return { success: false, reason: error.message };
+        }
     }
 
     saveLocalReview(reviewData) {
@@ -155,29 +181,49 @@ class CommunityDatabaseSystem {
         // Persist pending uploads
         localStorage.setItem('community_pending_uploads', 
                            JSON.stringify(this.pendingUploads));
+        console.log(`📥 Added to pending uploads queue. Total pending: ${this.pendingUploads.length}`);
     }
 
     async uploadPendingReviews() {
-        if (!this.isEnabled || this.pendingUploads.length === 0) return;
+        console.log('🔄 uploadPendingReviews() called');
+        
+        if (!this.isEnabled) {
+            console.log('❌ Upload aborted: Community integration not enabled');
+            return;
+        }
+        
+        if (this.pendingUploads.length === 0) {
+            console.log('ℹ️ No pending uploads to process');
+            return;
+        }
 
         console.log(`🔄 Uploading ${this.pendingUploads.length} pending reviews to community...`);
         
         let uploadedCount = 0;
         const failedUploads = [];
 
-        for (const review of this.pendingUploads) {
+        for (let i = 0; i < this.pendingUploads.length; i++) {
+            const review = this.pendingUploads[i];
+            console.log(`📤 Processing review ${i + 1}/${this.pendingUploads.length}:`, review.botName, review.rating);
+            
             try {
                 const result = await this.uploadReviewToCommunity(review);
+                console.log(`📊 Upload result for review ${i + 1}:`, result);
+                
                 if (result.success) {
                     uploadedCount++;
+                    console.log(`✅ Review ${i + 1} uploaded successfully`);
                 } else {
+                    console.error(`❌ Review ${i + 1} upload failed:`, result.reason);
                     failedUploads.push(review);
                 }
             } catch (error) {
-                console.error('Failed to upload pending review:', error);
+                console.error(`❌ Exception during review ${i + 1} upload:`, error);
                 failedUploads.push(review);
             }
         }
+
+        console.log(`📊 Upload summary: ${uploadedCount} successful, ${failedUploads.length} failed`);
 
         this.pendingUploads = failedUploads;
         localStorage.setItem('community_pending_uploads', 
@@ -189,6 +235,8 @@ class CommunityDatabaseSystem {
             this.contributionStats.reviewsContributed += uploadedCount;
             this.contributionStats.lastContribution = new Date().toISOString();
             this.saveContributionStats();
+        } else {
+            console.warn('⚠️ No reviews were successfully uploaded');
         }
     }
 
@@ -196,6 +244,7 @@ class CommunityDatabaseSystem {
         // Auto-sync every 5 minutes
         this.autoSyncInterval = setInterval(async () => {
             if (this.isEnabled && this.pendingUploads.length > 0) {
+                console.log('⏰ Auto-sync triggered');
                 await this.uploadPendingReviews();
             }
         }, 5 * 60 * 1000);
@@ -283,6 +332,7 @@ class CommunityDatabaseSystem {
         const pending = localStorage.getItem('community_pending_uploads');
         if (pending) {
             this.pendingUploads = JSON.parse(pending);
+            console.log(`📂 Loaded ${this.pendingUploads.length} pending uploads from storage`);
         }
     }
 
@@ -359,6 +409,7 @@ class CommunityDatabaseSystem {
         if (connected) {
             // Upload all existing local reviews
             const localReviews = JSON.parse(localStorage.getItem('training_reviews') || '[]');
+            console.log(`📋 Adding ${localReviews.length} local reviews to pending uploads`);
             this.pendingUploads = [...localReviews, ...this.pendingUploads];
             await this.uploadPendingReviews();
         }
@@ -380,12 +431,17 @@ class CommunityDatabaseSystem {
 
     // Testing and diagnostics
     async testConnection() {
+        console.log('🧪 Testing GitHub connection...');
+        
         if (!this.githubDB) {
+            console.log('❌ No GitHub database instance');
             return { success: false, message: 'Keine GitHub-Verbindung verfügbar' };
         }
         
         try {
             const result = await this.githubDB.testConnection();
+            console.log('🧪 GitHub test connection result:', result);
+            
             if (result) {
                 // Test if we can actually read the community data
                 const stats = await this.githubDB.getGlobalStats();
@@ -398,6 +454,7 @@ class CommunityDatabaseSystem {
                 return { success: false, message: 'Verbindungstest fehlgeschlagen' };
             }
         } catch (error) {
+            console.error('❌ Test connection error:', error);
             return { success: false, message: error.message };
         }
     }
