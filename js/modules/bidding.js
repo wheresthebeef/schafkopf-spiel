@@ -242,13 +242,12 @@ class CPUBiddingLogic {
             return { type: 'pass' };
         }
         
-        // Einfache Rufspiel-Regel: >= 3 Haxn + >= 5 Trumpf
+        // Einfache Rufspiel-Regel: >= 5 Trumpf
         const trumpCards = cards.filter(card => CPUBiddingLogic._isTrump(card));
-        const haxnCards = cards.filter(card => CPUBiddingLogic._isHaxn(card));
         
-        console.log(`🤖 ${player.name}: ${trumpCards.length} Trumpf, ${haxnCards.length} Haxn`);
+        console.log(`🤖 ${player.name}: ${trumpCards.length} Trumpf`);
         
-        if (trumpCards.length >= 5 && haxnCards.length >= 3) {
+        if (trumpCards.length >= 5) {
             // Welches Ass rufen?
             const calledAce = CPUBiddingLogic._selectCalledAce(cards);
             
@@ -269,13 +268,6 @@ class CPUBiddingLogic {
     static _isTrump(card) {
         // Alle Herz + alle Ober + alle Unter
         return card.suit === 'herz' || card.value === 'ober' || card.value === 'unter';
-    }
-    
-    /**
-     * Prüft ob Karte Haxn ist (Ass oder 10)
-     */
-    static _isHaxn(card) {
-        return card.value === 'ass' || card.value === '10';
     }
     
     /**
