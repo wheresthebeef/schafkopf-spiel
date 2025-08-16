@@ -88,6 +88,145 @@
             color: #28a745;
             font-weight: bold;
         }
+
+        /* Bidding Controls */
+        .bidding-controls {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            z-index: 1500;
+            text-align: center;
+            min-width: 320px;
+            display: none;
+        }
+
+        .bidding-controls.active {
+            display: block;
+        }
+
+        .bidding-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+        }
+
+        .bidding-info {
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.9;
+        }
+
+        .bidding-buttons {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .bid-btn {
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .bid-btn:hover {
+            background: rgba(255,255,255,0.3);
+            border-color: rgba(255,255,255,0.5);
+            transform: translateY(-2px);
+        }
+
+        .bid-btn.primary {
+            background: #28a745;
+            border-color: #28a745;
+        }
+
+        .bid-btn.primary:hover {
+            background: #218838;
+            border-color: #218838;
+        }
+
+        .bid-btn.secondary {
+            background: #6c757d;
+            border-color: #6c757d;
+        }
+
+        .bid-btn.secondary:hover {
+            background: #5a6268;
+            border-color: #5a6268;
+        }
+
+        .bidding-status {
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            opacity: 0.8;
+        }
+
+        .bidding-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1400;
+            display: none;
+        }
+
+        .bidding-overlay.active {
+            display: block;
+        }
+
+        /* Ace Selection for Rufspiel */
+        .ace-selection {
+            display: none;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .ace-selection.active {
+            display: block;
+        }
+
+        .ace-buttons {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-top: 0.75rem;
+        }
+
+        .ace-btn {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.2s ease;
+        }
+
+        .ace-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .ace-btn.selected {
+            background: #28a745;
+            border-color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -102,6 +241,38 @@
             </div>
         </div>
         <div class="training-icon">🧠</div>
+    </div>
+
+    <!-- Bidding Overlay -->
+    <div class="bidding-overlay" id="bidding-overlay"></div>
+
+    <!-- Bidding Controls -->
+    <div class="bidding-controls" id="bidding-controls">
+        <div class="bidding-title" id="bidding-title">🎯 Bidding Phase</div>
+        <div class="bidding-info" id="bidding-info">Sie sind am Zug - wählen Sie Ihr Gebot:</div>
+        
+        <div class="bidding-buttons">
+            <button class="bid-btn primary" onclick="placeBid('rufspiel')">🃏 Rufspiel</button>
+            <button class="bid-btn" onclick="placeBid('solo')">👑 Solo</button>
+            <button class="bid-btn" onclick="placeBid('wenz')">🃋 Wenz</button>
+            <button class="bid-btn secondary" onclick="placeBid('pass')">❌ Weiter</button>
+        </div>
+
+        <!-- Ace Selection for Rufspiel -->
+        <div class="ace-selection" id="ace-selection">
+            <div>Welches Ass möchten Sie rufen?</div>
+            <div class="ace-buttons">
+                <button class="ace-btn" data-ace="eichel" onclick="selectAce('eichel')">♠️ Eichel</button>
+                <button class="ace-btn" data-ace="gras" onclick="selectAce('gras')">♦️ Gras</button>
+                <button class="ace-btn" data-ace="schellen" onclick="selectAce('schellen')">🔔 Schellen</button>
+            </div>
+            <div style="margin-top: 1rem;">
+                <button class="bid-btn primary" onclick="confirmRufspiel()" id="confirm-rufspiel" disabled>✅ Bestätigen</button>
+                <button class="bid-btn secondary" onclick="cancelBid()">❌ Abbrechen</button>
+            </div>
+        </div>
+
+        <div class="bidding-status" id="bidding-status">Warten auf Ihre Entscheidung...</div>
     </div>
 
     <!-- Original Layout -->
@@ -196,6 +367,10 @@
     <script src="js/cards.js?v=20250815-clean"></script>
     <script src="js/game.js?v=20250815-clean"></script>
     
+    <!-- Bidding System Modules -->
+    <script src="js/modules/bidding.js?v=20250816-bidding"></script>
+    <script src="js/modules/game-controller.js?v=20250816-bidding"></script>
+    
     <!-- Community Training System -->
     <script src="github-db-secure.js?v=20250815-clean"></script>
     <script src="secure-training-integration.js?v=20250815-clean"></script>
@@ -205,6 +380,10 @@
     <script src="js/ai/post-game-training.js?v=20250815-clean"></script>
     
     <script>
+        // Bidding UI Variables
+        let selectedAce = null;
+        let pendingBidType = null;
+
         // Community Training badge control functions
         function toggleTrainingBadge() {
             const badge = document.getElementById('community-badge');
@@ -242,6 +421,143 @@
                 console.log('✅ Community-Training aktiviert! Bot-Züge werden bewertet.');
             }
         }
+
+        // Bidding UI Functions
+        function showBiddingInterface(playerName, isHumanTurn = true) {
+            const overlay = document.getElementById('bidding-overlay');
+            const controls = document.getElementById('bidding-controls');
+            const title = document.getElementById('bidding-title');
+            const info = document.getElementById('bidding-info');
+            
+            if (isHumanTurn) {
+                title.textContent = '🎯 Sie sind am Zug';
+                info.textContent = 'Wählen Sie Ihr Gebot:';
+                
+                overlay.classList.add('active');
+                controls.classList.add('active');
+            } else {
+                title.textContent = `🤖 ${playerName} überlegt...`;
+                info.textContent = 'Warten auf CPU-Entscheidung...';
+                
+                overlay.classList.add('active');
+                controls.classList.add('active');
+                
+                // Bidding-Buttons für CPU ausblenden
+                const buttons = controls.querySelectorAll('.bid-btn');
+                buttons.forEach(btn => btn.style.display = 'none');
+            }
+        }
+
+        function hideBiddingInterface() {
+            const overlay = document.getElementById('bidding-overlay');
+            const controls = document.getElementById('bidding-controls');
+            const aceSelection = document.getElementById('ace-selection');
+            
+            overlay.classList.remove('active');
+            controls.classList.remove('active');
+            aceSelection.classList.remove('active');
+            
+            // Reset
+            selectedAce = null;
+            pendingBidType = null;
+            
+            // Buttons wieder einblenden
+            const buttons = controls.querySelectorAll('.bid-btn');
+            buttons.forEach(btn => btn.style.display = 'inline-block');
+        }
+
+        function placeBid(bidType) {
+            console.log(`🎯 Spieler wählt: ${bidType}`);
+            
+            if (bidType === 'rufspiel') {
+                // Zeige Ass-Auswahl
+                pendingBidType = 'rufspiel';
+                document.getElementById('ace-selection').classList.add('active');
+                updateBiddingStatus('Wählen Sie das zu rufende Ass...');
+            } else {
+                // Direktes Gebot
+                submitBid(bidType);
+            }
+        }
+
+        function selectAce(ace) {
+            selectedAce = ace;
+            
+            // Update UI
+            const aceButtons = document.querySelectorAll('.ace-btn');
+            aceButtons.forEach(btn => {
+                btn.classList.toggle('selected', btn.dataset.ace === ace);
+            });
+            
+            document.getElementById('confirm-rufspiel').disabled = false;
+            updateBiddingStatus(`${ace.charAt(0).toUpperCase() + ace.slice(1)}-Ass ausgewählt`);
+        }
+
+        function confirmRufspiel() {
+            if (selectedAce) {
+                submitBid('rufspiel', { ace: selectedAce });
+            }
+        }
+
+        function cancelBid() {
+            document.getElementById('ace-selection').classList.remove('active');
+            pendingBidType = null;
+            selectedAce = null;
+            updateBiddingStatus('Warten auf Ihre Entscheidung...');
+        }
+
+        function submitBid(bidType, bidDetails = {}) {
+            console.log(`🎯 Übermittle Gebot: ${bidType}`, bidDetails);
+            
+            // Bidding-Interface ausblenden
+            hideBiddingInterface();
+            
+            // An Game Controller weiterleiten
+            if (window.BiddingIntegration) {
+                const result = window.BiddingIntegration.processBid(bidType, bidDetails);
+                
+                if (result.success) {
+                    updateGameStatus(`Sie: ${bidType === 'pass' ? 'Weiter' : bidType}`);
+                } else {
+                    console.error('Bidding-Fehler:', result.error);
+                    updateGameStatus('Fehler beim Bieten - versuchen Sie erneut');
+                }
+            } else {
+                console.warn('BiddingIntegration nicht verfügbar');
+            }
+        }
+
+        function updateBiddingStatus(message) {
+            document.getElementById('bidding-status').textContent = message;
+        }
+
+        // Integration mit bestehendem Spiel
+        function startBiddingPhase() {
+            console.log('🎯 Starte Bidding-Phase');
+            
+            if (window.BiddingIntegration && gameState) {
+                const result = window.BiddingIntegration.startBiddingPhase(gameState, updateGameDisplay);
+                
+                if (result.success) {
+                    // UI für aktuellen Bieter anzeigen
+                    const currentPlayer = gameState.players[result.currentBidder];
+                    showBiddingInterface(currentPlayer.name, currentPlayer.isHuman);
+                }
+            }
+        }
+
+        // Erweitere newGame() Funktion um Bidding
+        const originalNewGame = window.newGame;
+        window.newGame = function() {
+            if (originalNewGame) {
+                originalNewGame();
+            }
+            
+            // Nach Kartengeben: Bidding starten
+            setTimeout(() => {
+                startBiddingPhase();
+            }, 1000);
+        };
         
         // Auto-collapse badge after 8 seconds
         setTimeout(() => {
@@ -251,7 +567,8 @@
         
         // CLEAN: Einfache System-Checks ohne setTimeout-Chaos
         console.log('🌍 Community Training System - READY!');
-        console.log('🎯 Vereinfachtes ⭐/❌ Feedback-Interface');
+        console.log('🎯 Bidding System - INTEGRATED!');
+        console.log('🎲 Vereinfachtes ⭐/❌ Feedback-Interface');
         console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
         console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
         console.log('🔄 Vorhand-System direkt integriert (clean)');
@@ -265,9 +582,11 @@
                 console.log(`🏆 Training system: ${window.postGameTraining ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🌉 Q-Learning Bridge: ${window.qLearningBridge ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🌍 Community DB: ${window.communityDB ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🎯 Bidding System: ${window.BiddingManager ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🎮 Game Controller: ${window.GameController ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
                 
-                updateGameStatus('🌍 Community Training System Ready! KI lernt aus Ihrem Feedback.');
+                updateGameStatus('🌍 Community Training + Bidding System Ready!');
                 
                 // Auto-enable training after 3 seconds
                 setTimeout(() => {
@@ -277,7 +596,7 @@
                         btn.textContent = 'Training AUS';
                         btn.classList.add('active');
                         
-                        updateGameStatus('🏆 Training aktiviert! Bewerten Sie Bot-Züge nach jedem Stich.');
+                        updateGameStatus('🏆 Training + Bidding aktiviert! Starten Sie ein neues Spiel.');
                         console.log('✨ Community-Training auto-aktiviert!');
                     }
                 }, 3000);
@@ -286,10 +605,13 @@
         
         // CLEAN: Einfache Test-Funktion ohne Chaos
         window.testCommunityTraining = function() {
-            console.log('🧪 Community Training System Test:');
+            console.log('🧪 Community Training + Bidding System Test:');
             console.log('postGameTraining available:', !!window.postGameTraining);
             console.log('qLearningBridge available:', !!window.qLearningBridge);
             console.log('communityDB available:', !!window.communityDB);
+            console.log('BiddingManager available:', !!window.BiddingManager);
+            console.log('GameController available:', !!window.GameController);
+            console.log('BiddingIntegration available:', !!window.BiddingIntegration);
             console.log('Vorhand System available: ✅ Integrated');
             
             if (window.postGameTraining) {
@@ -303,6 +625,11 @@
                 console.log('Q-Learning Stats:', window.getQLearningStats());
             }
             
+            // Bidding System Test
+            if (window.BiddingIntegration) {
+                console.log('🎯 Bidding Status:', window.BiddingIntegration.getBiddingStatus());
+            }
+            
             // CLEAN: Direkte Vorhand-Tests
             console.log('🔄 Vorhand Tests:');
             console.log('getCurrentVorhand():', getCurrentVorhand());
@@ -313,6 +640,11 @@
                 training: window.postGameTraining,
                 bridge: window.qLearningBridge,
                 community: window.communityDB,
+                bidding: {
+                    manager: window.BiddingManager,
+                    controller: window.GameController,
+                    integration: window.BiddingIntegration
+                },
                 vorhand: {
                     current: getCurrentVorhand(),
                     name: getCurrentVorhandName(),
@@ -323,34 +655,40 @@
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '5.0-clean-restart',
-            layout: 'clean-index.html',
-            modules: ['game-state-with-vorhand', 'post-game-training', 'community-qlearning-bridge'],
+            version: '6.0-bidding-integrated',
+            layout: 'bidding-enhanced-index.html',
+            modules: ['game-state-with-vorhand', 'post-game-training', 'community-qlearning-bridge', 'bidding-system', 'game-controller'],
             features: [
                 'simplified-ui', 
                 'strategic-positions', 
                 'correct-roles', 
                 'enhanced-gamecontext',
                 'community-database',
-                'integrated-vorhand-system'
+                'integrated-vorhand-system',
+                'complete-bidding-system'
             ],
             improvements: [
                 'clean-architecture',
                 'no-setTimeout-chaos',
                 'direct-integration',
                 'simple-dependencies',
-                'vorhand-in-gamestate'
+                'vorhand-in-gamestate',
+                'modular-bidding-system'
             ],
             training: {
                 available: !!window.postGameTraining,
                 autoActivated: true,
                 features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
             },
-            status: 'clean-community-training-system'
+            bidding: {
+                available: !!window.BiddingManager,
+                features: ['rufspiel', 'solo', 'wenz', 'cpu-logic', 'ui-integration']
+            },
+            status: 'clean-community-training-with-bidding-system'
         };
         
-        console.log('📊 Community Training System Info:', window.communityTrainingInfo);
-        console.log('✨ CLEAN RESTART: Einfache Architektur ohne Chaos!');
+        console.log('📊 Community Training + Bidding System Info:', window.communityTrainingInfo);
+        console.log('✨ BIDDING INTEGRATION: Vollständiges Schafkopf-Erlebnis!');
     </script>
 </body>
 </html>
