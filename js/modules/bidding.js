@@ -228,7 +228,7 @@ class BiddingManager {
 
 /**
  * CPU-Bidding-Logik
- * Einfache Regeln für automatische Gebote
+ * Korrekte Schafkopf-Regeln für automatische Gebote
  */
 class CPUBiddingLogic {
     /**
@@ -242,50 +242,64 @@ class CPUBiddingLogic {
             return { type: 'pass' };
         }
         
-        // Einfache Rufspiel-Regel: >= 5 Trumpf
-        const trumpCards = cards.filter(card => CPUBiddingLogic._isTrump(card));
+        // Rufspiel-Regeln prüfen
+        const oberUnter = cards.filter(card => card.value === 'ober' || card.value === 'unter');
+        const herzCards = cards.filter(card => card.suit === 'herz' && card.value !== 'ober' && card.value !== 'unter');
         
-        console.log(`🤖 ${player.name}: ${trumpCards.length} Trumpf`);
+        console.log(`🤖 ${player.name}: ${oberUnter.length} Ober/Unter, ${herzCards.length} Herz`);
         
-        if (trumpCards.length >= 5) {
-            // Welches Ass rufen?
-            const calledAce = CPUBiddingLogic._selectCalledAce(cards);
-            
-            console.log(`🤖 ${player.name} spielt Rufspiel (${calledAce}-Ass)`);
-            return {
-                type: 'rufspiel',
-                details: { ace: calledAce }
-            };
+        // Regel 1: Mindestens 3 Ober oder Unter
+        if (oberUnter.length < 3) {
+            console.log(`🤖 ${player.name}: Pass (nur ${oberUnter.length} Ober/Unter)`);
+            return { type: 'pass' };
         }
         
-        console.log(`🤖 ${player.name}: Pass`);
-        return { type: 'pass' };
+        // Regel 2: Zusätzlich mindestens 2 Herz
+        if (herzCards.length < 2) {
+            console.log(`🤖 ${player.name}: Pass (nur ${herzCards.length} Herz)`);
+            return { type: 'pass' };
+        }
+        
+        // Regel 3: Eine Karte einer Farbe ohne das Ass zu haben
+        const calledAce = CPUBiddingLogic._findCallableAce(cards);
+        if (!calledAce) {
+            console.log(`🤖 ${player.name}: Pass (kein rufbares Ass)`);
+            return { type: 'pass' };
+        }
+        
+        console.log(`🤖 ${player.name} spielt Rufspiel (${calledAce}-Ass)`);
+        return {
+            type: 'rufspiel',
+            details: { ace: calledAce }
+        };
     }
     
     /**
-     * Prüft ob Karte Trumpf ist (vereinfacht)
+     * Findet ein rufbares Ass (Farbe ohne eigenes Ass)
      */
-    static _isTrump(card) {
-        // Alle Herz + alle Ober + alle Unter
-        return card.suit === 'herz' || card.value === 'ober' || card.value === 'unter';
-    }
-    
-    /**
-     * Wählt das zu rufende Ass aus
-     */
-    static _selectCalledAce(cards) {
-        const aces = ['eichel', 'gras', 'schellen'];
+    static _findCallableAce(cards) {
+        const suits = ['eichel', 'gras', 'schellen'];
         const ownAces = cards.filter(card => card.value === 'ass').map(card => card.suit);
         
-        // Rufe ein Ass das ich nicht habe
-        for (const ace of aces) {
-            if (!ownAces.includes(ace)) {
-                return ace;
+        // Prüfe jede Farbe
+        for (const suit of suits) {
+            // Hat er das Ass dieser Farbe?
+            const hasAce = ownAces.includes(suit);
+            
+            // Hat er mindestens eine Karte dieser Farbe (aber nicht das Ass)?
+            const hasCardInSuit = cards.some(card => 
+                card.suit === suit && 
+                card.value !== 'ass' && 
+                card.value !== 'ober' && 
+                card.value !== 'unter'
+            );
+            
+            if (!hasAce && hasCardInSuit) {
+                return suit; // Kann dieses Ass rufen
             }
         }
         
-        // Fallback: Eichel
-        return 'eichel';
+        return null; // Kein rufbares Ass gefunden
     }
 }
 
