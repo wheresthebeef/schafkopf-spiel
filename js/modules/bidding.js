@@ -228,7 +228,7 @@ class BiddingManager {
 
 /**
  * CPU-Bidding-Logik
- * Korrekte Schafkopf-Regeln für automatische Gebote
+ * NEUE REGELN: Mindestens 5 Trumpfkarten, davon mindestens 2 Ober/Unter
  */
 class CPUBiddingLogic {
     /**
@@ -242,21 +242,22 @@ class CPUBiddingLogic {
             return { type: 'pass' };
         }
         
-        // Rufspiel-Regeln prüfen
+        // NEUE REGEL: Alle Trumpfkarten zählen (Ober, Unter, Herz)
         const oberUnter = cards.filter(card => card.value === 'ober' || card.value === 'unter');
         const herzCards = cards.filter(card => card.suit === 'herz' && card.value !== 'ober' && card.value !== 'unter');
+        const totalTrumpCards = oberUnter.length + herzCards.length;
         
-        console.log(`🤖 ${player.name}: ${oberUnter.length} Ober/Unter, ${herzCards.length} Herz`);
+        console.log(`🤖 ${player.name}: ${oberUnter.length} Ober/Unter, ${herzCards.length} Herz, ${totalTrumpCards} Trümpfe gesamt`);
         
-        // Regel 1: Mindestens 3 Ober oder Unter
-        if (oberUnter.length < 3) {
-            console.log(`🤖 ${player.name}: Pass (nur ${oberUnter.length} Ober/Unter)`);
+        // NEUE REGEL 1: Mindestens 5 Trumpfkarten insgesamt
+        if (totalTrumpCards < 5) {
+            console.log(`🤖 ${player.name}: Pass (nur ${totalTrumpCards} Trümpfe, brauche 5)`);
             return { type: 'pass' };
         }
         
-        // Regel 2: Zusätzlich mindestens 2 Herz
-        if (herzCards.length < 2) {
-            console.log(`🤖 ${player.name}: Pass (nur ${herzCards.length} Herz)`);
+        // NEUE REGEL 2: Davon mindestens 2 Ober oder Unter
+        if (oberUnter.length < 2) {
+            console.log(`🤖 ${player.name}: Pass (nur ${oberUnter.length} Ober/Unter, brauche 2)`);
             return { type: 'pass' };
         }
         
@@ -267,7 +268,7 @@ class CPUBiddingLogic {
             return { type: 'pass' };
         }
         
-        console.log(`🤖 ${player.name} spielt Rufspiel (${calledAce}-Ass)`);
+        console.log(`🤖 ${player.name} spielt Rufspiel (${calledAce}-Ass) - ${totalTrumpCards} Trümpfe, ${oberUnter.length} Ober/Unter`);
         return {
             type: 'rufspiel',
             details: { ace: calledAce }
