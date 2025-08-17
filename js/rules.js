@@ -4,57 +4,41 @@
  */
 
 /**
- * Prüft ob eine Karte spielbar ist (BULLETPROOF VERSION)
+ * Prüft ob eine Karte spielbar ist (CLEAN VERSION - Debug entfernt)
  * @param {Object} card - Die zu prüfende Karte
  * @param {number} playerIndex - Index des Spielers
  * @returns {boolean} true wenn Karte spielbar ist
  */
 function canPlayCard(card, playerIndex) {
     try {
-        if (gameState.debugMode) {
-            console.log(`🃏 canPlayCard START: ${card.symbol}${card.short} für Spieler ${playerIndex}`);
-        }
-        
         // Null/undefined checks
         if (!card || playerIndex === undefined || playerIndex === null) {
-            console.warn('🃏 canPlayCard: Invalid parameters');
             return false;
         }
         
         // GameState checks
         if (!gameState || !gameState.players || !gameState.players[playerIndex]) {
-            console.warn('🃏 canPlayCard: Invalid gameState');
             return false;
         }
         
         // Nur der aktuelle Spieler kann Karten spielen
         if (playerIndex !== gameState.currentPlayer) {
-            if (gameState.debugMode) {
-                console.log(`🃏 canPlayCard: Nicht am Zug (${playerIndex} ≠ ${gameState.currentPlayer})`);
-            }
             return false;
         }
         
         // In der Bidding-Phase können keine Karten gespielt werden
         if (gameState.gamePhase !== 'playing') {
-            if (gameState.debugMode) {
-                console.log(`🃏 canPlayCard: Falsche Phase (${gameState.gamePhase})`);
-            }
             return false;
         }
         
         // Spieler muss die Karte haben
         const player = gameState.players[playerIndex];
         if (!player || !player.cards || !Array.isArray(player.cards)) {
-            console.warn('🃏 canPlayCard: Invalid player cards');
             return false;
         }
         
         const hasCard = player.cards.some(c => c && c.suit === card.suit && c.value === card.value);
         if (!hasCard) {
-            if (gameState.debugMode) {
-                console.log(`🃏 canPlayCard: Karte nicht in Hand`);
-            }
             return false;
         }
         
@@ -72,18 +56,10 @@ function canPlayCard(card, playerIndex) {
             return false;
         }
         
-        const result = validation.valid;
-        
-        if (gameState.debugMode) {
-            console.log(`🃏 canPlayCard: Validation result:`, validation);
-            console.log(`🃏 canPlayCard: Returning:`, result);
-        }
-        
-        return result;
+        return validation.valid;
         
     } catch (error) {
         console.error('🃏 canPlayCard CRITICAL ERROR:', error);
-        console.error('Stack:', error.stack);
         return false;
     }
 }
@@ -622,7 +598,7 @@ function debugCalledAceStatus() {
 }
 
 /**
- * DEBUG: Karten-Click Debugging-Funktion
+ * DEBUG: Karten-Click Debugging-Funktion (Nur bei Bedarf)
  * @param {number} playerIndex - Spieler zum Testen (Standard: 0)
  */
 function debugCardClickability(playerIndex = 0) {
@@ -672,18 +648,18 @@ const GAME_TYPES = {
     FARBSOLO: 'farbsolo'
 };
 
-// BULLETPROOF: Forciere Neu-Export mit Timestamp
+// CLEAN: Export ohne Debug-Spam
 if (typeof window !== 'undefined') {
     // Lösche alte Funktionen falls vorhanden
     delete window.canPlayCard;
     delete window.validateCardPlay;
     
-    // Exportiere neue bombensichere Versionen
+    // Exportiere saubere Versionen
     window.canPlayCard = canPlayCard;
     window.validateCardPlay = validateCardPlay;
     window.debugCardClickability = debugCardClickability;
     window.debugValidation = debugValidation;
     window.debugCalledAceStatus = debugCalledAceStatus;
     
-    console.log('🔧 Rules.js: BULLETPROOF functions exported at', new Date().toLocaleTimeString());
+    console.log('🔧 Rules.js: Clean functions exported');
 }
