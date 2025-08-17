@@ -18,7 +18,7 @@ function updateUI() {
 }
 
 /**
- * Aktualisiert die Anzeige aller Spieler-Karten
+ * Aktualisiert die Anzeige aller Spieler-Karten (FIXED: Defensive canPlayCard-Prüfung)
  */
 function updatePlayerCards() {
     gameState.players.forEach((player, index) => {
@@ -28,9 +28,37 @@ function updatePlayerCards() {
         if (player.isHuman || gameState.debugMode) {
             // Karten sichtbar anzeigen - mit korrekter Sortierung für die Anzeige
             const sortedCards = sortCardsForDisplay([...player.cards]);
-            cardsContainer.innerHTML = sortedCards.map(card => 
-                createCardHTML(card, canPlayCard(card, index), false)
-            ).join('');
+            
+            cardsContainer.innerHTML = sortedCards.map(card => {
+                // FIXED: Defensive Programmierung für canPlayCard
+                let isPlayable = false;
+                
+                if (typeof canPlayCard === 'function') {
+                    try {
+                        isPlayable = canPlayCard(card, index);
+                    } catch (error) {
+                        console.warn('🃏 canPlayCard error:', error);
+                        isPlayable = false;
+                    }
+                } else if (typeof window.canPlayCard === 'function') {
+                    try {
+                        isPlayable = window.canPlayCard(card, index);
+                    } catch (error) {
+                        console.warn('🃏 window.canPlayCard error:', error);
+                        isPlayable = false;
+                    }
+                } else {
+                    // Fallback: Basis-Check ohne Regelvalidierung
+                    isPlayable = (index === gameState.currentPlayer && 
+                                 gameState.gamePhase === 'playing');
+                    
+                    if (gameState.debugMode) {
+                        console.warn('🃏 canPlayCard nicht verfügbar - Fallback verwendet');
+                    }
+                }
+                
+                return createCardHTML(card, isPlayable, false);
+            }).join('');
         } else {
             // Kartenrückseiten anzeigen
             cardsContainer.innerHTML = player.cards.map(() => 
@@ -254,4 +282,56 @@ function getGridArea(playerIndex) {
         case 3: return '2 / 2 / 3 / 3'; // right
         default: return '1 / 1 / 2 / 2';
     }
+}
+
+/**
+ * DEBUG: UI-Debugging-Funktion für Karten-Click-Probleme
+ */
+function debugUICardSystem() {
+    console.log('🎨 UI Card System Debug:');
+    console.log('updatePlayerCards function available:', typeof updatePlayerCards === 'function');
+    console.log('createCardHTML function available:', typeof createCardHTML === 'function');
+    console.log('canPlayCard function available:', typeof canPlayCard === 'function');
+    console.log('window.canPlayCard available:', typeof window.canPlayCard === 'function');
+    
+    // Test Karten-Container
+    gameState.players.forEach((player, index) => {
+        const container = document.getElementById(`cards-${index}`);
+        console.log(`Player ${index} (${player.name}) container:`, !!container);
+        if (container) {
+            console.log(`  Cards in container: ${container.children.length}`);
+            console.log(`  Player has cards: ${player.cards.length}`);
+        }
+    });
+    
+    // Test aktuelle Spielsituation
+    console.log('Current game state:');
+    console.log('  gamePhase:', gameState.gamePhase);
+    console.log('  currentPlayer:', gameState.currentPlayer);
+    console.log('  Human player (0) turn:', gameState.currentPlayer === 0);
+    
+    return {
+        uiFunctions: {
+            updatePlayerCards: typeof updatePlayerCards === 'function',
+            createCardHTML: typeof createCardHTML === 'function',
+            canPlayCard: typeof canPlayCard === 'function',
+            windowCanPlayCard: typeof window.canPlayCard === 'function'
+        },
+        gameState: {
+            phase: gameState.gamePhase,
+            currentPlayer: gameState.currentPlayer,
+            humanTurn: gameState.currentPlayer === 0
+        },
+        containersFound: gameState.players.map((player, index) => ({
+            player: player.name,
+            containerExists: !!document.getElementById(`cards-${index}`),
+            cardCount: player.cards.length
+        }))
+    };
+}
+
+// Export Debug-Funktion global
+if (typeof window !== 'undefined') {
+    window.debugUICardSystem = debugUICardSystem;
+    console.log('🔧 UI-Core.js: Debug-Funktionen global exportiert');
 }
