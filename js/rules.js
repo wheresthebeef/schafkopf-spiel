@@ -4,6 +4,35 @@
  */
 
 /**
+ * Prüft ob eine Karte spielbar ist (NEUE FUNKTION - WAR FEHLEND!)
+ * @param {Object} card - Die zu prüfende Karte
+ * @param {number} playerIndex - Index des Spielers
+ * @returns {boolean} true wenn Karte spielbar ist
+ */
+function canPlayCard(card, playerIndex) {
+    // Nur der aktuelle Spieler kann Karten spielen
+    if (playerIndex !== gameState.currentPlayer) {
+        return false;
+    }
+    
+    // In der Bidding-Phase können keine Karten gespielt werden
+    if (gameState.gamePhase !== 'playing') {
+        return false;
+    }
+    
+    // Spieler muss die Karte haben
+    const player = gameState.players[playerIndex];
+    const hasCard = player.cards.some(c => c.suit === card.suit && c.value === card.value);
+    if (!hasCard) {
+        return false;
+    }
+    
+    // Regelvalidierung
+    const validation = validateCardPlay(card, playerIndex, gameState.currentTrick, player.cards);
+    return validation.valid;
+}
+
+/**
  * Validiert einen Spielzug nach Schafkopf-Regeln
  * @param {Object} card - Die zu spielende Karte
  * @param {number} playerIndex - Index des Spielers
