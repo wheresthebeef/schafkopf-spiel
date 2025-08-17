@@ -563,6 +563,40 @@ function debugCalledAceStatus() {
     }
 }
 
+/**
+ * DEBUG: Karten-Click Debugging-Funktion
+ * @param {number} playerIndex - Spieler zum Testen (Standard: 0)
+ */
+function debugCardClickability(playerIndex = 0) {
+    console.log('🃏 Card Click Debug:');
+    console.log('canPlayCard function available:', typeof canPlayCard === 'function');
+    console.log('validateCardPlay function available:', typeof validateCardPlay === 'function');
+    console.log('gameState.gamePhase:', gameState.gamePhase);
+    console.log('gameState.currentPlayer:', gameState.currentPlayer);
+    console.log('isPlayerTurn(0):', typeof isPlayerTurn === 'function' ? isPlayerTurn(0) : 'isPlayerTurn not available');
+    
+    const player = gameState.players[playerIndex];
+    if (player && player.cards.length > 0) {
+        console.log(`Player ${player.name} has ${player.cards.length} cards`);
+        const testCard = player.cards[0];
+        console.log(`Test card: ${testCard.symbol}${testCard.short}`);
+        console.log('Test card playability:', canPlayCard(testCard, playerIndex));
+        
+        // Detaillierte Validierung
+        const validation = validateCardPlay(testCard, playerIndex, gameState.currentTrick, player.cards);
+        console.log('Detailed validation:', validation);
+    } else {
+        console.log('No player or no cards available for testing');
+    }
+    
+    return {
+        canPlayCard: typeof canPlayCard === 'function',
+        gamePhase: gameState.gamePhase,
+        currentPlayer: gameState.currentPlayer,
+        playerTurn: typeof isPlayerTurn === 'function' ? isPlayerTurn(0) : null
+    };
+}
+
 // Exportierte Konstanten für Spielregeln
 const GAME_RULES = {
     POINTS_TO_WIN: 61,
@@ -579,3 +613,14 @@ const GAME_TYPES = {
     WENZ: 'wenz',
     FARBSOLO: 'farbsolo'
 };
+
+// CRITICAL FIX: Export wichtige Funktionen global für UI-Zugriff
+if (typeof window !== 'undefined') {
+    window.canPlayCard = canPlayCard;
+    window.validateCardPlay = validateCardPlay;
+    window.debugCardClickability = debugCardClickability;
+    window.debugValidation = debugValidation;
+    window.debugCalledAceStatus = debugCalledAceStatus;
+    
+    console.log('🔧 Rules.js: Funktionen global exportiert');
+}
