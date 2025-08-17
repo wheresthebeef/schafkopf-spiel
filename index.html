@@ -9,14 +9,14 @@
     <meta http-equiv="expires" content="0">
     <meta http-equiv="pragma" content="no-cache">
     
-    <title>🎯 Bayerisches Schafkopf - Modern AI System</title>
+    <title>🎯 Bayerisches Schafkopf - Community Training</title>
     
     <!-- Use original CSS -->
-    <link rel="stylesheet" href="css/style.css?v=20250817-ai">
+    <link rel="stylesheet" href="css/style.css?v=20250815-clean">
     
     <style>
-        /* Modern AI Training System Badge */
-        .ai-training-badge {
+        /* Community Training System Badge */
+        .community-training-badge {
             position: fixed;
             top: 10px;
             right: 10px;
@@ -30,14 +30,13 @@
             cursor: pointer;
             transition: all 0.3s ease;
             max-width: 200px;
-            opacity: 1;
         }
         
-        .ai-training-badge:hover {
+        .community-training-badge:hover {
             transform: scale(1.02);
         }
         
-        .ai-training-badge.collapsed {
+        .community-training-badge.collapsed {
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -51,7 +50,7 @@
             display: block;
         }
         
-        .ai-training-badge.collapsed .training-details {
+        .community-training-badge.collapsed .training-details {
             display: none;
         }
         
@@ -59,7 +58,7 @@
             display: none;
         }
         
-        .ai-training-badge.collapsed .training-icon {
+        .community-training-badge.collapsed .training-icon {
             display: block;
             font-size: 1.2rem;
         }
@@ -81,10 +80,15 @@
             opacity: 1;
             pointer-events: auto;
         }
-
-        .training-toggle.active {
+        
+        .training-toggle:hover {
             background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
+        }
+        
+        .training-toggle.active {
+            background: rgba(255,255,255,0.9);
+            color: #28a745;
+            font-weight: bold;
         }
 
         /* Bidding Controls */
@@ -228,17 +232,17 @@
     </style>
 </head>
 <body>
-    <!-- Modern AI Training System Badge -->
-    <div class="ai-training-badge" id="ai-badge" onclick="toggleAIBadge()">
+    <!-- Community Training System Badge -->
+    <div class="community-training-badge" id="community-badge" onclick="toggleTrainingBadge()">
         <div class="training-details">
-            <strong>🧠 Modern AI System</strong><br>
-            <small>Q-Learning + Human Training</small>
+            <strong>🌍 Community Training!</strong><br>
+            <small>KI lernt aus menschlichem Feedback</small>
             <div class="training-controls">
-                <button class="training-toggle" id="training-btn" onclick="toggleAITraining(event)">Training AN</button>
-                <small>Click to toggle</small>
+                <button class="training-toggle" id="training-btn" onclick="toggleTraining(event)">Training AN</button>
+                <small>Click to collapse</small>
             </div>
         </div>
-        <div class="training-icon">🤖</div>
+        <div class="training-icon">🧠</div>
     </div>
 
     <!-- Bidding Overlay -->
@@ -330,7 +334,7 @@
             <!-- Spielfeld-Mitte -->
             <div class="center-area">
                 <div class="game-status" id="game-status">
-                    🧠 Schafkopf mit Modern AI System - Bereit zum Spielen!
+                    🌍 Community Training System Ready - Start your game!
                 </div>
                 
                 <div class="trick-area" id="trick-area">
@@ -345,7 +349,7 @@
             <button class="btn" onclick="showStats()">Statistik</button>
             <button class="btn" onclick="toggleDebugMode()" id="debug-btn">Debug: AN</button>
             <button class="btn" onclick="toggleCardImages()" id="card-images-btn">Kartensymbole</button>
-            <button class="btn" onclick="showAIDashboard()">🧠 AI Dashboard</button>
+            <button class="btn" onclick="window.location.href='training-progress-community.html'">📊 Dashboard</button>
         </div>
     </div>
 
@@ -364,29 +368,31 @@
     <script src="js/ui/ui-modal.js?v=20250817-modular"></script>
     
     <!-- Core Game System -->
-    <script src="js/game-state.js?v=20250817-ai"></script>
-    <script src="js/rules.js?v=20250817-ai"></script>
-    <script src="js/cards.js?v=20250817-ai"></script>
-    
-    <!-- MODERN AI SYSTEM - ES6 MODULES -->
-    <script type="module" src="js/ai/ai-main.js?v=20250817-ai"></script>
-    
-    <!-- Legacy Game System (will be updated to use AI modules) -->
-    <script src="js/strategic-bots.js?v=20250817-ai"></script>
-    <script src="js/game.js?v=20250817-ai"></script>
+    <script src="js/game-state.js?v=20250815-clean"></script>
+    <script src="js/rules.js?v=20250815-clean"></script>
+    <script src="js/cards.js?v=20250815-clean"></script>
+    <script src="js/game.js?v=20250815-clean"></script>
     
     <!-- Bidding System Modules -->
-    <script src="js/modules/bidding.js?v=20250817-ai"></script>
-    <script src="js/modules/game-controller.js?v=20250817-ai"></script>
+    <script src="js/modules/bidding.js?v=20250816-bidding"></script>
+    <script src="js/modules/game-controller.js?v=20250816-bidding"></script>
+    
+    <!-- Community Training System -->
+    <script src="github-db-secure.js?v=20250815-clean"></script>
+    <script src="secure-training-integration.js?v=20250815-clean"></script>
+    <script src="community-database.js?v=20250815-clean"></script>
+    <script src="community-qlearning-bridge.js?v=20250815-clean"></script>
+    <script src="strategic-training-system.js?v=20250815-clean"></script>
+    <script src="js/ai/post-game-training.js?v=20250815-clean"></script>
     
     <script>
         // Bidding UI Variables
         let selectedAce = null;
         let pendingBidType = null;
 
-        // AI Training System Functions
-        function toggleAIBadge() {
-            const badge = document.getElementById('ai-badge');
+        // Community Training badge control functions
+        function toggleTrainingBadge() {
+            const badge = document.getElementById('community-badge');
             badge.classList.toggle('collapsed');
             
             // Auto-expand after 7 seconds if collapsed
@@ -396,8 +402,8 @@
                 }, 7000);
             }
         }
-
-        function toggleAITraining(event) {
+        
+        function toggleTraining(event) {
             event.stopPropagation(); // Prevent badge collapse
             
             const btn = document.getElementById('training-btn');
@@ -405,79 +411,20 @@
             
             if (isActive) {
                 // Disable training
-                if (window.humanFeedback) {
-                    window.humanFeedback.disable();
+                if (window.postGameTraining) {
+                    window.postGameTraining.disable();
                 }
                 btn.textContent = 'Training AN';
                 btn.classList.remove('active');
-                console.log('🚫 AI-Training deaktiviert');
-                showMessage('AI-Training deaktiviert', '#dc3545');
+                console.log('🚫 Community-Training deaktiviert');
             } else {
                 // Enable training
-                if (window.humanFeedback) {
-                    window.humanFeedback.enable();
+                if (window.postGameTraining) {
+                    window.postGameTraining.enable();
                 }
                 btn.textContent = 'Training AUS';
                 btn.classList.add('active');
-                console.log('✅ AI-Training aktiviert! Bot-Züge werden bewertet.');
-                showMessage('AI-Training aktiviert! Du kannst jetzt Bot-Züge bewerten.', '#28a745');
-            }
-        }
-
-        function showMessage(text, color) {
-            const msg = document.createElement('div');
-            msg.style.cssText = `
-                position: fixed;
-                top: 70px;
-                right: 20px;
-                background: ${color};
-                color: white;
-                padding: 8px 12px;
-                border-radius: 4px;
-                z-index: 1001;
-                font-weight: bold;
-                animation: fadeInOut 3s ease-in-out;
-            `;
-            msg.textContent = text;
-            
-            // Add CSS animation
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes fadeInOut {
-                    0% { opacity: 0; transform: translateX(100%); }
-                    20% { opacity: 1; transform: translateX(0); }
-                    80% { opacity: 1; transform: translateX(0); }
-                    100% { opacity: 0; transform: translateX(100%); }
-                }
-            `;
-            if (!document.getElementById('animation-style')) {
-                style.id = 'animation-style';
-                document.head.appendChild(style);
-            }
-            
-            document.body.appendChild(msg);
-            setTimeout(() => msg.remove(), 3000);
-        }
-
-        function showAIDashboard() {
-            if (window.getAIStats) {
-                const stats = window.getAIStats();
-                let statsText = '<h3>🧠 AI System Status</h3>';
-                
-                for (const [playerId, playerStats] of Object.entries(stats)) {
-                    const playerName = ['Sie', 'Anna', 'Hans', 'Sepp'][playerId] || `Bot ${playerId}`;
-                    statsText += `
-                        <p><strong>${playerName}:</strong><br>
-                        - Spiele: ${playerStats.gamesPlayed}<br>
-                        - Gewinnrate: ${(playerStats.winRate * 100).toFixed(1)}%<br>
-                        - Q-Table Größe: ${playerStats.qTableSize}<br>
-                        - Exploration: ${(playerStats.explorationRate * 100).toFixed(1)}%</p>
-                    `;
-                }
-                
-                showModal('AI Dashboard', statsText);
-            } else {
-                showModal('AI Dashboard', 'AI-System wird geladen... Versuchen Sie es in wenigen Sekunden erneut.');
+                console.log('✅ Community-Training aktiviert! Bot-Züge werden bewertet.');
             }
         }
 
@@ -618,12 +565,58 @@
             }, 1000);
         };
         
-        // MODERN AI: Enhanced Test Function
-        window.testModernAI = function() {
-            console.log('🧪 Modern AI System Test:');
-            console.log('aiSystem available:', !!window.aiSystem);
-            console.log('humanFeedback available:', !!window.humanFeedback);
-            console.log('selectCardWithAI available:', !!window.selectCardWithAI);
+        // Auto-collapse badge after 8 seconds
+        setTimeout(() => {
+            const badge = document.getElementById('community-badge');
+            badge.classList.add('collapsed');
+        }, 8000);
+        
+        console.log('🌍 Community Training System - READY!');
+        console.log('🎯 Bidding System - INTEGRATED!');
+        console.log('🧩 UI System - MODULAR (3 Module)!');
+        console.log('🎲 Vereinfachtes ⭐/❌ Feedback-Interface');
+        console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
+        console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
+        console.log('🔄 Vorhand-System direkt integriert (clean)');
+        
+        // System ready confirmation
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Community Training + Modular UI + Bidding System Check:');
+            
+            setTimeout(() => {
+                console.log(`🏆 Training system: ${window.postGameTraining ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🌉 Q-Learning Bridge: ${window.qLearningBridge ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🌍 Community DB: ${window.communityDB ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🎯 Bidding System: ${window.BiddingManager ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🎮 Game Controller: ${window.GameController ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🧩 Modular UI: ${typeof updateUI === 'function' ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🃏 Card UI: ${typeof createCardHTML === 'function' ? '✅ Available' : '❌ Missing'}`);
+                console.log(`📝 Modal UI: ${typeof showModal === 'function' ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
+                
+                updateGameStatus('🌍 Community Training + Modular UI + Bidding System Ready!');
+                
+                // Auto-enable training after 3 seconds
+                setTimeout(() => {
+                    if (window.postGameTraining && !window.postGameTraining.enabled) {
+                        window.postGameTraining.enable();
+                        const btn = document.getElementById('training-btn');
+                        btn.textContent = 'Training AUS';
+                        btn.classList.add('active');
+                        
+                        updateGameStatus('🏆 Training + Modular UI + Bidding aktiviert! Starten Sie ein neues Spiel.');
+                        console.log('✨ Community-Training auto-aktiviert!');
+                    }
+                }, 3000);
+            }, 1000);
+        });
+        
+        // Erweiterte Test-Funktion
+        window.testCommunityTraining = function() {
+            console.log('🧪 Community Training + Modular UI + Bidding System Test:');
+            console.log('postGameTraining available:', !!window.postGameTraining);
+            console.log('qLearningBridge available:', !!window.qLearningBridge);
+            console.log('communityDB available:', !!window.communityDB);
             console.log('BiddingManager available:', !!window.BiddingManager);
             console.log('GameController available:', !!window.GameController);
             console.log('BiddingIntegration available:', !!window.BiddingIntegration);
@@ -633,10 +626,18 @@
             console.log('  - showModal:', typeof showModal === 'function');
             console.log('Vorhand System available: ✅ Integrated');
             
-            if (window.aiSystem) {
-                console.log('🧠 AI Stats:', window.getAIStats());
+            if (window.postGameTraining) {
+                console.log('Training enabled:', window.postGameTraining.enabled);
+                console.log('Is tracking:', window.postGameTraining.isTrackingRound);
+                console.log('Current moves:', window.postGameTraining.currentRoundMoves.length);
             }
             
+            if (window.qLearningBridge) {
+                console.log('Q-Learning Bridge active:', window.qLearningBridge.isActive);
+                console.log('Q-Learning Stats:', window.getQLearningStats());
+            }
+            
+            // Bidding System Test
             if (window.BiddingIntegration) {
                 console.log('🎯 Bidding Status:', window.BiddingIntegration.getBiddingStatus());
             }
@@ -648,12 +649,9 @@
             debugVorhand();
             
             return {
-                ai: {
-                    system: window.aiSystem,
-                    humanFeedback: window.humanFeedback,
-                    selectCard: window.selectCardWithAI,
-                    stats: window.getAIStats ? window.getAIStats() : null
-                },
+                training: window.postGameTraining,
+                bridge: window.qLearningBridge,
+                community: window.communityDB,
                 bidding: {
                     manager: window.BiddingManager,
                     controller: window.GameController,
@@ -673,40 +671,59 @@
             };
         };
         
-        // System ready confirmation
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Modern AI + Bidding System Check:');
-            
-            setTimeout(() => {
-                console.log(`🧠 AI System: ${window.aiSystem ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🧑‍🏫 Human Training: ${window.humanFeedback ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🤖 AI Card Selection: ${window.selectCardWithAI ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🎯 Bidding System: ${window.BiddingManager ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🎮 Game Controller: ${window.GameController ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🧩 Modular UI: ${typeof updateUI === 'function' ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🃏 Card UI: ${typeof createCardHTML === 'function' ? '✅ Available' : '❌ Missing'}`);
-                console.log(`📝 Modal UI: ${typeof showModal === 'function' ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
-                
-                updateGameStatus('🧠 Modern AI + Bidding System Ready!');
-                
-                // Auto-enable training after 3 seconds
-                setTimeout(() => {
-                    if (window.humanFeedback) {
-                        window.humanFeedback.enable();
-                        const btn = document.getElementById('training-btn');
-                        btn.textContent = 'Training AUS';
-                        btn.classList.add('active');
-                        
-                        updateGameStatus('🏆 Modern AI + Training aktiviert! Starten Sie ein neues Spiel.');
-                        console.log('✨ AI-Training auto-aktiviert!');
-                    }
-                }, 3000);
-            }, 1000);
-        });
+        // Community Training info
+        window.communityTrainingInfo = {
+            version: '7.0-modular-ui-integrated',
+            layout: 'modular-ui-enhanced-index.html',
+            modules: [
+                'game-state-with-vorhand', 
+                'post-game-training', 
+                'community-qlearning-bridge', 
+                'bidding-system', 
+                'game-controller',
+                'modular-ui-cards',
+                'modular-ui-core', 
+                'modular-ui-modal'
+            ],
+            features: [
+                'simplified-ui', 
+                'strategic-positions', 
+                'correct-roles', 
+                'enhanced-gamecontext',
+                'community-database',
+                'integrated-vorhand-system',
+                'complete-bidding-system',
+                'modular-ui-architecture'
+            ],
+            improvements: [
+                'clean-architecture',
+                'no-setTimeout-chaos',
+                'direct-integration',
+                'simple-dependencies',
+                'vorhand-in-gamestate',
+                'modular-bidding-system',
+                'fixed-ui-integration',
+                'ui-split-into-modules'
+            ],
+            training: {
+                available: !!window.postGameTraining,
+                autoActivated: true,
+                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
+            },
+            bidding: {
+                available: !!window.BiddingManager,
+                features: ['rufspiel', 'solo', 'wenz', 'cpu-logic', 'ui-integration']
+            },
+            ui: {
+                architecture: 'modular',
+                modules: ['ui-cards', 'ui-core', 'ui-modal'],
+                totalSize: '~22KB (split from 21.7KB monolith)'
+            },
+            status: 'community-training-with-bidding-system-fully-activated'
+        };
         
-        console.log('🌟 Modern AI System loaded');
-        console.log('✨ Verwende testModernAI() für vollständige Tests');
+        console.log('📊 Community Training + Modular UI + Bidding System Info:', window.communityTrainingInfo);
+        console.log('✨ Verwende testCommunityTraining() für vollständige Tests');
     </script>
 </body>
 </html>
