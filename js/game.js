@@ -174,7 +174,7 @@ function startGameAfterBidding(gameType, calledAce = null) {
  * @param {string} suit - Farbe des gerufenen Asses
  */
 function findPartnerWithAce(suit) {
-    for (let i = 1; i < gameState.players.length; i++) {
+    for (let i = 0; i < gameState.players.length; i++) {
         const hasAce = gameState.players[i].cards.some(card => 
             card.suit === suit && card.value === 'sau'
         );
@@ -232,21 +232,246 @@ function initializeGame() {
     }, 1000);
 }
 
-// MINIMAL-VERSION: Nur die essentiellen Funktionen für Platzhalter
+/**
+ * ECHTE IMPLEMENTIERUNG: Spielt eine Karte
+ * @param {string} suit - Farbe der Karte
+ * @param {string} value - Wert der Karte
+ */
+function playCard(suit, value) {
+    console.log(`🎮 playCard: Spiele ${suit} ${value}`);
+    
+    // Aktueller Spieler
+    const player = getCurrentPlayer();
+    
+    // Karte finden und entfernen
+    const card = player.cards.find(c => c.suit === suit && c.value === value);
+    if (!card) {
+        console.error('Karte nicht in Spielerhand gefunden!');
+        return;
+    }
+    
+    // Karte aus Hand entfernen
+    const cardIndex = player.cards.indexOf(card);
+    player.cards.splice(cardIndex, 1);
+    
+    // Karte zum Stich hinzufügen
+    addCardToTrick(card, gameState.currentPlayer);
+    
+    // UI aktualisieren
+    updateUI();
+    
+    console.log(`🎮 ${player.name} spielt: ${card.symbol}${card.short}`);
+    
+    // Prüfen ob Stich vollständig
+    if (gameState.currentTrick.length === 4) {
+        // Stich auswerten
+        evaluateTrick();
+    } else {
+        // Nächster Spieler
+        nextPlayer();
+        
+        // CPU automatisch spielen lassen
+        if (!getCurrentPlayer().isHuman) {
+            setTimeout(playCPUCard, 1500);
+        }
+    }
+}
 
-function playCard(suit, value) { /* Bestehende Implementierung */ }
-function playCPUCard() { /* Bestehende Implementierung */ }  
-function evaluateTrick() { /* Bestehende Implementierung */ }
-function endGame() { /* Bestehende Implementierung */ }
-function showRules() { /* Bestehende Implementierung */ }
-function showStats() { /* Bestehende Implementierung */ }
-function toggleDebugMode() { /* Bestehende Implementierung */ }
-function toggleCardImages() { /* Bestehende Implementierung */ }
-function canPlayCard(card, playerIndex) { /* Bestehende Implementierung */ }
-function selectCardWithAI(playableCards, playerIndex) { /* Bestehende Implementierung */ }
-function handleResize() { /* Bestehende Implementierung */ }
-function exportGameData() { /* Bestehende Implementierung */ }
-function importGameData(data) { /* Bestehende Implementierung */ }
+/**
+ * ECHTE IMPLEMENTIERUNG: CPU spielt eine Karte
+ */
+function playCPUCard() {
+    const player = getCurrentPlayer();
+    
+    if (player.isHuman) {
+        console.warn('playCPUCard für menschlichen Spieler aufgerufen!');
+        return;
+    }
+    
+    console.log(`🤖 ${player.name} denkt...`);
+    
+    // Spielbare Karten ermitteln
+    const playableCards = player.cards.filter(card => 
+        canPlayCard(card, player.index)
+    );
+    
+    if (playableCards.length === 0) {
+        console.error(`${player.name} hat keine spielbaren Karten!`);
+        return;
+    }
+    
+    // KI-Entscheidung
+    const selectedCard = selectCardWithAI(playableCards, player.index);
+    
+    if (selectedCard) {
+        playCard(selectedCard.suit, selectedCard.value);
+    } else {
+        // Fallback: Erste spielbare Karte
+        playCard(playableCards[0].suit, playableCards[0].value);
+    }
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Wertet einen vollständigen Stich aus
+ */
+function evaluateTrick() {
+    const trickResult = completeTrick();
+    
+    if (!trickResult) {
+        console.error('Fehler beim Abschließen des Stichs');
+        return;
+    }
+    
+    console.log(`🏆 Stich ${trickResult.trickNumber}: ${trickResult.winnerName} gewinnt mit ${trickResult.points} Punkten`);
+    
+    // UI-Update nach kurzer Verzögerung für Übersicht
+    setTimeout(() => {
+        updateUI();
+        
+        // Prüfen ob Spiel beendet
+        if (isGameFinished()) {
+            endGame();
+        } else {
+            // Continue-Button anzeigen
+            showContinueButton();
+        }
+    }, 1000);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Beendet das Spiel
+ */
+function endGame() {
+    const result = finishGame();
+    
+    console.log('🏁 Spiel beendet:', result);
+    
+    // Endergebnis anzeigen
+    const message = result.humanWins ? 
+        `🎉 Sie haben gewonnen! (${result.humanPoints} Punkte)` :
+        `😔 Sie haben verloren. (${result.humanPoints} Punkte)`;
+    
+    showModal('Spiel beendet', message);
+    
+    // Nach kurzer Zeit neues Spiel anbieten
+    setTimeout(() => {
+        if (confirm('Neues Spiel starten?')) {
+            newGame();
+        }
+    }, 3000);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Zeigt Regeln an
+ */
+function showRules() {
+    const rulesText = `
+        <h3>Bayerisches Schafkopf - Regeln</h3>
+        <p><strong>Trumpf-Reihenfolge:</strong><br>
+        Ober (höchster) → Unter → Herz-Karten (niedrigster Trumpf)</p>
+        
+        <p><strong>Rufspiel:</strong><br>
+        Sie rufen ein Ass und spielen mit dem Partner, der diese Karte hat.</p>
+        
+        <p><strong>Punkte:</strong><br>
+        Ass = 11, Zehn = 10, König = 4, Ober = 3, Unter = 2</p>
+        
+        <p><strong>Ziel:</strong><br>
+        61 von 120 Punkten erreichen</p>
+    `;
+    
+    showModal('Spielregeln', rulesText);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Zeigt Statistiken an
+ */
+function showStats() {
+    const stats = getGameStats();
+    
+    const statsText = `
+        <h3>Spielstatistiken</h3>
+        <p><strong>Aktuelle Runde:</strong> ${stats.roundNumber}</p>
+        <p><strong>Gespielte Spiele:</strong> ${stats.gamesPlayed}</p>
+        <p><strong>Aktuelle Punkte:</strong></p>
+        <ul>
+            ${stats.players.map(p => 
+                `<li>${p.name}: ${p.points} Punkte (${p.tricks} Stiche)</li>`
+            ).join('')}
+        </ul>
+    `;
+    
+    showModal('Statistiken', statsText);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Schaltet Debug-Modus um
+ */
+function toggleDebugMode() {
+    setDebugMode(!gameState.debugMode);
+    updateUI();
+    
+    const status = gameState.debugMode ? 'aktiviert' : 'deaktiviert';
+    showToast(`Debug-Modus ${status}`, 2000);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Schaltet Kartenbilder um
+ */
+function toggleCardImages() {
+    const currentMode = shouldUseCardImages();
+    setCardImagesMode(!currentMode);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Fenster-Resize Handler
+ */
+function handleResize() {
+    // UI an neue Fenstergröße anpassen
+    updateUI();
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Exportiert Spieldaten
+ */
+function exportGameData() {
+    const data = {
+        gameState: getGameState(),
+        timestamp: new Date().toISOString(),
+        version: '1.0'
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `schafkopf-${Date.now()}.json`;
+    a.click();
+    
+    URL.revokeObjectURL(url);
+    showToast('Spieldaten exportiert', 2000);
+}
+
+/**
+ * ECHTE IMPLEMENTIERUNG: Importiert Spieldaten
+ */
+function importGameData(data) {
+    try {
+        const imported = JSON.parse(data);
+        
+        if (imported.gameState && imported.version) {
+            Object.assign(gameState, imported.gameState);
+            updateUI();
+            showToast('Spieldaten importiert', 2000);
+        } else {
+            throw new Error('Ungültiges Datenformat');
+        }
+    } catch (error) {
+        console.error('Import-Fehler:', error);
+        showToast('Import fehlgeschlagen', 2000);
+    }
+}
 
 // Spiel beim Laden der Seite initialisieren
 if (typeof window !== 'undefined') {
@@ -272,4 +497,12 @@ if (typeof window !== 'undefined') {
     
     // Neue Funktion für Bidding-Integration
     window.startGameAfterBidding = startGameAfterBidding;
+    
+    // ECHTE GAME FUNCTIONS EXPORTIERT
+    window.playCard = playCard;
+    window.playCPUCard = playCPUCard;
+    window.evaluateTrick = evaluateTrick;
+    window.endGame = endGame;
+    
+    console.log('🔧 Game.js: ECHTE Funktionen exportiert!');
 }
