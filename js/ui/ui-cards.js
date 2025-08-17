@@ -156,7 +156,7 @@ function setCardImagesMode(enabled) {
 }
 
 /**
- * Behandelt Kartenklicks
+ * Behandelt Kartenklicks (FIXED: Bidding-Phase-Check entfernt)
  * @param {string} suit - Farbe der geklickten Karte
  * @param {string} value - Wert der geklickten Karte
  */
@@ -167,11 +167,8 @@ function handleCardClick(suit, value) {
         return;
     }
     
-    // Während Ass-Auswahl keine Karten spielbar
-    if (gameState.gamePhase === 'bidding') {
-        showModal('Ass-Auswahl', 'Bitte wählen Sie zuerst ein Ass für das Rufspiel.');
-        return;
-    }
+    // FIXED: Bidding-Check entfernt - Bidding-Modal übernimmt das
+    // Spielphase wird vom Bidding-System korrekt auf 'playing' gesetzt
     
     playCard(suit, value);
 }
