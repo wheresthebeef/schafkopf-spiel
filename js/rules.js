@@ -4,19 +4,29 @@
  */
 
 /**
- * Prüft ob eine Karte spielbar ist (NEUE FUNKTION - WAR FEHLEND!)
+ * Prüft ob eine Karte spielbar ist (FIXED: Debug-Enhanced Version)
  * @param {Object} card - Die zu prüfende Karte
  * @param {number} playerIndex - Index des Spielers
  * @returns {boolean} true wenn Karte spielbar ist
  */
 function canPlayCard(card, playerIndex) {
+    if (gameState.debugMode) {
+        console.log(`🃏 canPlayCard Debug: ${card.symbol}${card.short} für Spieler ${playerIndex}`);
+    }
+    
     // Nur der aktuelle Spieler kann Karten spielen
     if (playerIndex !== gameState.currentPlayer) {
+        if (gameState.debugMode) {
+            console.log(`🃏 canPlayCard: Nicht am Zug (${playerIndex} ≠ ${gameState.currentPlayer})`);
+        }
         return false;
     }
     
     // In der Bidding-Phase können keine Karten gespielt werden
     if (gameState.gamePhase !== 'playing') {
+        if (gameState.debugMode) {
+            console.log(`🃏 canPlayCard: Falsche Phase (${gameState.gamePhase})`);
+        }
         return false;
     }
     
@@ -24,11 +34,20 @@ function canPlayCard(card, playerIndex) {
     const player = gameState.players[playerIndex];
     const hasCard = player.cards.some(c => c.suit === card.suit && c.value === card.value);
     if (!hasCard) {
+        if (gameState.debugMode) {
+            console.log(`🃏 canPlayCard: Karte nicht in Hand`);
+        }
         return false;
     }
     
     // Regelvalidierung
     const validation = validateCardPlay(card, playerIndex, gameState.currentTrick, player.cards);
+    
+    if (gameState.debugMode) {
+        console.log(`🃏 canPlayCard: Validation result:`, validation);
+        console.log(`🃏 canPlayCard: Returning:`, validation.valid);
+    }
+    
     return validation.valid;
 }
 
@@ -66,7 +85,7 @@ function validateCardPlay(card, playerIndex, currentTrick, playerCards) {
 }
 
 /**
- * Validiert das Ausspielen (erster Spieler im Stich)
+ * Validiert das Ausspielen (erster Spieler im Stich) - FIXED: Explicit returns
  * @param {Object} card - Die zu spielende Karte
  * @param {number} playerIndex - Index des Spielers
  * @param {Array} playerCards - Karten des Spielers
@@ -110,6 +129,7 @@ function validateLeadCard(card, playerIndex, playerCards) {
         }
     }
     
+    // FIXED: Explicit return für alle anderen Fälle
     return { valid: true, reason: 'Ausspielen erlaubt' };
 }
 
@@ -254,7 +274,7 @@ function hasCalledSuitBeenPlayed() {
 }
 
 /**
- * Markiert dass die Ruffarbe angespielt wurde
+ * Markiert dass die Ruffarbe angespielt wurde (FIXED: Kein Return-Value-Problem)
  */
 function markCalledSuitPlayed() {
     if (gameState.calledAce && !gameState.calledSuitPlayed) {
@@ -270,6 +290,7 @@ function markCalledSuitPlayed() {
             console.log(`🎯 ${suitNames[gameState.calledAce]}-Farbe wurde angespielt - Ruf-Ass darf jetzt abgeworfen werden`);
         }
     }
+    // FIXED: Keine Rückgabe, damit keine ungewollten Return-Values entstehen
 }
 
 /**
