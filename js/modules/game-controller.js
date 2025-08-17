@@ -177,6 +177,14 @@ class GameController {
             // Spiel beginnt
             console.log(`🎮 Spiel beginnt: ${biddingResult.message}`);
             
+            // FIXED: Explizit game-state.js Callback aufrufen
+            if (typeof window.startGameAfterBidding === 'function') {
+                console.log('🎮 Rufe startGameAfterBidding auf...');
+                window.startGameAfterBidding(biddingResult.gameType, biddingResult.calledAce);
+            } else {
+                console.warn('🎮 startGameAfterBidding Funktion nicht gefunden!');
+            }
+            
             // Game-State für Spielbeginn vorbereiten
             const gameConfig = {
                 caller: biddingResult.caller,
@@ -268,11 +276,17 @@ class BiddingIntegration {
                         gameStateRef.gameType = result.gameType;
                         gameStateRef.calledAce = result.calledAce;
                         gameStateRef.calledAcePlayer = result.caller;
-                        gameStateRef.gamePhase = 'playing';
+                        gameStateRef.gamePhase = 'playing'; // FIXED: Explizit auf 'playing' setzen!
                         
                         if (result.trumpSuit) {
                             gameStateRef.trumpSuit = result.trumpSuit;
                         }
+                        
+                        console.log('🎮 GameState aktualisiert:', {
+                            gamePhase: gameStateRef.gamePhase,
+                            gameType: gameStateRef.gameType,
+                            calledAce: gameStateRef.calledAce
+                        });
                     }
                     
                     // UI aktualisieren
@@ -281,6 +295,13 @@ class BiddingIntegration {
                 
                 onGameStateUpdate: (updates) => {
                     console.log('🎮 Game-State Update:', updates);
+                    
+                    // FIXED: gamePhase direkt setzen wenn in updates enthalten
+                    if (updates.phase === 'playing') {
+                        gameStateRef.gamePhase = 'playing';
+                        console.log('🎮 gamePhase auf "playing" gesetzt!');
+                    }
+                    
                     if (updateUI) updateUI();
                 },
                 
