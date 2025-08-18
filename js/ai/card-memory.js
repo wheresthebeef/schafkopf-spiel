@@ -2,13 +2,14 @@
  * Bayerisches Schafkopf - Card Memory System
  * Intelligentes Kartengedächtnis für AI-Strategien
  * Verfolgt gespielte Karten und schätzt Wahrscheinlichkeiten
+ * Browser-Script Version (ohne ES6 exports)
  */
 
 /**
  * Erweiterte Kartengedächtnis-Klasse
  * Optimiert für Schafkopf-spezifische Strategien
  */
-export class SchafkopfCardMemory {
+class SchafkopfCardMemory {
     constructor() {
         // Gespielte Karten
         this.playedCards = new Set();
@@ -224,5 +225,10 @@ export class SchafkopfCardMemory {
     }
 }
 
-// Export für Verwendung in anderen Modulen
-export { SchafkopfCardMemory as CardMemory };
+// Browser-globale Verfügbarkeit
+if (typeof window !== 'undefined') {
+    window.SchafkopfCardMemory = SchafkopfCardMemory;
+    window.CardMemory = SchafkopfCardMemory; // Alias für Kompatibilität
+    
+    console.log('🔧 SchafkopfCardMemory an window exportiert');
+}
