@@ -325,3 +325,13 @@ function getGlobalBiddingManager() {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { BiddingManager, CPUBiddingLogic };
 }
+
+// BROWSER WINDOW BINDING - FIX für "BiddingManager available: false"
+if (typeof window !== 'undefined') {
+    window.BiddingManager = BiddingManager;
+    window.CPUBiddingLogic = CPUBiddingLogic;
+    window.createBiddingManager = createBiddingManager;
+    window.getGlobalBiddingManager = getGlobalBiddingManager;
+    
+    console.log('🔧 BiddingManager an window exportiert');
+}
