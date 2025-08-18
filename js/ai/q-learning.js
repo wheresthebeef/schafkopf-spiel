@@ -1,10 +1,17 @@
-import { SchafkopfCardMemory } from './card-memory.js';
+/**
+ * Q-Learning AI für Schafkopf
+ * Lernt optimale Strategien durch Verstärkungslernen
+ * Browser-Script Version (ohne ES6 imports/exports)
+ */
+
+// Dependencies erwartet als window-globals:
+// - window.SchafkopfCardMemory (aus card-memory.js)
 
 /**
  * Q-Learning AI für Schafkopf
  * Lernt optimale Strategien durch Verstärkungslernen
  */
-export class SchafkopfQLearning {
+class SchafkopfQLearning {
     constructor(playerId, config = {}) {
         this.playerId = playerId;
         
@@ -29,7 +36,7 @@ export class SchafkopfQLearning {
         this.lastGameScore = 0;
         
         // Kartengedächtnis
-        this.cardMemory = new SchafkopfCardMemory();
+        this.cardMemory = new window.SchafkopfCardMemory();
         
         console.log(`🧠 Q-Learning AI ${playerId} initialisiert`);
     }
@@ -497,7 +504,7 @@ export class SchafkopfQLearning {
  * Kartengedächtnis-System für AI
  * Verfolgt gespielte Karten und schätzt Wahrscheinlichkeiten
  */
-export class CardMemory {
+class CardMemory {
     constructor() {
         this.playedCards = new Set();
         this.cardsByPlayer = new Map(); // playerId -> [cards]
@@ -584,7 +591,7 @@ export class CardMemory {
 /**
  * Utility: Q-Learning Performance Monitoring
  */
-export class QLearningMonitor {
+class QLearningMonitor {
     constructor() {
         this.performanceHistory = [];
         this.winRateWindow = 100; // Sliding window für Win-Rate
@@ -658,5 +665,14 @@ export class QLearningMonitor {
     }
 }
 
-// Global Monitor Instance (optional)
-export const qLearningMonitor = new QLearningMonitor();
+// Browser-globale Verfügbarkeit
+if (typeof window !== 'undefined') {
+    window.SchafkopfQLearning = SchafkopfQLearning;
+    window.CardMemory = CardMemory;
+    window.QLearningMonitor = QLearningMonitor;
+    
+    // Global Monitor Instance
+    window.qLearningMonitor = new QLearningMonitor();
+    
+    console.log('🔧 Q-Learning Klassen an window exportiert');
+}
