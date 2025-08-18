@@ -34,8 +34,8 @@ class GameController {
      * @param {number} vorhandIndex - Vorhand-Index aus game-state
      */
     startBidding(players, vorhandIndex) {
-        // Neuen BiddingManager erstellen
-        this.biddingManager = new BiddingManager();
+        // FIXED: Use window.BiddingManager to access the class
+        this.biddingManager = new window.BiddingManager();
         
         // Bidding starten
         const result = this.biddingManager.startBidding(players, vorhandIndex);
@@ -105,8 +105,8 @@ class GameController {
             return;
         }
         
-        // CPU-Gebot ermitteln
-        const cpuBid = CPUBiddingLogic.getCPUBid(player, player.cards);
+        // FIXED: Use window.CPUBiddingLogic to access the class
+        const cpuBid = window.CPUBiddingLogic.getCPUBid(player, player.cards);
         
         console.log(`🎮 CPU-Gebot: ${player.name} → ${cpuBid.type}`);
         
@@ -341,6 +341,8 @@ class BiddingIntegration {
 if (typeof window !== 'undefined') {
     window.GameController = GameController;
     window.BiddingIntegration = BiddingIntegration;
+    
+    console.log('🔧 GameController und BiddingIntegration an window exportiert');
 }
 
 // Export für Module-System
