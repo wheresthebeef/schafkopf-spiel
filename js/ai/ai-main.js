@@ -2,10 +2,13 @@
  * Bayerisches Schafkopf - AI Main Module
  * Zentrale Schnittstelle für das moderne AI-System
  * Löst Circular Dependencies und stellt einheitliche API bereit
+ * Browser-Script Version (ohne ES6 imports)
  */
 
-import { SchafkopfQLearning, qLearningMonitor } from './q-learning.js';
-import { SchafkopfCardMemory } from './card-memory.js';
+// Dependencies werden als window-globals erwartet:
+// - window.SchafkopfQLearning (aus q-learning.js)
+// - window.qLearningMonitor (aus q-learning.js)
+// - window.SchafkopfCardMemory (aus card-memory.js)
 
 /**
  * Haupt-AI-Manager ohne Circular Dependencies
@@ -39,7 +42,7 @@ class AISystem {
      * Initialisiert einzelnen AI-Spieler
      */
     initializePlayer(playerId, config = {}) {
-        const aiInstance = new SchafkopfQLearning(playerId, {
+        const aiInstance = new window.SchafkopfQLearning(playerId, {
             learningRate: config.learningRate || 0.1,
             explorationRate: config.explorationRate || 0.3,
             ...config
@@ -143,10 +146,12 @@ class AISystem {
                 aiData.instance.trainAfterGame(playerResult);
                 
                 // Performance Monitoring
-                qLearningMonitor.recordGame(playerId, {
-                    ...playerResult,
-                    explorationRate: aiData.instance.explorationRate
-                });
+                if (window.qLearningMonitor) {
+                    window.qLearningMonitor.recordGame(playerId, {
+                        ...playerResult,
+                        explorationRate: aiData.instance.explorationRate
+                    });
+                }
                 
                 // Auto-Save
                 aiData.instance.saveToStorage();
@@ -396,8 +401,8 @@ class SimpleHumanFeedback {
 }
 
 // Globale Instanzen
-export const aiSystem = new AISystem();
-export const humanFeedback = new SimpleHumanFeedback();
+const aiSystem = new AISystem();
+const humanFeedback = new SimpleHumanFeedback();
 
 // Human Feedback mit AI System verbinden (Dependency Injection)
 aiSystem.setHumanFeedback(humanFeedback);
@@ -410,7 +415,7 @@ aiSystem.setHumanFeedback(humanFeedback);
 /**
  * Hauptfunktion: Ersetzt selectCardWithAI aus game.js
  */
-export function selectCardWithAI(playableCards, playerIndex, gameContext = null) {
+function selectCardWithAI(playableCards, playerIndex, gameContext = null) {
     // Sichere Initialisierung falls noch nicht geschehen
     if (aiSystem.aiPlayers.size === 0) {
         aiSystem.initialize();
@@ -423,7 +428,7 @@ export function selectCardWithAI(playableCards, playerIndex, gameContext = null)
 /**
  * Legacy-Kompatibilität: selectCardWithBot
  */
-export function selectCardWithBot(playableCards, playerIndex, gameContext = null) {
+function selectCardWithBot(playableCards, playerIndex, gameContext = null) {
     return selectCardWithAI(playableCards, playerIndex, gameContext);
 }
 
@@ -463,12 +468,12 @@ function buildGameContext() {
 /**
  * Spiel-Event-Handler
  */
-export function notifyAITrickCompleted(trickResult) {
+function notifyAITrickCompleted(trickResult) {
     const context = buildGameContext();
     aiSystem.onTrickCompleted(trickResult, context);
 }
 
-export function notifyAIGameCompleted(gameResult) {
+function notifyAIGameCompleted(gameResult) {
     aiSystem.onGameCompleted(gameResult);
 }
 
