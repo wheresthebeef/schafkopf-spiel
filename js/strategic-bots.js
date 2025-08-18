@@ -55,7 +55,7 @@ function selectCardWithBot(playableCards, playerIndex, gameContext = null) {
 }
 
 /**
- * ALIAS FUNCTION: Legacy-Kompatibilität für selectCardWithAI
+ * ALIAS: Legacy-Kompatibilität für selectCardWithAI
  * @param {Array} playableCards - Spielbare Karten
  * @param {number} playerIndex - Index des Bot-Spielers
  * @param {Object} gameContext - Aktueller Spielkontext
@@ -66,16 +66,12 @@ function selectCardWithAI(playableCards, playerIndex, gameContext = null) {
     return selectCardWithBot(playableCards, playerIndex, gameContext);
 }
 
-// BROWSER WINDOW BINDING - Für Legacy-Kompatibilität
+// Export to window for browser compatibility
 if (typeof window !== 'undefined') {
     window.selectCardWithAI = selectCardWithAI;
     window.selectCardWithBot = selectCardWithBot;
-    
-    console.log('🔧 AI-Functions an window exportiert: selectCardWithAI, selectCardWithBot');
+    console.log('🔧 AI functions exported to window');
 }
-
-// Rest des strategic-bots.js Codes bleibt unverändert...
-// [Der Rest der Datei würde hier weitergehen, aber wegen der Längenbegrenzung breche ich hier ab]
 
 /**
  * Bestimmt Schwierigkeitsgrad für Bot-Spieler
@@ -108,5 +104,71 @@ function getHighestCard(cards) {
     });
 }
 
-// Placeholder für alle anderen Funktionen...
-// (Vollständige Datei würde alle bestehenden Funktionen beibehalten)
+function getCurrentTrickWinner(trickCards) {
+    if (!trickCards || trickCards.length === 0) return null;
+    
+    let winner = trickCards[0];
+    for (let i = 1; i < trickCards.length; i++) {
+        if (isCardHigher(trickCards[i].card, winner.card)) {
+            winner = trickCards[i];
+        }
+    }
+    
+    return {
+        playerIndex: winner.player,
+        card: winner.card
+    };
+}
+
+function getCurrentHighestCardInTrick(trickCards) {
+    if (!trickCards || trickCards.length === 0) return null;
+    
+    let highest = trickCards[0].card;
+    for (let i = 1; i < trickCards.length; i++) {
+        if (isCardHigher(trickCards[i].card, highest)) {
+            highest = trickCards[i].card;
+        }
+    }
+    return highest;
+}
+
+function getTrickPointsFromContext(trickCards) {
+    return trickCards.reduce((sum, tc) => sum + tc.card.points, 0);
+}
+
+/**
+ * Bot-Ausspielen-Strategien
+ */
+function selectLeadCardBot(playableCards, playerIndex, context, difficulty, partnershipsKnown) {
+    if (gameState.debugMode) {
+        console.log(`🤖 ${gameState.players[playerIndex].name} spielt aus`);
+    }
+    
+    // Einfache Strategie: zufällige Karte
+    return playableCards[Math.floor(Math.random() * playableCards.length)];
+}
+
+/**
+ * Bot-Folgen-Strategien
+ */
+function selectFollowCardBot(playableCards, playerIndex, context, difficulty, partnershipsKnown) {
+    const leadCard = context.currentTrick[0].card;
+    const currentHighest = getCurrentHighestCardInTrick(context.currentTrick);
+    const canWin = playableCards.filter(c => isCardHigher(c, currentHighest));
+    
+    if (gameState.debugMode) {
+        console.log(`🤖 ${gameState.players[playerIndex].name} folgt`);
+    }
+    
+    // Einfache Strategie: stechen wenn möglich, sonst niedrigste Karte
+    if (canWin.length > 0) {
+        return getLowestCard(canWin);
+    } else {
+        return getLowestCard(playableCards);
+    }
+}
+
+// Placeholder für alle anderen komplexen Funktionen
+function handleCalledAceBot() { return null; }
+function selectPositionAwareFollow() { return null; }
+function selectUnknownPartnershipFollow() { return null; }
