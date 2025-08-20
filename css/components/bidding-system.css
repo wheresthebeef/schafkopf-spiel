@@ -1,0 +1,138 @@
+/* Bidding Controls */
+.bidding-controls {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+    z-index: 1500;
+    text-align: center;
+    min-width: 320px;
+    display: none;
+}
+
+.bidding-controls.active {
+    display: block;
+}
+
+.bidding-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+
+.bidding-info {
+    font-size: 0.9rem;
+    margin-bottom: 1.5rem;
+    opacity: 0.9;
+}
+
+.bidding-buttons {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.bid-btn {
+    background: rgba(255,255,255,0.2);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    min-width: 100px;
+}
+
+.bid-btn:hover {
+    background: rgba(255,255,255,0.3);
+    border-color: rgba(255,255,255,0.5);
+    transform: translateY(-2px);
+}
+
+.bid-btn.primary {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+.bid-btn.primary:hover {
+    background: #218838;
+    border-color: #218838;
+}
+
+.bid-btn.secondary {
+    background: #6c757d;
+    border-color: #6c757d;
+}
+
+.bid-btn.secondary:hover {
+    background: #5a6268;
+    border-color: #5a6268;
+}
+
+.bidding-status {
+    margin-top: 1rem;
+    font-size: 0.8rem;
+    opacity: 0.8;
+}
+
+.bidding-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    z-index: 1400;
+    display: none;
+}
+
+.bidding-overlay.active {
+    display: block;
+}
+
+/* Ace Selection for Rufspiel */
+.ace-selection {
+    display: none;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(255,255,255,0.3);
+}
+
+.ace-selection.active {
+    display: block;
+}
+
+.ace-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
+.ace-btn {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s ease;
+}
+
+.ace-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.ace-btn.selected {
+    background: #28a745;
+    border-color: #28a745;
+}
