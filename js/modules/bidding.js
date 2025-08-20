@@ -277,10 +277,12 @@ class CPUBiddingLogic {
     
     /**
      * Findet ein rufbares Ass (Farbe ohne eigenes Ass)
+     * 🔧 FIXED: 'ass' → 'sau' für korrekte Schafkopf-Kartenwerte
      */
     static _findCallableAce(cards) {
         const suits = ['eichel', 'gras', 'schellen'];
-        const ownAces = cards.filter(card => card.value === 'ass').map(card => card.suit);
+        // ✅ FIX: Verwende 'sau' statt 'ass' (Schafkopf-Standard)
+        const ownAces = cards.filter(card => card.value === 'sau').map(card => card.suit);
         
         // Prüfe jede Farbe
         for (const suit of suits) {
@@ -290,7 +292,7 @@ class CPUBiddingLogic {
             // Hat er mindestens eine Karte dieser Farbe (aber nicht das Ass)?
             const hasCardInSuit = cards.some(card => 
                 card.suit === suit && 
-                card.value !== 'ass' && 
+                card.value !== 'sau' &&  // ✅ FIX: Verwende 'sau' statt 'ass'
                 card.value !== 'ober' && 
                 card.value !== 'unter'
             );
