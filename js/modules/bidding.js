@@ -228,6 +228,7 @@ class BiddingManager {
 
 /**
  * CPU-Bidding-Logik
+ * 🏗️ REFACTORED: Nutzt jetzt Regel-Funktionen aus rules.js
  * NEUE REGELN: Mindestens 5 Trumpfkarten, davon mindestens 2 Ober/Unter
  */
 class CPUBiddingLogic {
@@ -261,27 +262,30 @@ class CPUBiddingLogic {
             return { type: 'pass' };
         }
         
-        // Regel 3: Eine Karte einer Farbe ohne das Ass zu haben
-        const calledAce = CPUBiddingLogic._findCallableAce(cards);
-        if (!calledAce) {
+        // 🏗️ REFACTORED: Regel 3 nutzt jetzt rules.js Funktionen
+        const callableAces = window.getCallableAces ? window.getCallableAces(cards) : CPUBiddingLogic._findCallableAceFallback(cards);
+        
+        if (!callableAces || callableAces.length === 0) {
             console.log(`🤖 ${player.name}: Pass (kein rufbares Ass)`);
             return { type: 'pass' };
         }
         
-        console.log(`🤖 ${player.name} spielt Rufspiel (${calledAce}-Ass) - ${totalTrumpCards} Trümpfe, ${oberUnter.length} Ober/Unter`);
+        // Erstes rufbares Ass wählen
+        const selectedAce = callableAces[0];
+        
+        console.log(`🤖 ${player.name} spielt Rufspiel (${selectedAce}-Ass) - ${totalTrumpCards} Trümpfe, ${oberUnter.length} Ober/Unter`);
         return {
             type: 'rufspiel',
-            details: { ace: calledAce }
+            details: { ace: selectedAce }
         };
     }
     
     /**
-     * Findet ein rufbares Ass (Farbe ohne eigenes Ass)
-     * 🔧 FIXED: 'ass' → 'sau' für korrekte Schafkopf-Kartenwerte
+     * 🏗️ DEPRECATED: Fallback für _findCallableAce falls rules.js nicht verfügbar
+     * Diese Funktion wird entfernt sobald rules.js Integration komplett ist
      */
-    static _findCallableAce(cards) {
+    static _findCallableAceFallback(cards) {
         const suits = ['eichel', 'gras', 'schellen'];
-        // ✅ FIX: Verwende 'sau' statt 'ass' (Schafkopf-Standard)
         const ownAces = cards.filter(card => card.value === 'sau').map(card => card.suit);
         
         // Prüfe jede Farbe
@@ -292,17 +296,17 @@ class CPUBiddingLogic {
             // Hat er mindestens eine Karte dieser Farbe (aber nicht das Ass)?
             const hasCardInSuit = cards.some(card => 
                 card.suit === suit && 
-                card.value !== 'sau' &&  // ✅ FIX: Verwende 'sau' statt 'ass'
+                card.value !== 'sau' &&
                 card.value !== 'ober' && 
                 card.value !== 'unter'
             );
             
             if (!hasAce && hasCardInSuit) {
-                return suit; // Kann dieses Ass rufen
+                return [suit]; // Gibt Array zurück wie getCallableAces()
             }
         }
         
-        return null; // Kein rufbares Ass gefunden
+        return []; // Kein rufbares Ass gefunden
     }
 }
 
