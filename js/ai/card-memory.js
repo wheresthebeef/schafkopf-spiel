@@ -33,80 +33,174 @@ class SchafkopfCardMemory {
     }
     
     /**
-     * Hauptfunktion: Registriert gespielte Karte
+     * 🛡️ FIXED: Hauptfunktion mit robuster Null-Check Logic
      */
     recordCard(card, playerId, trickNumber, position = 0) {
-        const cardKey = this.getCardKey(card);
-        
-        // Basis-Registrierung
-        this.playedCards.add(cardKey);
-        
-        if (!this.cardsByPlayer.has(playerId)) {
-            this.cardsByPlayer.set(playerId, []);
+        // 🛡️ SAFETY: Input Validation
+        if (!card || typeof card !== 'object') {
+            console.error(`❌ CardMemory: Invalid card object:`, card);
+            return;
         }
         
-        const cardRecord = {
-            card: card,
-            trick: trickNumber,
-            position: position,
-            timestamp: Date.now()
-        };
+        if (!card.suit || !card.value) {
+            console.error(`❌ CardMemory: Card missing suit/value:`, card);
+            return;
+        }
         
-        this.cardsByPlayer.get(playerId).push(cardRecord);
+        if (typeof playerId !== 'number' || playerId < 0 || playerId > 3) {
+            console.error(`❌ CardMemory: Invalid playerId:`, playerId);
+            return;
+        }
         
-        // Erweiterte Analysen
-        this.updateSuitAnalysis(card, playerId);
-        this.updateTrumpAnalysis(card, playerId);
-        this.updatePartnershipAnalysis(card, playerId, trickNumber);
-        
-        // Debug für wichtige Karten
-        if (this.isImportantCard(card)) {
-            console.log(`🎯 Wichtige Karte registriert: ${card.suit} ${card.value} von Spieler ${playerId}`);
+        try {
+            const cardKey = this.getCardKey(card);
+            
+            // Basis-Registrierung
+            this.playedCards.add(cardKey);
+            
+            if (!this.cardsByPlayer.has(playerId)) {
+                this.cardsByPlayer.set(playerId, []);
+            }
+            
+            const cardRecord = {
+                card: { ...card }, // 🛡️ SAFETY: Create safe copy
+                trick: trickNumber,
+                position: position,
+                timestamp: Date.now()
+            };
+            
+            this.cardsByPlayer.get(playerId).push(cardRecord);
+            
+            // Erweiterte Analysen mit Null-Safety
+            this.updateSuitAnalysis(card, playerId);
+            this.updateTrumpAnalysis(card, playerId);
+            this.updatePartnershipAnalysis(card, playerId, trickNumber);
+            
+            // Debug für wichtige Karten
+            if (this.isImportantCard(card)) {
+                console.log(`🎯 Wichtige Karte registriert: ${card.suit} ${card.value} von Spieler ${playerId}`);
+            }
+        } catch (error) {
+            console.error(`❌ CardMemory recordCard Fehler:`, error);
         }
     }
     
     /**
-     * Schätzt verbleibende Trümpfe im Spiel
+     * 🛡️ FIXED: Schätzt verbleibende Trümpfe mit Null-Safety
      */
     estimateRemainingTrumps(gameContext) {
-        const totalTrumps = this.getTotalTrumpCount(gameContext.gameType);
-        let playedTrumps = 0;
-        
-        // Zähle alle gespielten Trümpfe
-        for (const cardKey of this.playedCards) {
-            const card = this.parseCardKey(cardKey);
-            if (this.isTrump(card, gameContext)) {
-                playedTrumps++;
+        try {
+            // 🛡️ SAFETY: Validate gameContext
+            if (!gameContext || typeof gameContext !== 'object') {
+                console.warn(`⚠️ CardMemory: Invalid gameContext, returning default estimate`);
+                return 7; // Default estimate
             }
+            
+            const totalTrumps = this.getTotalTrumpCount(gameContext.gameType);
+            let playedTrumps = 0;
+            
+            // Zähle alle gespielten Trümpfe mit Null-Checks
+            for (const cardKey of this.playedCards) {
+                try {
+                    const card = this.parseCardKey(cardKey);
+                    if (card && this.isTrump(card, gameContext)) {
+                        playedTrumps++;
+                    }
+                } catch (error) {
+                    console.warn(`⚠️ CardMemory: Error parsing card key ${cardKey}:`, error);
+                    continue;
+                }
+            }
+            
+            return Math.max(0, totalTrumps - playedTrumps);
+        } catch (error) {
+            console.error(`❌ CardMemory estimateRemainingTrumps Fehler:`, error);
+            return 7; // Safe fallback
         }
-        
-        return Math.max(0, totalTrumps - playedTrumps);
     }
     
     /**
-     * HILFSFUNKTIONEN
+     * HILFSFUNKTIONEN mit Null-Safety
      */
     
     getCardKey(card) {
+        // 🛡️ SAFETY: Validate card before creating key
+        if (!card || !card.suit || !card.value) {
+            console.error(`❌ getCardKey: Invalid card:`, card);
+            return 'invalid_card';
+        }
         return `${card.suit}_${card.value}`;
     }
     
     parseCardKey(key) {
-        const [suit, value] = key.split('_');
-        return { suit, value };
+        // 🛡️ SAFETY: Validate key format
+        if (!key || typeof key !== 'string') {
+            return null;
+        }
+        
+        const parts = key.split('_');
+        if (parts.length !== 2) {
+            return null;
+        }
+        
+        const [suit, value] = parts;
+        return suit && value ? { suit, value } : null;
     }
     
     hasCardBeenPlayed(card) {
-        return this.playedCards.has(this.getCardKey(card));
+        // 🛡️ SAFETY: Validate card
+        if (!card || !card.suit || !card.value) {
+            return false;
+        }
+        
+        try {
+            return this.playedCards.has(this.getCardKey(card));
+        } catch (error) {
+            console.error(`❌ hasCardBeenPlayed Fehler:`, error);
+            return false;
+        }
     }
     
+    /**
+     * 🛡️ FIXED: getCardPlayedBy with comprehensive null checks
+     */
     getCardPlayedBy(card) {
-        for (const [playerId, cards] of this.cardsByPlayer.entries()) {
-            const found = cards.find(record => 
-                record.card.suit === card.suit && record.card.value === card.value
-            );
-            if (found) return playerId;
+        // 🛡️ SAFETY: Validate input card
+        if (!card || !card.suit || !card.value) {
+            console.error(`❌ getCardPlayedBy: Invalid card:`, card);
+            return -1;
         }
+        
+        try {
+            for (const [playerId, cards] of this.cardsByPlayer.entries()) {
+                if (!Array.isArray(cards)) {
+                    console.warn(`⚠️ getCardPlayedBy: Invalid cards array for player ${playerId}`);
+                    continue;
+                }
+                
+                const found = cards.find(record => {
+                    // 🛡️ SAFETY: Validate record and record.card
+                    if (!record || !record.card) {
+                        console.warn(`⚠️ getCardPlayedBy: Invalid record:`, record);
+                        return false;
+                    }
+                    
+                    const recordCard = record.card;
+                    if (!recordCard.suit || !recordCard.value) {
+                        console.warn(`⚠️ getCardPlayedBy: Record card missing suit/value:`, recordCard);
+                        return false;
+                    }
+                    
+                    // 🛡️ SAFE COMPARISON: Both cards are validated
+                    return recordCard.suit === card.suit && recordCard.value === card.value;
+                });
+                
+                if (found) return playerId;
+            }
+        } catch (error) {
+            console.error(`❌ getCardPlayedBy Fehler:`, error);
+        }
+        
         return -1;
     }
     
@@ -119,109 +213,229 @@ class SchafkopfCardMemory {
         }
     }
     
+    /**
+     * 🛡️ FIXED: isTrump with null safety
+     */
     isTrump(card, gameContext) {
-        if (card.value === 'ober' || card.value === 'unter') {
-            return true;
+        // 🛡️ SAFETY: Validate inputs
+        if (!card || !card.value) {
+            return false;
         }
         
-        if (gameContext.gameType === 'wenz') {
-            return false; // Nur Unter sind Trump
+        if (!gameContext) {
+            return false;
         }
         
-        return card.suit === gameContext.trumpSuit;
+        try {
+            if (card.value === 'ober' || card.value === 'unter') {
+                return true;
+            }
+            
+            if (gameContext.gameType === 'wenz') {
+                return false; // Nur Unter sind Trump
+            }
+            
+            return card.suit === gameContext.trumpSuit;
+        } catch (error) {
+            console.error(`❌ isTrump Fehler:`, error);
+            return false;
+        }
     }
     
+    /**
+     * 🛡️ FIXED: isImportantCard with null safety
+     */
     isImportantCard(card) {
-        return ['ass', 'ober', 'unter', '10'].includes(card.value.toLowerCase());
-    }
-    
-    updateSuitAnalysis(card, playerId) {
-        if (!this.suitCounts.has(card.suit)) {
-            this.suitCounts.set(card.suit, new Map());
+        // 🛡️ SAFETY: Validate card
+        if (!card || !card.value) {
+            return false;
         }
         
-        const suitMap = this.suitCounts.get(card.suit);
-        suitMap.set(playerId, (suitMap.get(playerId) || 0) + 1);
-    }
-    
-    updateTrumpAnalysis(card, playerId) {
-        if (card.value === 'ober' || card.value === 'unter') {
-            this.trumpCounts.set(playerId, (this.trumpCounts.get(playerId) || 0) + 1);
+        try {
+            return ['ass', 'ober', 'unter', '10'].includes(card.value.toLowerCase());
+        } catch (error) {
+            console.error(`❌ isImportantCard Fehler:`, error);
+            return false;
         }
     }
     
+    /**
+     * 🛡️ FIXED: updateSuitAnalysis with null safety
+     */
+    updateSuitAnalysis(card, playerId) {
+        // 🛡️ SAFETY: Validate inputs
+        if (!card || !card.suit) {
+            console.warn(`⚠️ updateSuitAnalysis: Invalid card:`, card);
+            return;
+        }
+        
+        if (typeof playerId !== 'number') {
+            console.warn(`⚠️ updateSuitAnalysis: Invalid playerId:`, playerId);
+            return;
+        }
+        
+        try {
+            if (!this.suitCounts.has(card.suit)) {
+                this.suitCounts.set(card.suit, new Map());
+            }
+            
+            const suitMap = this.suitCounts.get(card.suit);
+            suitMap.set(playerId, (suitMap.get(playerId) || 0) + 1);
+        } catch (error) {
+            console.error(`❌ updateSuitAnalysis Fehler:`, error);
+        }
+    }
+    
+    /**
+     * 🛡️ FIXED: updateTrumpAnalysis with null safety
+     */
+    updateTrumpAnalysis(card, playerId) {
+        // 🛡️ SAFETY: Validate inputs
+        if (!card || !card.value) {
+            console.warn(`⚠️ updateTrumpAnalysis: Invalid card:`, card);
+            return;
+        }
+        
+        if (typeof playerId !== 'number') {
+            console.warn(`⚠️ updateTrumpAnalysis: Invalid playerId:`, playerId);
+            return;
+        }
+        
+        try {
+            if (card.value === 'ober' || card.value === 'unter') {
+                this.trumpCounts.set(playerId, (this.trumpCounts.get(playerId) || 0) + 1);
+            }
+        } catch (error) {
+            console.error(`❌ updateTrumpAnalysis Fehler:`, error);
+        }
+    }
+    
+    /**
+     * 🛡️ FIXED: updatePartnershipAnalysis with comprehensive null safety
+     */
     updatePartnershipAnalysis(card, playerId, trickNumber) {
         if (this.gameMode !== 'rufspiel') return;
         
-        if (!this.partnershipClues.has(playerId)) {
-            this.partnershipClues.set(playerId, {
-                calledSuitCards: 0,
-                cooperativeActions: 0,
-                trumpUsage: []
-            });
+        // 🛡️ SAFETY: Validate inputs
+        if (!card || !card.suit || !card.value) {
+            console.warn(`⚠️ updatePartnershipAnalysis: Invalid card:`, card);
+            return;
         }
         
-        const clues = this.partnershipClues.get(playerId);
-        
-        if (this.calledAce && card.suit === this.calledAce.suit) {
-            clues.calledSuitCards++;
+        if (typeof playerId !== 'number') {
+            console.warn(`⚠️ updatePartnershipAnalysis: Invalid playerId:`, playerId);
+            return;
         }
         
-        if (card.value === 'ober' || card.value === 'unter') {
-            clues.trumpUsage.push({
-                trick: trickNumber,
-                card: card,
-                strength: this.getTrumpStrength(card)
-            });
+        try {
+            if (!this.partnershipClues.has(playerId)) {
+                this.partnershipClues.set(playerId, {
+                    calledSuitCards: 0,
+                    cooperativeActions: 0,
+                    trumpUsage: []
+                });
+            }
+            
+            const clues = this.partnershipClues.get(playerId);
+            
+            // 🛡️ SAFETY: Validate calledAce before using
+            if (this.calledAce && this.calledAce.suit && card.suit === this.calledAce.suit) {
+                clues.calledSuitCards++;
+            }
+            
+            if (card.value === 'ober' || card.value === 'unter') {
+                clues.trumpUsage.push({
+                    trick: trickNumber,
+                    card: { ...card }, // 🛡️ SAFETY: Safe copy
+                    strength: this.getTrumpStrength(card)
+                });
+            }
+        } catch (error) {
+            console.error(`❌ updatePartnershipAnalysis Fehler:`, error);
         }
     }
     
+    /**
+     * 🛡️ FIXED: getTrumpStrength with null safety
+     */
     getTrumpStrength(card) {
-        if (card.value === 'unter') return 0.2;
-        if (card.value === 'ober') return 0.6;
+        // 🛡️ SAFETY: Validate card
+        if (!card || !card.value) {
+            return 0.1; // Minimum strength
+        }
         
-        const herzOrder = ['7', '8', '9', '10', 'könig', 'ass'];
-        const index = herzOrder.indexOf(card.value);
-        return index >= 0 ? 0.7 + (index * 0.05) : 0.5;
+        try {
+            if (card.value === 'unter') return 0.2;
+            if (card.value === 'ober') return 0.6;
+            
+            const herzOrder = ['7', '8', '9', '10', 'könig', 'ass'];
+            const index = herzOrder.indexOf(card.value);
+            return index >= 0 ? 0.7 + (index * 0.05) : 0.5;
+        } catch (error) {
+            console.error(`❌ getTrumpStrength Fehler:`, error);
+            return 0.1;
+        }
     }
     
     save() {
-        return {
-            playedCards: Array.from(this.playedCards),
-            cardsByPlayer: Array.from(this.cardsByPlayer.entries()),
-            trickHistory: this.trickHistory,
-            suitCounts: Array.from(this.suitCounts.entries()),
-            trumpCounts: Array.from(this.trumpCounts.entries()),
-            partnershipClues: Array.from(this.partnershipClues.entries()),
-            gameMode: this.gameMode,
-            calledAce: this.calledAce,
-            partnerRevealed: this.partnerRevealed
-        };
+        try {
+            return {
+                playedCards: Array.from(this.playedCards),
+                cardsByPlayer: Array.from(this.cardsByPlayer.entries()),
+                trickHistory: this.trickHistory,
+                suitCounts: Array.from(this.suitCounts.entries()),
+                trumpCounts: Array.from(this.trumpCounts.entries()),
+                partnershipClues: Array.from(this.partnershipClues.entries()),
+                gameMode: this.gameMode,
+                calledAce: this.calledAce,
+                partnerRevealed: this.partnerRevealed
+            };
+        } catch (error) {
+            console.error(`❌ CardMemory save Fehler:`, error);
+            return {}; // Safe fallback
+        }
     }
     
     load(data) {
-        this.playedCards = new Set(data.playedCards || []);
-        this.cardsByPlayer = new Map(data.cardsByPlayer || []);
-        this.trickHistory = data.trickHistory || [];
-        this.suitCounts = new Map(data.suitCounts || []);
-        this.trumpCounts = new Map(data.trumpCounts || []);
-        this.partnershipClues = new Map(data.partnershipClues || []);
-        this.gameMode = data.gameMode || 'rufspiel';
-        this.calledAce = data.calledAce;
-        this.partnerRevealed = data.partnerRevealed || false;
+        try {
+            // 🛡️ SAFETY: Validate data before loading
+            if (!data || typeof data !== 'object') {
+                console.warn(`⚠️ CardMemory load: Invalid data`);
+                return;
+            }
+            
+            this.playedCards = new Set(data.playedCards || []);
+            this.cardsByPlayer = new Map(data.cardsByPlayer || []);
+            this.trickHistory = data.trickHistory || [];
+            this.suitCounts = new Map(data.suitCounts || []);
+            this.trumpCounts = new Map(data.trumpCounts || []);
+            this.partnershipClues = new Map(data.partnershipClues || []);
+            this.gameMode = data.gameMode || 'rufspiel';
+            this.calledAce = data.calledAce;
+            this.partnerRevealed = data.partnerRevealed || false;
+            
+            console.log('📂 CardMemory erfolgreich geladen');
+        } catch (error) {
+            console.error(`❌ CardMemory load Fehler:`, error);
+            this.reset(); // Reset on load failure
+        }
     }
     
     reset() {
-        this.playedCards.clear();
-        this.cardsByPlayer.clear();
-        this.trickHistory = [];
-        this.suitCounts.clear();
-        this.trumpCounts.clear();
-        this.partnershipClues.clear();
-        this.currentTrick = null;
-        this.partnerRevealed = false;
-        
-        console.log('🔄 Card Memory zurückgesetzt');
+        try {
+            this.playedCards.clear();
+            this.cardsByPlayer.clear();
+            this.trickHistory = [];
+            this.suitCounts.clear();
+            this.trumpCounts.clear();
+            this.partnershipClues.clear();
+            this.currentTrick = null;
+            this.partnerRevealed = false;
+            
+            console.log('🔄 Card Memory zurückgesetzt');
+        } catch (error) {
+            console.error(`❌ CardMemory reset Fehler:`, error);
+        }
     }
 }
 
@@ -230,5 +444,5 @@ if (typeof window !== 'undefined') {
     window.SchafkopfCardMemory = SchafkopfCardMemory;
     window.CardMemory = SchafkopfCardMemory; // Alias für Kompatibilität
     
-    console.log('🔧 SchafkopfCardMemory an window exportiert');
+    console.log('🔧 SchafkopfCardMemory an window exportiert (mit AI-Bug-Fix)');
 }
