@@ -278,7 +278,7 @@ function playCard(suit, value) {
 }
 
 /**
- * ECHTE IMPLEMENTIERUNG: CPU spielt eine Karte
+ * 🛡️ FIXED: CPU spielt eine Karte - Mit robuster Null-Check Logic
  */
 function playCPUCard() {
     const player = getCurrentPlayer();
@@ -290,24 +290,80 @@ function playCPUCard() {
     
     console.log(`🤖 ${player.name} denkt...`);
     
+    // 🛡️ SAFETY: Validate player has cards
+    if (!player.cards || player.cards.length === 0) {
+        console.error(`❌ ${player.name} hat keine Karten mehr!`);
+        return;
+    }
+    
     // Spielbare Karten ermitteln
     const playableCards = player.cards.filter(card => 
         canPlayCard(card, player.index)
     );
     
     if (playableCards.length === 0) {
-        console.error(`${player.name} hat keine spielbaren Karten!`);
+        console.error(`❌ ${player.name} hat keine spielbaren Karten!`);
         return;
     }
     
-    // KI-Entscheidung
-    const selectedCard = selectCardWithAI(playableCards, player.index);
+    // 🧠 KI-Entscheidung mit robuster Fehlerbehandlung
+    let selectedCard = null;
     
-    if (selectedCard) {
-        playCard(selectedCard.suit, selectedCard.value);
+    try {
+        selectedCard = selectCardWithAI(playableCards, player.index);
+        console.log(`🤖 ${player.name} AI wählte:`, selectedCard);
+    } catch (error) {
+        console.error(`❌ AI-Fehler für ${player.name}:`, error);
+        selectedCard = null;
+    }
+    
+    // 🛡️ FIX: Robuste Null-Check und Validation
+    if (selectedCard && selectedCard.suit && selectedCard.value) {
+        // Zusätzliche Validation: Ist die gewählte Karte auch wirklich spielbar?
+        const isValidCard = playableCards.some(card => 
+            card.suit === selectedCard.suit && card.value === selectedCard.value
+        );
+        
+        if (isValidCard) {
+            console.log(`✅ ${player.name} spielt: ${selectedCard.suit} ${selectedCard.value}`);
+            playCard(selectedCard.suit, selectedCard.value);
+        } else {
+            console.warn(`⚠️ ${player.name}: AI wählte ungültige Karte, verwende Fallback`);
+            playFallbackCard(player, playableCards);
+        }
     } else {
-        // Fallback: Erste spielbare Karte
-        playCard(playableCards[0].suit, playableCards[0].value);
+        // 🆘 Fallback wenn AI null zurückgibt oder Karte invalid ist
+        console.warn(`⚠️ ${player.name}: AI gab keine gültige Karte zurück, verwende Fallback`);
+        playFallbackCard(player, playableCards);
+    }
+}
+
+/**
+ * 🆘 Neue Fallback-Funktion für robuste Kartenauswahl
+ * @param {Object} player - Spieler-Objekt
+ * @param {Array} playableCards - Array der spielbaren Karten
+ */
+function playFallbackCard(player, playableCards) {
+    if (!playableCards || playableCards.length === 0) {
+        console.error(`❌ Fallback fehlgeschlagen: Keine spielbaren Karten für ${player.name}`);
+        return;
+    }
+    
+    // Strategie 1: Erste gültige Karte
+    const fallbackCard = playableCards.find(card => card && card.suit && card.value);
+    
+    if (fallbackCard) {
+        console.log(`🚨 ${player.name} verwendet Fallback-Karte: ${fallbackCard.suit} ${fallbackCard.value}`);
+        playCard(fallbackCard.suit, fallbackCard.value);
+    } else {
+        // Strategie 2: Notfall - einfach erste Karte
+        const emergencyCard = playableCards[0];
+        if (emergencyCard) {
+            console.log(`🆘 ${player.name} verwendet Notfall-Karte: ${emergencyCard.suit || 'unknown'} ${emergencyCard.value || 'unknown'}`);
+            playCard(emergencyCard.suit || 'herz', emergencyCard.value || '7');
+        } else {
+            console.error(`❌ Alle Fallback-Strategien fehlgeschlagen für ${player.name}`);
+        }
     }
 }
 
@@ -504,5 +560,8 @@ if (typeof window !== 'undefined') {
     window.evaluateTrick = evaluateTrick;
     window.endGame = endGame;
     
-    console.log('🔧 Game.js: ECHTE Funktionen exportiert!');
+    // 🛡️ Neue Fallback-Funktion exportiert
+    window.playFallbackCard = playFallbackCard;
+    
+    console.log('🔧 Game.js: ECHTE Funktionen exportiert mit AI-Bug-Fix!');
 }
