@@ -76,8 +76,44 @@ class AISystem {
             return this.selectCard(playerId, playableCards, gameContext);
         }
         
+        // 🔒 SAFETY: Validate playableCards input
+        if (!playableCards || playableCards.length === 0) {
+            console.error(`❌ AI Spieler ${playerId}: Keine spielbaren Karten erhalten!`);
+            return null;
+        }
+        
         try {
             const selectedCard = aiData.instance.selectCard(playableCards, gameContext);
+            
+            // 🛡️ FIX: Null-Check vor Rückgabe - Das löst den Hauptfehler!
+            if (!selectedCard) {
+                console.warn(`⚠️ AI Spieler ${playerId}: selectCard() gab null zurück, verwende Fallback`);
+                const fallbackCard = this.getFallbackCard(playerId, playableCards);
+                
+                if (!fallbackCard) {
+                    console.error(`❌ AI Spieler ${playerId}: Auch Fallback-Karte ist null!`);
+                    return null;
+                }
+                
+                console.log(`🔄 AI Spieler ${playerId}: Fallback-Karte gewählt: ${fallbackCard.suit} ${fallbackCard.value}`);
+                return fallbackCard;
+            }
+            
+            // 🛡️ ADDITIONAL SAFETY: Validate selected card structure
+            if (!selectedCard.suit || !selectedCard.value) {
+                console.warn(`⚠️ AI Spieler ${playerId}: Invalide Karte (fehlende suit/value), verwende Fallback`);
+                return this.getFallbackCard(playerId, playableCards);
+            }
+            
+            // 🛡️ VERIFY: Ensure selected card is actually playable
+            const isValidSelection = playableCards.some(card => 
+                card.suit === selectedCard.suit && card.value === selectedCard.value
+            );
+            
+            if (!isValidSelection) {
+                console.warn(`⚠️ AI Spieler ${playerId}: Gewählte Karte nicht in spielbaren Karten, verwende Fallback`);
+                return this.getFallbackCard(playerId, playableCards);
+            }
             
             // Human Feedback Integration (falls verfügbar)
             if (selectedCard && this.humanFeedback && this.humanFeedback.isEnabled) {
@@ -87,8 +123,47 @@ class AISystem {
             return selectedCard;
         } catch (error) {
             console.error(`❌ AI-Fehler für Spieler ${playerId}:`, error);
-            return playableCards[0]; // Emergency fallback
+            const emergencyCard = this.getFallbackCard(playerId, playableCards);
+            if (emergencyCard) {
+                console.log(`🚨 AI Spieler ${playerId}: Emergency fallback: ${emergencyCard.suit} ${emergencyCard.value}`);
+            }
+            return emergencyCard;
         }
+    }
+    
+    /**
+     * 🆘 Neue Fallback-Mechanismus für robuste Karten-Auswahl
+     */
+    getFallbackCard(playerId, playableCards) {
+        if (!playableCards || playableCards.length === 0) {
+            console.error(`❌ getFallbackCard: Keine Karten verfügbar für Spieler ${playerId}`);
+            return null;
+        }
+        
+        // Strategie 1: Erste verfügbare Karte
+        const firstCard = playableCards[0];
+        if (firstCard && firstCard.suit && firstCard.value) {
+            return firstCard;
+        }
+        
+        // Strategie 2: Suche erste valide Karte
+        for (const card of playableCards) {
+            if (card && card.suit && card.value) {
+                return card;
+            }
+        }
+        
+        // Strategie 3: Notfall - erstelle valide Karte aus erstem Element
+        if (playableCards[0]) {
+            return {
+                suit: playableCards[0].suit || 'herz',
+                value: playableCards[0].value || '7',
+                ...playableCards[0]
+            };
+        }
+        
+        console.error(`❌ getFallbackCard: Alle Fallback-Strategien fehlgeschlagen für Spieler ${playerId}`);
+        return null;
     }
     
     /**
