@@ -7,7 +7,6 @@ Dieses Projekt implementiert das traditionelle bayerische Schafkopf-Spiel mit de
 🎯 Projektziele
 ✅ Authentische Schafkopf-Erfahrung
 ✅ Intuitive Benutzeroberfläche
-✅ Offline spielbar
 ✅ Responsive Design für verschiedene Bildschirmgrößen
 ✅ Erweiterbar für verschiedene Spielvarianten
 📁 Projekt-Struktur
