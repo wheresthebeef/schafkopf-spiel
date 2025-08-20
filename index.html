@@ -11,225 +11,10 @@
     
     <title>🎯 Bayerisches Schafkopf - Community Training</title>
     
-    <!-- Use original CSS -->
+    <!-- CSS Modular Architecture -->
     <link rel="stylesheet" href="css/style.css?v=20250815-clean">
-    
-    <style>
-        /* Community Training System Badge */
-        .community-training-badge {
-            position: fixed;
-            top: 10px;
-            right: 10px;
-            background: linear-gradient(135deg, #28a745, #20c997);
-            color: white;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            z-index: 1000;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            max-width: 200px;
-        }
-        
-        .community-training-badge:hover {
-            transform: scale(1.02);
-        }
-        
-        .community-training-badge.collapsed {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            padding: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .training-details {
-            display: block;
-        }
-        
-        .community-training-badge.collapsed .training-details {
-            display: none;
-        }
-        
-        .training-icon {
-            display: none;
-        }
-        
-        .community-training-badge.collapsed .training-icon {
-            display: block;
-            font-size: 1.2rem;
-        }
-        
-        .training-controls {
-            margin-top: 0.5rem;
-            font-size: 0.75rem;
-        }
-        
-        .training-toggle {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 0.7rem;
-            margin-right: 0.25rem;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        .training-toggle:hover {
-            background: rgba(255,255,255,0.3);
-        }
-        
-        .training-toggle.active {
-            background: rgba(255,255,255,0.9);
-            color: #28a745;
-            font-weight: bold;
-        }
-
-        /* Bidding Controls */
-        .bidding-controls {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: linear-gradient(135deg, #007bff, #0056b3);
-            color: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-            z-index: 1500;
-            text-align: center;
-            min-width: 320px;
-            display: none;
-        }
-
-        .bidding-controls.active {
-            display: block;
-        }
-
-        .bidding-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-        }
-
-        .bidding-info {
-            font-size: 0.9rem;
-            margin-bottom: 1.5rem;
-            opacity: 0.9;
-        }
-
-        .bidding-buttons {
-            display: flex;
-            gap: 0.75rem;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .bid-btn {
-            background: rgba(255,255,255,0.2);
-            border: 2px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.75rem 1.25rem;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            min-width: 100px;
-        }
-
-        .bid-btn:hover {
-            background: rgba(255,255,255,0.3);
-            border-color: rgba(255,255,255,0.5);
-            transform: translateY(-2px);
-        }
-
-        .bid-btn.primary {
-            background: #28a745;
-            border-color: #28a745;
-        }
-
-        .bid-btn.primary:hover {
-            background: #218838;
-            border-color: #218838;
-        }
-
-        .bid-btn.secondary {
-            background: #6c757d;
-            border-color: #6c757d;
-        }
-
-        .bid-btn.secondary:hover {
-            background: #5a6268;
-            border-color: #5a6268;
-        }
-
-        .bidding-status {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
-
-        .bidding-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 1400;
-            display: none;
-        }
-
-        .bidding-overlay.active {
-            display: block;
-        }
-
-        /* Ace Selection for Rufspiel */
-        .ace-selection {
-            display: none;
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .ace-selection.active {
-            display: block;
-        }
-
-        .ace-buttons {
-            display: flex;
-            gap: 0.5rem;
-            justify-content: center;
-            margin-top: 0.75rem;
-        }
-
-        .ace-btn {
-            background: rgba(255,255,255,0.1);
-            border: 1px solid rgba(255,255,255,0.3);
-            color: white;
-            padding: 0.5rem 0.75rem;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s ease;
-        }
-
-        .ace-btn:hover {
-            background: rgba(255,255,255,0.2);
-        }
-
-        .ace-btn.selected {
-            background: #28a745;
-            border-color: #28a745;
-        }
-    </style>
+    <link rel="stylesheet" href="css/components/community-badge.css?v=20250819">
+    <link rel="stylesheet" href="css/components/bidding-system.css?v=20250819">
 </head>
 <body>
     <!-- Community Training System Badge -->
@@ -334,7 +119,7 @@
             <!-- Spielfeld-Mitte -->
             <div class="center-area">
                 <div class="game-status" id="game-status">
-                    🌍 Community Training System Ready - Start your game!
+                    🌍 Community Training + AI System Ready!
                 </div>
                 
                 <div class="trick-area" id="trick-area">
@@ -372,6 +157,11 @@
     <script src="js/rules.js?v=20250815-clean"></script>
     <script src="js/cards.js?v=20250815-clean"></script>
     <script src="js/game.js?v=20250815-clean"></script>
+    
+    <!-- AI System Core -->
+    <script src="js/ai/card-memory.js?v=20250819-ai-fix"></script>
+    <script src="js/ai/q-learning.js?v=20250819-ai-fix"></script>
+    <script src="js/ai/ai-main.js?v=20250819-ai-fix"></script>
     
     <!-- Bidding System Modules -->
     <script src="js/modules/bidding.js?v=20250816-bidding"></script>
@@ -565,36 +355,26 @@
             }, 1000);
         };
         
-        // Auto-collapse badge after 8 seconds
-        setTimeout(() => {
-            const badge = document.getElementById('community-badge');
-            badge.classList.add('collapsed');
-        }, 8000);
-        
         console.log('🌍 Community Training System - READY!');
-        console.log('🎯 Bidding System - INTEGRATED!');
+        console.log('🤖 AI System mit Q-Learning - INTEGRATED!');
         console.log('🧩 UI System - MODULAR (3 Module)!');
-        console.log('🎲 Vereinfachtes ⭐/❌ Feedback-Interface');
-        console.log('🧠 Strategische Positionen: ausspieler, zweiter, dritter, letzter');
-        console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
-        console.log('🔄 Vorhand-System direkt integriert (clean)');
+        console.log('🎯 Bidding System - INTEGRATED!');
         
         // System ready confirmation
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Community Training + Modular UI + Bidding System Check:');
+            console.log('🚀 Community Training + AI System + Modular UI Check:');
             
             setTimeout(() => {
                 console.log(`🏆 Training system: ${window.postGameTraining ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🌉 Q-Learning Bridge: ${window.qLearningBridge ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🌍 Community DB: ${window.communityDB ? '✅ Available' : '❌ Missing'}`);
+                console.log(`🤖 AI System: ${typeof selectCardWithAI === 'function' ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🎯 Bidding System: ${window.BiddingManager ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🎮 Game Controller: ${window.GameController ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🧩 Modular UI: ${typeof updateUI === 'function' ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🃏 Card UI: ${typeof createCardHTML === 'function' ? '✅ Available' : '❌ Missing'}`);
                 console.log(`📝 Modal UI: ${typeof showModal === 'function' ? '✅ Available' : '❌ Missing'}`);
-                console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
                 
-                updateGameStatus('🌍 Community Training + Modular UI + Bidding System Ready!');
+                updateGameStatus('🌍 Community Training + AI System Ready!');
                 
                 // Auto-enable training after 3 seconds
                 setTimeout(() => {
@@ -604,7 +384,7 @@
                         btn.textContent = 'Training AUS';
                         btn.classList.add('active');
                         
-                        updateGameStatus('🏆 Training + Modular UI + Bidding aktiviert! Starten Sie ein neues Spiel.');
+                        updateGameStatus('🏆 Training + AI System aktiviert! Starten Sie ein neues Spiel.');
                         console.log('✨ Community-Training auto-aktiviert!');
                     }
                 }, 3000);
@@ -613,18 +393,15 @@
         
         // Erweiterte Test-Funktion
         window.testCommunityTraining = function() {
-            console.log('🧪 Community Training + Modular UI + Bidding System Test:');
+            console.log('🧪 Community Training + AI System Test:');
             console.log('postGameTraining available:', !!window.postGameTraining);
             console.log('qLearningBridge available:', !!window.qLearningBridge);
             console.log('communityDB available:', !!window.communityDB);
-            console.log('BiddingManager available:', !!window.BiddingManager);
-            console.log('GameController available:', !!window.GameController);
-            console.log('BiddingIntegration available:', !!window.BiddingIntegration);
+            console.log('AI System available:', typeof selectCardWithAI === 'function');
             console.log('Modular UI Functions available:');
             console.log('  - updateUI:', typeof updateUI === 'function');
             console.log('  - createCardHTML:', typeof createCardHTML === 'function');
             console.log('  - showModal:', typeof showModal === 'function');
-            console.log('Vorhand System available: ✅ Integrated');
             
             if (window.postGameTraining) {
                 console.log('Training enabled:', window.postGameTraining.enabled);
@@ -637,92 +414,58 @@
                 console.log('Q-Learning Stats:', window.getQLearningStats());
             }
             
-            // Bidding System Test
-            if (window.BiddingIntegration) {
-                console.log('🎯 Bidding Status:', window.BiddingIntegration.getBiddingStatus());
-            }
-            
-            // Vorhand-Tests
-            console.log('🔄 Vorhand Tests:');
-            console.log('getCurrentVorhand():', getCurrentVorhand());
-            console.log('getCurrentVorhandName():', getCurrentVorhandName());
-            debugVorhand();
-            
             return {
                 training: window.postGameTraining,
                 bridge: window.qLearningBridge,
                 community: window.communityDB,
-                bidding: {
-                    manager: window.BiddingManager,
-                    controller: window.GameController,
-                    integration: window.BiddingIntegration
+                ai: {
+                    selectCard: typeof selectCardWithAI === 'function',
+                    qlearning: typeof window.QLearningManager !== 'undefined',
+                    cardMemory: typeof window.CardMemoryManager !== 'undefined'
                 },
                 ui: {
                     modular: true,
                     core: typeof updateUI === 'function',
                     cards: typeof createCardHTML === 'function',
                     modal: typeof showModal === 'function'
-                },
-                vorhand: {
-                    current: getCurrentVorhand(),
-                    name: getCurrentVorhandName(),
-                    status: 'integrated'
                 }
             };
         };
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '7.0-modular-ui-integrated',
-            layout: 'modular-ui-enhanced-index.html',
+            version: '8.0-ai-system-integrated-clean',
+            layout: 'clean-index-with-ai-scripts',
             modules: [
-                'game-state-with-vorhand', 
-                'post-game-training', 
-                'community-qlearning-bridge', 
-                'bidding-system', 
-                'game-controller',
                 'modular-ui-cards',
                 'modular-ui-core', 
-                'modular-ui-modal'
+                'modular-ui-modal',
+                'game-state-clean',
+                'ai-card-memory',
+                'ai-q-learning',
+                'ai-main',
+                'post-game-training', 
+                'community-qlearning-bridge'
             ],
             features: [
-                'simplified-ui', 
-                'strategic-positions', 
-                'correct-roles', 
-                'enhanced-gamecontext',
-                'community-database',
-                'integrated-vorhand-system',
-                'complete-bidding-system',
-                'modular-ui-architecture'
+                'ai-system-core', 
+                'q-learning-integration',
+                'community-training',
+                'modular-ui-architecture',
+                'modular-css-architecture',
+                'clean-dependencies'
             ],
-            improvements: [
-                'clean-architecture',
-                'no-setTimeout-chaos',
-                'direct-integration',
-                'simple-dependencies',
-                'vorhand-in-gamestate',
-                'modular-bidding-system',
-                'fixed-ui-integration',
-                'ui-split-into-modules'
+            fixes: [
+                'selectCardWithAI-error-resolved',
+                'ai-scripts-properly-loaded',
+                'css-extracted-to-components',
+                'clean-script-order',
+                'index-html-size-reduced'
             ],
-            training: {
-                available: !!window.postGameTraining,
-                autoActivated: true,
-                features: ['move-rating', 'drag-modal', 'feedback-collection', 'community-sync']
-            },
-            bidding: {
-                available: !!window.BiddingManager,
-                features: ['rufspiel', 'solo', 'wenz', 'cpu-logic', 'ui-integration']
-            },
-            ui: {
-                architecture: 'modular',
-                modules: ['ui-cards', 'ui-core', 'ui-modal'],
-                totalSize: '~22KB (split from 21.7KB monolith)'
-            },
-            status: 'community-training-with-bidding-system-fully-activated'
+            status: 'community-training-with-ai-system-clean'
         };
         
-        console.log('📊 Community Training + Modular UI + Bidding System Info:', window.communityTrainingInfo);
+        console.log('📊 Community Training + AI System Info:', window.communityTrainingInfo);
         console.log('✨ Verwende testCommunityTraining() für vollständige Tests');
     </script>
 </body>
