@@ -1,0 +1,75 @@
+/* Community Training System Badge */
+.community-training-badge {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    padding: 0.75rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    z-index: 1000;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    max-width: 200px;
+}
+
+.community-training-badge:hover {
+    transform: scale(1.02);
+}
+
+.community-training-badge.collapsed {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.training-details {
+    display: block;
+}
+
+.community-training-badge.collapsed .training-details {
+    display: none;
+}
+
+.training-icon {
+    display: none;
+}
+
+.community-training-badge.collapsed .training-icon {
+    display: block;
+    font-size: 1.2rem;
+}
+
+.training-controls {
+    margin-top: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.training-toggle {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    margin-right: 0.25rem;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.training-toggle:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.training-toggle.active {
+    background: rgba(255,255,255,0.9);
+    color: #28a745;
+    font-weight: bold;
+}
