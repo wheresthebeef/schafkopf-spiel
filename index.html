@@ -98,7 +98,6 @@
 
             <!-- CPU-Spieler 3 (rechts) -->
             <div class="player cpu3" id="player-3">
-                <h3>Sepp</h3>
                 <div class="player-info">
                     <div>Punkte: <span class="points">0</span></div>
                     <div>Stiche: <span class="tricks">0</span></div>
@@ -147,16 +146,16 @@
         </div>
     </div>
 
-    <!-- MODULAR: UI System aufgeteilt in 3 Module -->
-    <script src="js/ui/ui-cards.js?v=20250817-modular"></script>
-    <script src="js/ui/ui-core.js?v=20250817-modular"></script>
-    <script src="js/ui/ui-modal.js?v=20250817-modular"></script>
-    
-    <!-- Core Game System -->
+    <!-- FIXED: Core Game System ZUERST (damit UI-Module Funktionen finden) -->
     <script src="js/game-state.js?v=20250815-clean"></script>
     <script src="js/rules.js?v=20250815-clean"></script>
     <script src="js/cards.js?v=20250815-clean"></script>
     <script src="js/game.js?v=20250815-clean"></script>
+    
+    <!-- DANN: UI System (kann jetzt canPlayCard() finden) -->
+    <script src="js/ui/ui-cards.js?v=20250817-modular"></script>
+    <script src="js/ui/ui-core.js?v=20250817-modular"></script>
+    <script src="js/ui/ui-modal.js?v=20250817-modular"></script>
     
     <!-- Bidding System Modules -->
     <script src="js/modules/bidding.js?v=20250816-bidding"></script>
@@ -381,6 +380,7 @@
         console.log('👥 Korrekte Rollen: Spieler, Mitspieler, Gegner');
         console.log('🔄 Vorhand-System direkt integriert (clean)');
         console.log('🔧 window.submitReview() FIX implementiert!');
+        console.log('🔧 Script-Loading-Reihenfolge KORRIGIERT!');
         
         // System ready confirmation
         document.addEventListener('DOMContentLoaded', () => {
@@ -397,6 +397,7 @@
                 console.log(`📝 Modal UI: ${typeof showModal === 'function' ? '✅ Available' : '❌ Missing'}`);
                 console.log(`🔄 Vorhand System: ✅ Integrated in game-state.js`);
                 console.log(`🔧 submitReview Fix: ✅ Implemented`);
+                console.log(`🔧 canPlayCard Function: ${typeof canPlayCard === 'function' ? '✅ Available' : '❌ Missing'}`);
                 
                 updateGameStatus('🌍 Community Training + Modular UI + Bidding System Ready!');
                 
@@ -428,6 +429,7 @@
             console.log('  - updateUI:', typeof updateUI === 'function');
             console.log('  - createCardHTML:', typeof createCardHTML === 'function');
             console.log('  - showModal:', typeof showModal === 'function');
+            console.log('  - canPlayCard:', typeof canPlayCard === 'function');
             console.log('Vorhand System available: ✅ Integrated');
             console.log('submitReview Fix available: ✅', typeof window.submitReview === 'function');
             
@@ -466,7 +468,8 @@
                     modular: true,
                     core: typeof updateUI === 'function',
                     cards: typeof createCardHTML === 'function',
-                    modal: typeof showModal === 'function'
+                    modal: typeof showModal === 'function',
+                    canPlayCard: typeof canPlayCard === 'function'
                 },
                 vorhand: {
                     current: getCurrentVorhand(),
@@ -479,8 +482,8 @@
         
         // Community Training info
         window.communityTrainingInfo = {
-            version: '8.0-css-cleaned-submitreview-fixed',
-            layout: 'external-css-submitreview-fix',
+            version: '8.1-script-loading-order-fixed',
+            layout: 'external-css-submitreview-fix-script-order',
             modules: [
                 'game-state-with-vorhand', 
                 'post-game-training', 
@@ -501,7 +504,8 @@
                 'complete-bidding-system',
                 'modular-ui-architecture',
                 'external-css-files',
-                'submitreview-fix'
+                'submitreview-fix',
+                'script-loading-order-fixed'
             ],
             improvements: [
                 'clean-architecture',
@@ -513,7 +517,8 @@
                 'fixed-ui-integration',
                 'ui-split-into-modules',
                 'css-externalized',
-                'missing-function-implemented'
+                'missing-function-implemented',
+                'script-dependencies-resolved'
             ],
             training: {
                 available: !!window.postGameTraining,
@@ -527,7 +532,8 @@
             ui: {
                 architecture: 'modular',
                 modules: ['ui-cards', 'ui-core', 'ui-modal'],
-                totalSize: '~22KB (split from 21.7KB monolith)'
+                totalSize: '~22KB (split from 21.7KB monolith)',
+                dependencies: 'fixed'
             },
             css: {
                 external: true,
@@ -535,10 +541,10 @@
                 inlineRemoved: true,
                 sizeSaved: '~4KB'
             },
-            status: 'css-cleaned-submitreview-fixed-ready-for-testing'
+            status: 'all-script-dependencies-resolved-ready-for-q-learning-testing'
         };
         
-        console.log('📊 Community Training + CSS Clean + submitReview Fix Info:', window.communityTrainingInfo);
+        console.log('📊 Community Training + Script-Loading Fix Info:', window.communityTrainingInfo);
         console.log('✨ Verwende testCommunityTraining() für vollständige Tests');
     </script>
 </body>
