@@ -66,6 +66,63 @@ function canPlayCard(card, playerIndex) {
 }
 
 /**
+ * QUICK FIX: Validiert einen Kartenzug nach Schafkopf-Regeln
+ * @param {Object} card - Die zu spielende Karte
+ * @param {number} playerIndex - Index des Spielers
+ * @param {Array} currentTrick - Aktuelle Karten im Stich
+ * @param {Array} playerCards - Alle Karten des Spielers
+ * @returns {Object} {valid: boolean, reason: string}
+ */
+function validateCardPlay(card, playerIndex, currentTrick, playerCards) {
+    try {
+        // Basis-Validierung
+        if (!card || !playerCards) {
+            return { valid: false, reason: 'Ungültige Parameter' };
+        }
+        
+        // Wenn erster Zug im Stich - alles erlaubt
+        if (!currentTrick || currentTrick.length === 0) {
+            return { valid: true, reason: 'Ausspielen - alle Karten erlaubt' };
+        }
+        
+        // Farbzwang prüfen
+        const firstCard = currentTrick[0].card;
+        const leadSuit = firstCard.suit;
+        
+        // Spezialfall: Trumpf wurde ausgespielt
+        if (firstCard.isTrump) {
+            // Muss Trumpf zugeben wenn möglich
+            const hasTrump = playerCards.some(c => c.isTrump);
+            
+            if (hasTrump && !card.isTrump) {
+                return { valid: false, reason: 'Trumpfzwang - Sie müssen Trumpf zugeben' };
+            }
+            
+            return { valid: true, reason: 'Trumpf korrekt bedient' };
+        }
+        
+        // Normale Farbe wurde ausgespielt
+        const hasSuit = playerCards.some(c => c.suit === leadSuit && !c.isTrump);
+        
+        if (hasSuit) {
+            // Hat die Farbe - muss sie bedienen (außer mit Trumpf)
+            if (card.suit !== leadSuit && !card.isTrump) {
+                return { valid: false, reason: 'Farbzwang - Sie müssen die Farbe bedienen oder trumpfen' };
+            }
+        } else {
+            // Hat die Farbe nicht - kann alles spielen
+            return { valid: true, reason: 'Farbe nicht vorhanden - freie Kartenwahl' };
+        }
+        
+        return { valid: true, reason: 'Regelkonformer Zug' };
+        
+    } catch (error) {
+        console.error('validateCardPlay error:', error);
+        return { valid: false, reason: 'Validierungsfehler' };
+    }
+}
+
+/**
  * 🏗️ REFACTORED: Rufspiel-Bidding-Regeln (aus bidding.js verschoben)
  * Diese Funktionen implementieren die einheitlichen Regeln für Ruf-Ass-Auswahl
  * Werden sowohl von Bots als auch für UI-Validierung verwendet
@@ -154,13 +211,37 @@ function validateRufspielBid(playerCards, calledSuit) {
     };
 }
 
-[... Rest der rules.js bleibt unverändert ...]
+// Hilfsfunktionen für andere Module
+function isCardHigher(card1, card2) {
+    // Vereinfachte Implementierung - Trump sticht immer
+    if (card1.isTrump && !card2.isTrump) return true;
+    if (!card1.isTrump && card2.isTrump) return false;
+    
+    // Beide Trumpf oder beide nicht Trumpf - nach Wert vergleichen
+    const values = ['7', '8', '9', 'unter', 'ober', 'koenig', '10', 'sau'];
+    const value1Index = values.indexOf(card1.value);
+    const value2Index = values.indexOf(card2.value);
+    
+    return value1Index > value2Index;
+}
 
-// CLEAN: Export ohne Debug-Spam + Neue Bidding-Regel-Funktionen
+function shouldUseCardImages() {
+    // Einfache Implementierung - prüft localStorage
+    return localStorage.getItem('useCardImages') === 'true';
+}
+
+function getCurrentPlayer() {
+    if (!gameState || !gameState.players || gameState.currentPlayer === undefined) {
+        return { name: 'Unbekannt' };
+    }
+    return gameState.players[gameState.currentPlayer] || { name: 'Unbekannt' };
+}
+
+// QUICK FIX: Export aller Funktionen inklusive validateCardPlay
 if (typeof window !== 'undefined') {
     // Bestehende Funktionen
     window.canPlayCard = canPlayCard;
-    window.validateCardPlay = validateCardPlay;
+    window.validateCardPlay = validateCardPlay; // ✅ QUICK FIX
     
     // 🏗️ NEUE: Bidding-Regel-Funktionen exportiert
     window.canCallAce = canCallAce;
@@ -168,5 +249,10 @@ if (typeof window !== 'undefined') {
     window.hasOwnAce = hasOwnAce;
     window.validateRufspielBid = validateRufspielBid;
     
-    console.log('🔧 Rules.js: Clean functions + Bidding rules exported');
+    // Hilfsfunktionen
+    window.isCardHigher = isCardHigher;
+    window.shouldUseCardImages = shouldUseCardImages;
+    window.getCurrentPlayer = getCurrentPlayer;
+    
+    console.log('🔧 Rules.js: QUICK FIX - validateCardPlay implementiert + alle Funktionen exportiert');
 }
